@@ -50,7 +50,7 @@ here costs an hour of confusion:
 Create `.env.local`:
 
 ```
-API_URL=https://commerce-core.onrender.com     # confirm the real host first
+API_URL=https://commerce-core-kvlg.onrender.com
 NEXT_PUBLIC_SITE_URL=http://localhost:5173
 ```
 
@@ -191,5 +191,6 @@ page to a paid order without you explaining anything to them. `/style-tile`
 matches artboard 01. The 409 path and the awaiting-webhook path are both
 reachable and both look like the design. `pnpm build` and `pnpm lint` pass.
 
-Start by reading the two documents and confirming the real API host, then show
+Start by reading the two documents and generating the client from the live
+spec, then show
 me your plan before you scaffold.

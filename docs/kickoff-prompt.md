@@ -7,13 +7,15 @@
 ---
 
 You are building **AVESSO**, the storefront for a headless commerce API. This
-repository is empty except for two documents. Read both, completely, before
-writing a line of code:
+repository is empty except for three documents. Read all three, completely,
+before writing a line of code:
 
 - `docs/backend-commerce-core.md` — the backend contract. Written by the
   backend's own repo and copied here verbatim.
 - `docs/design-system.md` — the visual contract, extracted from a Claude
   Design canvas. Tokens, component CSS, all 10 screens, the full copy deck.
+- `docs/upstream-first.md` — **how to work.** What to do when the API is
+  missing something. Read this one before you hit the problem, not after.
 
 If code and `docs/design-system.md` ever disagree, the document wins. If a
 document and the live OpenAPI spec disagree, **the OpenAPI spec wins** — it
@@ -29,6 +31,46 @@ is the only thing the backend's CI guarantees.
 - **API client generated from OpenAPI.** `openapi-typescript` for types,
   `openapi-fetch` for the client. No hand-written request or response types,
   ever.
+
+## How to work — upstream-first
+
+This matters more than any screen, so it goes before the build steps.
+
+The commerce-core backend is **not the backend of this store**. It is a
+backend built to be redeployed for every store this author makes: same `main`,
+different database, different Stripe account. That only survives if nobody
+ever works around it.
+
+So when you find something the API cannot do:
+
+> **Do not build a workaround here. Take it upstream, PR it into
+> commerce-core, test it, merge it, and then continue this screen.**
+
+A workaround you tell yourself is temporary is how the template dies. The
+first store-specific hack is the moment it stops being reusable.
+
+`docs/upstream-first.md` has the decision test, the full procedure, and the
+backend's environment traps. Three things to internalize right now:
+
+1. **The trigger.** A gap counts when *this* store needs it for a screen you
+   are building *now*, and another store would plausibly need it too. Domain,
+   data, money, state transitions, permissions → upstream. Layout, routing,
+   copy, UI state, formatting → here. If you catch yourself doing arithmetic
+   on money, stock, or freight to make a screen work, you have found a backend
+   gap, not a frontend puzzle.
+2. **The decision is joint.** Name the gap, say which side you think it falls
+   on and why, and get agreement before you either open a backend PR or accept
+   a deferral. Do not disappear into the backend unannounced, and do not
+   quietly work around it either. If it gets deferred, record the divergence
+   in this repo's `README.md` instead of hiding it.
+3. **Nothing speculative.** "Some store might want this someday" is not a
+   trigger. Generality is not invented ahead of need.
+
+The backend lives at `C:\Users\Arthu\Desktop\code\commerce-core`. Bring it
+into the session with `/add-dir` when the moment comes. It has its own
+workflow — spec in `docs/specs/` before code, TDD inside-out, e2e as a safety
+net, regenerate `openapi.json` or CI fails — and you follow it there, not the
+conventions of this repo.
 
 ## Step 0 — scaffold
 
@@ -157,25 +199,36 @@ in a way tests won't catch.
 
 5. **Shipping price does not come from the client.** Quote via `POST /shipping/quote` with the CEP, then send back `shippingOptionCode` **and** `quotedShippingCents` at checkout. The server re-quotes and rejects a mismatch. Handle `estimatedDays` and `carrier` being `null` — the design's freight row must survive both.
 
-## Sizes — the known divergence
+## Sizes — the first upstream candidate
 
 The design has a P/M/G/GG/XGG selector. **The API has no product variants**: one
-product, one price, one stock count. This is deliberate and documented.
+product, one price, one stock count.
 
-So: render the size row exactly as designed, including GG struck through as
-unavailable. Keep the selection in client state and require it before the CTA
-enables. **Do not send it anywhere** — `POST /cart/items` takes
-`{ productId, quantity }` and nothing else, and you must not invent a field the
-OpenAPI document doesn't have. Omit the size line from cart rows for now.
+Run it through the decision test and it passes on all three counts: every
+clothing store needs it, it is pure domain (schema, per-variant stock, order
+items), and there is no way to do it here without inventing a field. So this
+is not a divergence to live with — it is the first thing to take upstream.
 
-Mark it with a single comment pointing at this section. When variants matter,
-the fix is a PR to the commerce-core backend, not a workaround here. Record the
-divergence in the README rather than hiding it.
+**Raise it when you reach the PDP** (build order step 3), not before. Say what
+the change involves in commerce-core and ask whether to do it now or defer.
+Then:
+
+- **If we do it now** — stop frontend work, follow `docs/upstream-first.md`,
+  ship the variants PR, wait for the deploy, regenerate `pnpm api:types`, and
+  build the PDP against the real thing.
+- **If we defer** — render the size row exactly as designed, including GG
+  struck through. Keep the selection in client state and require it before the
+  CTA enables, but **do not send it anywhere**: `POST /cart/items` takes
+  `{ productId, quantity }` and nothing else, and you must never invent a field
+  the OpenAPI document doesn't have. Omit the size line from cart rows. Leave
+  one comment pointing at this section, and record it in the README.
 
 ## Rules for the whole build
 
 - Never hand-write a request or response type. Regenerate from `/docs-json`.
-- Never invent an endpoint. If it isn't in the OpenAPI document, it does not exist, and the answer is a backend PR.
+- Never invent an endpoint or a field. If it isn't in the OpenAPI document it does not exist — and the answer is a PR to commerce-core, following `docs/upstream-first.md`, not a clever fix here.
+- Never work around a backend gap silently. Name it, decide together, then either fix it upstream or write the deferral down.
+- Never do arithmetic on money, stock, or freight to make a screen work. That is always a backend gap.
 - Never treat the Stripe return as proof of payment.
 - Never fire two concurrent refreshes.
 - `409` and `429` are first-class UI states. `429` carries `Retry-After` — respect it.
@@ -191,6 +244,5 @@ page to a paid order without you explaining anything to them. `/style-tile`
 matches artboard 01. The 409 path and the awaiting-webhook path are both
 reachable and both look like the design. `pnpm build` and `pnpm lint` pass.
 
-Start by reading the two documents and generating the client from the live
-spec, then show
-me your plan before you scaffold.
+Start by reading the three documents and generating the client from the live
+spec, then show me your plan before you scaffold.

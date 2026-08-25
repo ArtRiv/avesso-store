@@ -151,6 +151,12 @@ rail esquerdo com categorias e faixas de preço como listas separadas por
 fio (sem accordion, sem chip, sem pill) · grid 4-up · paginação
 `Anterior · 1 · Próxima`.
 
+O rail de categorias abre com `Todas as peças (12)` e marca a categoria ativa
+em rust. As faixas de preço são `até R$ 149,90` (5) · `R$ 150 – R$ 249,90` (2)
+· `R$ 250 – R$ 349,90` (4) · `acima de R$ 350` (1) — **contagens corrigidas
+em relação ao canvas**, ver §8. Elas são calculadas no cliente: `GET /products`
+não filtra por preço.
+
 **04 — PDP**: breadcrumb `Catálogo / Camisetas / <nome>` · coluna esquerda
 com 3 imagens empilhadas (não é carrossel) · coluna direita sticky:
 h1, preço, descrição, `Tamanho` + `Guia de medidas`, linha de tamanhos,
@@ -194,6 +200,10 @@ o total foi atualizado." · total antigo riscado em muted ao lado do novo ·
 CTA rust `Finalizar com 2 peças — R$ 522,30` · nota `Nada foi cobrado ainda.`
 **Sem modal. Sem caixa vermelha.**
 
+O canvas traz ainda a linha "Os outros dois itens seguem reservados apenas
+até o pagamento." **Ela não vai para o código** — contradiz o artboard 06 e
+o backend. Ver §8.
+
 ---
 
 ## 4. Imagens
@@ -228,6 +238,10 @@ imagem quebrada, e mantém o layout honesto.
 
 Categorias: `Camisetas` (5) · `Moletons` (2) · `Calças` (3) · `Acessórios` (2)
 
+A `Jaqueta Corta-Vento Preta` está em `Calças` de propósito no catálogo de
+demonstração — é o que fecha a contagem de 3 e mantém a faixa de 4 categorias
+da home. Ver §8.
+
 Frete: `SEDEX · 2 dias úteis · Correios · R$ 42,50` · `PAC · 7 dias úteis · Correios · R$ 24,90`
 
 Specs do PDP: Composição `100% algodão penteado, 240 g/m²` · Modelagem
@@ -261,3 +275,32 @@ Bandeiras: Visa · Mastercard · Elo · Pix · Boleto
 - Biblioteca de ícones
 - Texto de corpo centralizado (exceto artboards 08 e 09)
 - Spinner
+
+---
+
+## 8. Correções sobre o canvas
+
+O canvas (`design/AVESSO Storefront.dc.html`) é o material bruto, e tem três
+defeitos. Estão corrigidos acima; a lista existe para que ninguém os traga de
+volta numa reimportação.
+
+**1. As contagens das faixas de preço estavam erradas.** O canvas declara
+3 / 3 / 4 / 2. As 12 peças da §5 dão **5 / 2 / 4 / 1**. Como as faixas são
+calculadas no cliente, computar honestamente contradiria o artboard 03 — então
+o artboard é que está errado, e as contagens certas estão na §3.
+
+**2. A copy sobre reserva de estoque se contradizia.** Artboard 06: "O estoque
+não é reservado. A peça sai da sacola se acabar antes do pagamento." Artboard
+10: "Os outros dois itens seguem reservados apenas até o pagamento."
+
+O 06 está certo e o 10 sai. O backend reserva estoque em `POST /orders`, não
+na sacola — e o 409 do artboard 10 acontece *antes* do pedido existir, quando
+não há nada reservado. Prometer reserva ali seria mentira, e ainda por cima
+mentira que o `Nada foi cobrado ainda.` da mesma tela desmente.
+
+**3. A `Jaqueta Corta-Vento Preta` está na categoria `Calças`.** É um deslize
+do catálogo de demonstração, mas é um deslize que carrega peso: mover a peça
+faz `Calças` cair para 2, cria uma quinta categoria e quebra a faixa de 4 da
+home e o rail do catálogo. Fica como está, e o seed do backend carrega o mesmo
+deslize. Quando entrar catálogo real, a peça ganha categoria própria e a faixa
+passa a ter 5.

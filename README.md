@@ -20,6 +20,7 @@ front-end que o consome.
 | --- | --- |
 | [`docs/backend-commerce-core.md`](docs/backend-commerce-core.md) | O contrato do backend, copiado do repositório dele. O que a API resolve, o que ela não resolve, e as seis coisas que quebram quem não sabe. |
 | [`docs/design-system.md`](docs/design-system.md) | O contrato visual: tokens, CSS dos componentes, as 10 telas e o copy deck. Extraído do canvas do Claude Design. |
+| [`design/`](design/) | O canvas do Claude Design de onde o contrato visual foi extraído, importado como está. Material bruto: consulte quando um detalhe não estiver na extração. |
 | [`docs/upstream-first.md`](docs/upstream-first.md) | Como trabalhar quando a API não tem o que a loja precisa: o teste de decisão, o procedimento do PR no backend e as armadilhas de lá. |
 | [`docs/kickoff-prompt.md`](docs/kickoff-prompt.md) | O prompt de partida da construção. |
 

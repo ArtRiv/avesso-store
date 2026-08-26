@@ -58,10 +58,14 @@ type FetchResult<T> =
  * turn a failure into an ApiError so a screen can branch on 409 or 429 instead
  * of on an untyped body — see src/lib/api/errors.ts.
  */
-export function unwrap<T>(result: FetchResult<T>): T {
+export function unwrap<T>(result: FetchResult<T>): NonNullable<T> {
   assertOk(result);
 
-  return result.data as T;
+  // openapi-fetch types `data` as optional across the whole result union, so
+  // the inferred T carries an `undefined` that a successful response with a
+  // body never actually has. Use `assertOk` for the 204 routes, where the
+  // absence is real.
+  return result.data as NonNullable<T>;
 }
 
 /** For the routes that answer 204 and carry no body at all. */

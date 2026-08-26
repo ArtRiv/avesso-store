@@ -41,7 +41,9 @@ const buttonVariants = cva(
         // reaching for this anywhere else.
         recovery: "bg-rust text-paper hover:opacity-90",
         ghost: "bg-transparent text-ink hover:text-rust",
-        link: "bg-transparent text-ink underline underline-offset-4 hover:text-rust",
+        // There is no `link` variant on purpose. A link in this design is body
+        // text with a rust hover, not a 48px mono uppercase control — see
+        // src/components/text-link.tsx.
       },
       size: {
         // The 48px control height everything in the design snaps to.

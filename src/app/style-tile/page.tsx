@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Badge, StockBadge } from "@/components/badge";
 import { ProductTile } from "@/components/product-tile";
 import { SizeCell } from "@/components/size-cell";
+import { TextLink } from "@/components/text-link";
 import { WaitBar } from "@/components/wait-bar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -252,9 +253,9 @@ export default function StyleTilePage() {
               </GroupLabel>
               <div className="flex flex-wrap items-center gap-4">
                 <Button variant="recovery">Finalizar com 2 peças</Button>
-                <Button variant="link" size="inline">
+                <TextLink href="/entrar" className="text-small text-muted">
                   Esqueci minha senha
-                </Button>
+                </TextLink>
               </div>
             </div>
 

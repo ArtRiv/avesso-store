@@ -92,10 +92,25 @@ decisão caiu e por quê.
   já entrega — e então chama `DELETE /cart/items/{productId}`, o que torna
   verdadeiro o "Removemos da sacola" da tela. Se o 409 um dia ganhar corpo
   estruturado, esta reconciliação sai.
-- **Linha de newsletter da home.** O artboard 02 tem campo + `Assinar`, e não
+- **Faixa de newsletter da home.** O artboard 02 tem campo + `Assinar`, e não
   existe endpoint nenhum por trás disso — inventar um seria generalidade antes
-  da hora. A faixa editorial fica com o texto e sem o campo: nada em tela promete
-  o que o backend não cumpre.
+  da hora. A faixa fica, sem campo e sem botão. O título também mudou: `Receba
+  avisos de reposição` prometia exatamente aquilo que não temos como cumprir, e
+  no lugar dele a faixa diz o que é verdade sobre os lotes. Nada em tela promete
+  o que o backend não entrega.
+- **As três peças em destaque da home.** O artboard 02 destaca uma peça de
+  Camisetas, uma de Moletons e uma de Calças. A API não tem `featured`, e
+  nenhuma regra sobre os dados reproduz essa escolha: por contagem de peças dá
+  empate entre Moletons e Acessórios (2 cada), e o canvas escolheu Moletons.
+  Escolha editorial não se deriva de catálogo. A home usa a regra "peça mais
+  recente com estoque de cada uma das três maiores categorias" — a parte do
+  estoque importa, porque a peça mais nova de Camisetas é justamente a esgotada,
+  e vitrine não abre com o que ninguém pode comprar. Curadoria de verdade é uma
+  flag `featured` no commerce-core, se e quando a loja quiser.
+- **Contador da sacola no header.** O artboard 02 mostra `Sacola (2)`. Sai o
+  número enquanto `GET /cart` não devolver `itemCount` — somar quantidades aqui
+  seria justamente o que o PR de totais da sacola existe para evitar. Volta com
+  uma linha quando o PR entrar.
 - **Rate limit por IP contra um BFF.** `register` (5/hora), `login` (5/15min),
   `refresh` (60/min), `shipping/quote` (30/min) e `orders/:id/pay` (10/min) são
   todos chaveados no IP do chamador, lido de `cf-connecting-ip` — que a

@@ -1,11 +1,9 @@
-import { cn } from "@/lib/utils";
-import { toneClass, toneFor, toneLabelClass } from "@/lib/product-tone";
+import { ToneBlock } from "@/components/tone-block";
+import { toneFor } from "@/lib/product-tone";
 
 /**
- * A piece's image (docs/design-system.md §4). Until real photography exists
- * this is a solid block in the piece's tone with its name in mono at the bottom
- * left — deliberately, because a broken-image icon is worse and an empty box
- * lies about the layout.
+ * A piece's image. Until real photography exists this is the piece's tone with
+ * its name in the corner — see ToneBlock and docs/design-system.md §4.
  *
  * `imageUrls` on the API is a list of plain URLs and is empty for all twelve
  * products today. When it fills, the photo goes in this same box at this same
@@ -14,33 +12,20 @@ import { toneClass, toneFor, toneLabelClass } from "@/lib/product-tone";
 export function ProductImage({
   slug,
   name,
-  ratio = "4/5",
+  aspect,
   className,
 }: {
   slug: string;
   name: string;
-  ratio?: "4/5" | "16/9";
+  aspect?: string;
   className?: string;
 }) {
-  const tone = toneFor(slug);
-
   return (
-    <div
-      className={cn(
-        "relative border border-hairline",
-        ratio === "4/5" ? "aspect-4/5" : "aspect-video",
-        toneClass(tone),
-        className,
-      )}
-    >
-      <span
-        className={cn(
-          "absolute bottom-3 left-3 font-mono text-[11px] leading-[1.2] tracking-[0.06em] uppercase",
-          toneLabelClass(tone),
-        )}
-      >
-        {name}
-      </span>
-    </div>
+    <ToneBlock
+      tone={toneFor(slug)}
+      label={name}
+      aspect={aspect}
+      className={className}
+    />
   );
 }

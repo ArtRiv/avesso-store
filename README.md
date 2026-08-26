@@ -62,9 +62,66 @@ antes de cobrar de alguém.
 
 ## Divergências conhecidas entre design e API
 
+Registradas aqui, e não escondidas no código, conforme
+[`docs/upstream-first.md`](docs/upstream-first.md). Cada uma diz de que lado a
+decisão caiu e por quê.
+
+### Em aberto — vai subir para o commerce-core
+
+- **Totais da sacola.** `GET /cart` devolve `{ items }` e nada mais: nenhum
+  subtotal. O subtotal da sacola (artboard 06), o total da revisão do checkout
+  (07) e o total novo do conflito de estoque (10) sairiam todos de somar
+  `priceCents × quantity` no front-end — exatamente a aritmética de dinheiro que
+  o teste de decisão trata como lacuna do backend. **Decidido subir**, com o PR
+  aberto quando a sacola for construída, e não antes.
 - **Tamanhos.** O design tem seletor P/M/G/GG/XGG; a API não tem variantes de
-  produto (um produto = um preço = um estoque). É o primeiro candidato a PR
-  upstream — a decidir quando o PDP for construído. Até lá, o seletor é
-  renderizado como estado-alvo e a seleção não é enviada a lugar nenhum.
+  produto (um produto = um preço = um estoque). A decisão de subir agora ou
+  adiar se toma quando o PDP for construído. Até lá, o seletor é renderizado
+  como estado-alvo e a seleção não é enviada a lugar nenhum.
 - **Tamanho na linha da sacola.** Pelo mesmo motivo, a linha da sacola omite o
   tamanho que o artboard 06 mostra.
+
+### Adiadas — resolvidas aqui, de propósito
+
+- **O corpo do 409 do checkout é prosa.** `POST /orders` responde
+  `{ statusCode, message, error }`, e a `message` nomeia as peças esgotadas
+  dentro de uma frase. O artboard 10 precisa saber *qual linha* riscar. Em vez
+  de fazer parsing de prosa ou de duplicar a regra, o front-end relê
+  `GET /cart` e trata como culpada qualquer linha com
+  `product.stockQuantity < quantity` ou `status !== 'ACTIVE'` — dado que a API
+  já entrega — e então chama `DELETE /cart/items/{productId}`, o que torna
+  verdadeiro o "Removemos da sacola" da tela. Se o 409 um dia ganhar corpo
+  estruturado, esta reconciliação sai.
+- **Linha de newsletter da home.** O artboard 02 tem campo + `Assinar`, e não
+  existe endpoint nenhum por trás disso — inventar um seria generalidade antes
+  da hora. A faixa editorial fica com o texto e sem o campo: nada em tela promete
+  o que o backend não cumpre.
+- **Rate limit por IP contra um BFF.** `register` (5/hora), `login` (5/15min),
+  `refresh` (60/min), `shipping/quote` (30/min) e `orders/:id/pay` (10/min) são
+  todos chaveados no IP do chamador, lido de `cf-connecting-ip` — que a
+  Cloudflare sobrescreve a partir do socket. Como todo o tráfego desta loja sai
+  do servidor do Next, **todos os visitantes dividem o mesmo balde**: o sexto
+  cadastro da hora leva 429. Irrelevante para um portfólio com um usuário, e
+  parede em qualquer tráfego real. Não há conserto deste lado. É o próximo
+  candidato a upstream depois de tamanhos.
+
+### Correções: a prosa ficou para trás do spec
+
+O documento OpenAPI vivo ganha de qualquer texto, inclusive dos `docs/` deste
+repositório. Duas coisas que já divergem:
+
+- **`GET /products` filtra e ordena no servidor.** `docs/design-system.md` §3 e o
+  kickoff dizem que as faixas de preço são calculadas no cliente e que só existem
+  filtro de categoria e busca por nome. O spec tem `sort`
+  (`newest | price_asc | price_desc | name_asc`, um-para-um com o seletor de
+  ordenação do artboard 03) e `minPriceCents` / `maxPriceCents`. As quatro faixas
+  do design, consultadas na API, devolvem **5 / 2 / 4 / 1** — as contagens
+  corrigidas da §8. O catálogo é construído contra o servidor; nenhuma aritmética
+  de preço acontece aqui.
+- **O frete real não é o do design.** A `SHIPPING_TABLE` implantada tem
+  `padrao-sudeste` (Entrega padrão, 5 dias, R$ 19,90 ou R$ 39,90 conforme o peso)
+  e `padrao-brasil` (10 dias, R$ 49,90), escolhidas por prefixo de CEP — então um
+  CEP costuma devolver **uma única opção**, com `carrier: null`. O
+  `SEDEX · Correios · R$ 42,50` / `PAC · R$ 24,90` da §5 é dado de demonstração.
+  A linha de frete é construída para sobreviver a uma opção só e a `carrier` e
+  `estimatedDays` nulos.

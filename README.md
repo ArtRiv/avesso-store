@@ -36,6 +36,30 @@ teste de decisão e o procedimento estão em
 adiar é conjunta, e o que for adiado fica registrado abaixo em vez de ficar
 escondido no código.
 
+## Catálogo de demonstração
+
+As 12 peças e 4 categorias do `docs/design-system.md` §5 entram na API pelo
+script de seed:
+
+```bash
+API_URL=https://commerce-core-kvlg.onrender.com ADMIN_EMAIL=... ADMIN_PASSWORD=... node scripts/seed-catalog.mjs
+```
+
+Ele é idempotente por slug — `PATCH` no que existe, `POST` no que falta — e
+aceita `--dry-run` para imprimir o plano sem escrever nada. Rode de novo
+sempre que o e2e do commerce-core passar por cima do banco: ele dá `TRUNCATE`
+no catálogo e nos usuários.
+
+O seed mora aqui, e não no `prisma/demo-catalog.ts` do commerce-core, de
+propósito: aquele arquivo é dado de exemplo neutro num repositório
+compartilhado, e o catálogo da AVESSO é dado desta loja. Catálogo de loja no
+repositório do template é o primeiro passo para ele virar dois projetos.
+
+**Os pesos são estimativa.** O design informa um único peso (`310 g no
+tamanho M`, de camiseta); os outros onze eu inferi. `weightGrams` precifica
+frete, e o que falta o backend cobra da loja — confira contra as peças reais
+antes de cobrar de alguém.
+
 ## Divergências conhecidas entre design e API
 
 - **Tamanhos.** O design tem seletor P/M/G/GG/XGG; a API não tem variantes de

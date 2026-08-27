@@ -180,8 +180,6 @@ export function CheckoutView({ initialCart }: { initialCart: Cart }) {
     }
 
     setCart(latest);
-    // The header's count is rendered on the server.
-    router.refresh();
 
     if (guilty.length > 0) {
       setRemoved(guilty);
@@ -192,8 +190,14 @@ export function CheckoutView({ initialCart }: { initialCart: Cart }) {
       setQuote(null);
       setSelectedCode(null);
 
+      // Deliberately no refresh here. This page redirects an empty sacola to
+      // /sacola on the server, and re-rendering it now would do exactly that
+      // — throwing away the one screen that explains why the sacola emptied.
       return;
     }
+
+    // The header's count is rendered on the server.
+    router.refresh();
 
     // What is left weighs less, so the freight it was quoted at is no longer
     // the freight it costs. The number on the button has to be real.
@@ -226,7 +230,10 @@ export function CheckoutView({ initialCart }: { initialCart: Cart }) {
     setPlacing(true);
     setPlaceError(null);
     setFreightNote(null);
+    // The struck-through total belongs to the banner. Leaving it behind on a
+    // retry would show a number crossed out with nothing on screen saying why.
     setRemoved([]);
+    setPreviousTotalCents(null);
 
     const shownTotalCents = selected.orderTotalCents;
     let leaving = false;

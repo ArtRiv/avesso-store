@@ -93,3 +93,19 @@ export function formatEta(days: number | null): string | null {
 
   return days === 1 ? "1 dia útil" : `${days} dias úteis`;
 }
+
+/**
+ * A date with its year, for a list of orders that spans them. The order page
+ * can afford `28 de agosto` because it is showing one order made minutes ago;
+ * a listing cannot, and a year silently dropped is the kind of thing nobody
+ * notices until January.
+ */
+const orderDate = new Intl.DateTimeFormat("pt-BR", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+export function formatOrderDate(iso: string): string {
+  return orderDate.format(new Date(iso));
+}

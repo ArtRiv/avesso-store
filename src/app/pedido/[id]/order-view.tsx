@@ -7,6 +7,10 @@ import { apiFetch, problemMessage, SessionEndedError } from "@/lib/api/browser";
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/ui/button";
 import { WaitBar } from "@/components/wait-bar";
+import {
+  ORDER_STATUS_CLASS,
+  ORDER_STATUS_LABEL,
+} from "@/lib/order-status";
 import type { components } from "@/lib/api/schema";
 import { estimatedDelivery, formatBRL, formatOrderRef } from "@/lib/format";
 
@@ -249,24 +253,6 @@ export function OrderView({
   );
 }
 
-const STATUS_LABEL: Readonly<Record<Order["status"], string>> = {
-  CREATED: "Aguardando pagamento",
-  PAID: "Pago",
-  SHIPPED: "Enviado",
-  DELIVERED: "Entregue",
-  CANCELLED: "Cancelado",
-  REFUNDED: "Reembolsado",
-};
-
-const STATUS_CLASS: Readonly<Record<Order["status"], string>> = {
-  CREATED: "text-rust",
-  PAID: "text-moss",
-  SHIPPED: "text-moss",
-  DELIVERED: "text-moss",
-  CANCELLED: "text-clay",
-  REFUNDED: "text-clay",
-};
-
 function OrderSummary({ order }: { order: Order }) {
   // A count of lines on an order that is already frozen — not a rule, and not
   // a number the API would be better off computing.
@@ -275,8 +261,8 @@ function OrderSummary({ order }: { order: Order }) {
   return (
     <dl className="flex w-full max-w-[420px] flex-col gap-3 border border-hairline bg-paper p-6 text-left">
       <Row label="Status">
-        <span className={`type-meta ${STATUS_CLASS[order.status]}`}>
-          {STATUS_LABEL[order.status]}
+        <span className={`type-meta ${ORDER_STATUS_CLASS[order.status]}`}>
+          {ORDER_STATUS_LABEL[order.status]}
         </span>
       </Row>
 

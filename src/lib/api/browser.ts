@@ -88,8 +88,22 @@ type ProblemBody = { error?: string };
 /**
  * Reads the message a BFF route sent, falling back to something honest when a
  * response carries no body — a 502 from a cold backend, for instance.
+ *
+ * A `Retry-After` is folded into the sentence rather than dropped. It only
+ * ever rides on a 429, and it is the server saying exactly how long to wait;
+ * a screen that showed "muitas tentativas" without the number would leave the
+ * customer guessing at the one thing they were told.
  */
 export async function problemMessage(response: Response): Promise<string> {
+  const message = await bodyMessage(response);
+  const seconds = retryAfterSeconds(response);
+
+  return seconds === null
+    ? message
+    : `${message} Tente de novo em ${String(seconds)} segundos.`;
+}
+
+async function bodyMessage(response: Response): Promise<string> {
   try {
     const body = (await response.json()) as ProblemBody;
 
@@ -101,4 +115,21 @@ export async function problemMessage(response: Response): Promise<string> {
   }
 
   return "Não foi possível concluir. Tente novamente em instantes.";
+}
+
+/**
+ * `Retry-After` is seconds here. The header may also carry an HTTP date by
+ * spec, so anything non-numeric is treated as absent — better to say nothing
+ * than to print a date as a count of seconds.
+ */
+function retryAfterSeconds(response: Response): number | null {
+  const raw = response.headers.get("retry-after");
+
+  if (!raw) {
+    return null;
+  }
+
+  const seconds = Number(raw);
+
+  return Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : null;
 }

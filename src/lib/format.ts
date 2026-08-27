@@ -65,3 +65,31 @@ export function estimatedDelivery(
 
   return formatLongDate(arrival);
 }
+
+/**
+ * A CEP as the design writes it: `01310-200`, in mono (§2).
+ *
+ * The API takes eight digits with or without the hyphen, so this is display
+ * only — it never decides whether a code is valid, which is the backend's
+ * answer to give.
+ */
+export function formatPostalCode(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 8);
+
+  return digits.length > 5
+    ? `${digits.slice(0, 5)}-${digits.slice(5)}`
+    : digits;
+}
+
+/**
+ * A carrier's estimate, in words. Null when it gave none — the deployed
+ * shipping table returns `estimatedDays: null` on some options and the freight
+ * row has to survive it.
+ */
+export function formatEta(days: number | null): string | null {
+  if (days === null) {
+    return null;
+  }
+
+  return days === 1 ? "1 dia útil" : `${days} dias úteis`;
+}

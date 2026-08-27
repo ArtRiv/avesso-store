@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-import { apiFetch, SessionEndedError } from "@/lib/api/browser";
+import { apiFetch, problemMessage, SessionEndedError } from "@/lib/api/browser";
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/ui/button";
 import { WaitBar } from "@/components/wait-bar";
@@ -11,6 +11,7 @@ import type { components } from "@/lib/api/schema";
 import { estimatedDelivery, formatBRL, formatOrderRef } from "@/lib/format";
 
 type Order = components["schemas"]["OrderResponse"];
+type PaidOrder = components["schemas"]["OrderWithPaymentResponse"];
 
 /**
  * Polling, and when to stop.
@@ -31,9 +32,17 @@ function isSettled(status: Order["status"]): boolean {
   return status !== "CREATED";
 }
 
-export function OrderView({ initialOrder }: { initialOrder: Order }) {
+export function OrderView({
+  initialOrder,
+  cancelledAtProvider,
+}: {
+  initialOrder: Order;
+  cancelledAtProvider: boolean;
+}) {
   const [order, setOrder] = useState(initialOrder);
   const [gaveUp, setGaveUp] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
   // Started inside the effect, not during render: reading the clock while
   // rendering is impure, and a re-render would quietly restart the minute.
   const startedAt = useRef<number | null>(null);
@@ -96,8 +105,68 @@ export function OrderView({ initialOrder }: { initialOrder: Order }) {
   }, [order.id, order.status, gaveUp]);
 
   const paid = order.status === "PAID";
-  const waiting = order.status === "CREATED";
+  /**
+   * An order that has no way to be paid.
+   *
+   * Two ways to get here, and both are ordinary rather than broken. The
+   * payment provider can be down at checkout — the order is still created,
+   * its stock is still decremented, and `payment` comes back null, because an
+   * order with the wrong total would be unfixable while a missing payment
+   * session is not. Or the buyer reached Stripe and came back without paying,
+   * which only the marker on the cancel redirect can tell us.
+   *
+   * Either way the fix is POST /orders/{id}/pay, which hands back the session
+   * that already exists rather than opening a second way to pay one order.
+   */
+  const needsPayment =
+    order.status === "CREATED" &&
+    (order.paymentUrl === null || cancelledAtProvider);
+  const waiting = order.status === "CREATED" && !needsPayment;
   const arrival = estimatedDelivery(order.paidAt, order.shippingEtaDays);
+
+  async function pay() {
+    setPaying(true);
+    setPayError(null);
+
+    let leaving = false;
+
+    try {
+      const response = await apiFetch(`/api/orders/${order.id}/pay`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        setPayError(await problemMessage(response));
+
+        return;
+      }
+
+      const next = (await response.json()) as PaidOrder;
+
+      if (next.payment?.mode === "hosted" && next.payment.url) {
+        leaving = true;
+        window.location.href = next.payment.url;
+
+        return;
+      }
+
+      // Still no way to pay: the provider has not recovered, or it issued a
+      // mode this storefront cannot render. The order is untouched either way.
+      setPayError(
+        "Não conseguimos abrir a página de pagamento. Tente novamente em instantes.",
+      );
+    } catch (caught) {
+      setPayError(
+        caught instanceof SessionEndedError
+          ? "A sessão expirou. Entre novamente para pagar este pedido."
+          : "Não conseguimos falar com o servidor. Tente de novo.",
+      );
+    } finally {
+      if (!leaving) {
+        setPaying(false);
+      }
+    }
+  }
 
   return (
     // Centred body text, which §7 forbids everywhere except artboards 08
@@ -129,6 +198,32 @@ export function OrderView({ initialOrder }: { initialOrder: Order }) {
             registrado e nada se perdeu — assim que o processador responder,
             enviamos um e-mail. Você pode fechar esta página.
           </p>
+        </div>
+      ) : null}
+
+      {needsPayment ? (
+        <div className="flex w-full max-w-[420px] flex-col gap-4">
+          <p className="type-meta text-muted">Pagamento pendente</p>
+
+          <p className="text-small text-muted">
+            {order.paymentUrl === null
+              ? "Não foi possível abrir o pagamento quando o pedido foi criado. O pedido está guardado e as peças já saíram do estoque para você."
+              : "Você voltou sem concluir o pagamento. O pedido está guardado e as peças já saíram do estoque para você."}
+          </p>
+
+          {/* Ink, not rust. §1 rations rust to four places and the recovery CTA
+              it names is the stock conflict's, not this one. */}
+          <Button type="button" disabled={paying} onClick={() => void pay()}>
+            {paying ? "Abrindo o pagamento" : "Pagar pedido"}
+          </Button>
+
+          {payError ? (
+            <p role="alert" className="text-small text-clay">
+              {payError}
+            </p>
+          ) : null}
+
+          <p className="text-small text-muted">Nada foi cobrado ainda.</p>
         </div>
       ) : null}
 

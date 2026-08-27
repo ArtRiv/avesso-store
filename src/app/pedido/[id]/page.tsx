@@ -26,14 +26,25 @@ type Order = components["schemas"]["OrderResponse"];
  * order, never from the fact that Stripe sent the buyer back here.
  */
 export default async function OrderPage(props: PageProps<"/pedido/[id]">) {
-  const { id } = await props.params;
+  const [{ id }, { pagamento }] = await Promise.all([
+    props.params,
+    props.searchParams,
+  ]);
   const order = await loadOrder(id);
 
   return (
     <>
       <SiteHeader />
       <main className="flex flex-1 flex-col">
-        <OrderView initialOrder={order} />
+        {/* Set by /checkout/cancel, and the only way this page can know that
+            the buyer came back from Stripe without paying. Without it a
+            cancelled order and one waiting on its webhook look identical, and
+            the page would spend a minute confirming a payment that was never
+            attempted. */}
+        <OrderView
+          initialOrder={order}
+          cancelledAtProvider={pagamento === "cancelado"}
+        />
       </main>
       <SiteFooter />
     </>

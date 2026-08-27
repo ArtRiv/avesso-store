@@ -147,6 +147,26 @@ decisão caiu e por quê.
   número enquanto `GET /cart` não devolver `itemCount` — somar quantidades aqui
   seria justamente o que o PR de totais da sacola existe para evitar. Volta com
   uma linha quando o PR entrar.
+- **A linha de tamanhos é ficção em 4 das 12 peças, até o PR #19 entrar.** O
+  seletor P/M/G/GG/XGG e a nota `GG indisponível nesta cor.` são constantes no
+  código, porque a API ainda não tem variantes. Num boné ou num kit de meias
+  isso aparece errado na tela — e some sozinho quando o
+  [#19](https://github.com/ArtRiv/commerce-core/pull/19) for implantado: aí cada
+  peça traz suas próprias variantes, um acessório vem com `Único`, e `GG` deixa
+  de ser constante para virar uma variante com estoque zero. Não inventamos aqui
+  uma regra de "acessório não tem tamanho": seria lógica desta loja para tapar um
+  buraco que já tem conserto a caminho.
+- **Tabela de especificações do PDP.** O artboard 04 lista Composição,
+  Modelagem, Peso e Cuidados. A API tem `description` (texto livre) e
+  `weightGrams`, e nada estruturado. `Peso` sai de `weightGrams`, que é dado real
+  por peça; `Composição` e `Modelagem` ficam de fora porque repeti-las como
+  linhas fixas seria carimbar copy de camiseta num boné e num par de meias.
+  Atributos estruturados por produto são lacuna de backend legítima — todo PDP de
+  toda loja tem essa tabela — e são candidatos a upstream quando alguém quiser.
+  O `310 g no tamanho M` do design perde o qualificador pelo mesmo motivo: não
+  há tamanho para nomear.
+- **`Você também pode gostar` é "mesma categoria".** A API não tem recomendação,
+  e inventar uma regra aqui seria lógica desta loja que nenhuma outra reusaria.
 - **Rate limit por IP contra um BFF.** `register` (5/hora), `login` (5/15min),
   `refresh` (60/min), `shipping/quote` (30/min) e `orders/:id/pay` (10/min) são
   todos chaveados no IP do chamador, lido de `cf-connecting-ip` — que a

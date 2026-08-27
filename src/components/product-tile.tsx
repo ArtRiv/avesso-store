@@ -15,11 +15,16 @@ export function ProductTile({
   name,
   priceCents,
   stockQuantity,
+  // Artboard 04's "Você também pode gostar" row carries no badges at all —
+  // just the name and the price. The dimming of a sold-out piece stays either
+  // way, so the row never invites a click on something nobody can buy.
+  showBadge = true,
 }: {
   slug: string;
   name: string;
   priceCents: number;
   stockQuantity: number;
+  showBadge?: boolean;
 }) {
   const soldOut = stockQuantity <= 0;
 
@@ -38,7 +43,7 @@ export function ProductTile({
         <span className={cn("type-price", soldOut && "text-muted")}>
           {formatBRL(priceCents)}
         </span>
-        <ScarcityBadge stockQuantity={stockQuantity} />
+        {showBadge ? <ScarcityBadge stockQuantity={stockQuantity} /> : null}
       </span>
     </Link>
   );

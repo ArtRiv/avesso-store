@@ -98,13 +98,11 @@ antes de cobrar de alguém.
 
 ## O que ainda falta
 
-Todas as dez telas do `docs/design-system.md` §3 estão de pé, mais as rotas
-para onde o backend manda gente por e-mail e pela Stripe. O que sobrou:
-
-- **`/minha-conta/pedidos`.** O `Ver meus pedidos` do artboard 08 aponta para
-  lá e é link morto. `GET /orders` já existe e já vem escopado pelo dono — sem
-  `orders.read`, a listagem é silenciosamente limitada aos pedidos de quem
-  pergunta —, então é uma tela pequena e sem lacuna de API atrás dela.
+Todas as dez telas do `docs/design-system.md` §3 estão de pé, mais
+`/minha-conta/pedidos` e as rotas para onde o backend manda gente por e-mail e
+pela Stripe. Uma compra real já passou ponta a ponta: `Finalizar pedido`,
+página da Stripe, retorno, e o pedido virando `Pago` pelo webhook. O que
+sobrou:
 
 - **O e-mail do admin está com typo no banco, e isso trava login e reset.**
   `public.users` guarda `arthurfelaco707@gmail.com.br`, com `.br` sobrando.

@@ -9,45 +9,52 @@ import { SignInForm } from "@/components/sign-in-form";
 import { SizeCell } from "@/components/size-cell";
 import { StockBadge } from "@/components/badge";
 import { Button } from "@/components/ui/button";
+import type { components } from "@/lib/api/schema";
+
+type Variant = components["schemas"]["ProductVariantResponse"];
 
 /**
- * The sizes the design shows, and the one place this store still draws
- * something the API cannot back.
+ * The size selector, now backed by real data.
  *
- * `POST /cart/items` takes `{ productId, quantity }` and nothing else, so the
- * chosen size is held in state and **sent nowhere**. Inventing a field the
- * OpenAPI document does not have is the one thing this build must never do.
+ * Sizes used to be a constant here with `GG` hard-coded as unavailable,
+ * because the API had one product, one price, one stock count. commerce-core
+ * PR #19 made the size the sellable unit, so every cell on this row is a
+ * variant the backend knows about, its struck-through state is that variant's
+ * stock actually being zero, and the sacola receives a `variantId`.
  *
- * That is temporary rather than permanent: product variants are open upstream
- * as commerce-core PR #19, which makes the size the sellable unit and gives
- * every size its own stock. When it deploys, this list stops being a constant
- * and becomes `product.variants`, `GG` stops being hard-coded as unavailable
- * and becomes a variant with zero stock, and the request body carries
- * `variantId`. Until then the row is the design's target state, honestly
- * inert. See README.md under "Divergências conhecidas".
+ * A piece with a single `Único` variant — an accessory, or anything seeded
+ * before sizes existed — shows no row at all and selects itself. That is a
+ * rule about real data rather than a rule about categories: nothing here needs
+ * to know what a cap is.
  */
-const SIZES = ["P", "M", "G", "GG", "XGG"] as const;
-const UNAVAILABLE: readonly string[] = ["GG"];
-
 type Panel = "none" | "signIn";
 
 export function AddToBag({
-  productId,
+  variants,
   stockQuantity,
 }: {
-  productId: string;
+  variants: Variant[];
   stockQuantity: number;
 }) {
   const router = useRouter();
-  const [size, setSize] = useState<string | null>(null);
+
+  const sized = variants.length > 1 || variants[0]?.label !== "Único";
+  const [selected, setSelected] = useState<Variant | null>(
+    sized ? null : (variants[0] ?? null),
+  );
+
   const [panel, setPanel] = useState<Panel>("none");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
 
   const soldOut = stockQuantity <= 0;
+  // Once a size is chosen the badge describes that size, which is the number
+  // the customer is actually buying against. Before that it describes the
+  // piece.
+  const shownStock = selected ? selected.stockQuantity : stockQuantity;
 
-  async function addToBag() {
+  async function addToBag(variant: Variant) {
     setPending(true);
     setError(null);
 
@@ -55,7 +62,7 @@ export function AddToBag({
       const response = await apiFetch("/api/cart/items", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ productId, quantity: 1 }),
+        body: JSON.stringify({ variantId: variant.id, quantity: 1 }),
       });
 
       if (response.status === 401) {
@@ -73,19 +80,17 @@ export function AddToBag({
       }
 
       setAdded(true);
-      // The header's sacola is rendered on the server, so it only learns about
-      // this if the route re-renders.
+      // The header's sacola count is rendered on the server.
       router.refresh();
     } catch (caught) {
-      setError(
-        caught instanceof SessionEndedError
-          ? "A sessão expirou. Entre novamente."
-          : "Não conseguimos falar com o servidor. Tente de novo.",
-      );
-
       if (caught instanceof SessionEndedError) {
+        setError("A sessão expirou. Entre novamente.");
         setPanel("signIn");
+
+        return;
       }
+
+      setError("Não conseguimos falar com o servidor. Tente de novo.");
     } finally {
       setPending(false);
     }
@@ -94,17 +99,31 @@ export function AddToBag({
   if (panel === "signIn") {
     return (
       <div className="flex flex-col gap-6">
-        <SizeRow size={size} onSelect={setSize} soldOut={soldOut} />
+        {sized ? (
+          <SizeRow
+            variants={variants}
+            selected={selected}
+            onSelect={setSelected}
+          />
+        ) : null}
 
         <AuthPanel
           title="Entre para montar sua sacola"
-          note={`A peça${size ? ` e o tamanho ${size}` : ""} ${size ? "ficam" : "fica"} guardad${size ? "os" : "a"}. Você continua nesta página.`}
+          note={
+            selected && sized
+              ? `A peça e o tamanho ${selected.label} ficam guardados. Você continua nesta página.`
+              : "A peça fica guardada. Você continua nesta página."
+          }
         >
           <SignInForm
             onDone={() => {
               setPanel("none");
+
               // Finish what the customer was doing before the wall appeared.
-              void addToBag();
+              if (selected) {
+                void addToBag(selected);
+              }
+
               router.refresh();
             }}
             onForgotPassword={() =>
@@ -121,15 +140,21 @@ export function AddToBag({
 
   return (
     <div className="flex flex-col gap-8">
-      <SizeRow size={size} onSelect={setSize} soldOut={soldOut} />
+      {sized ? (
+        <SizeRow
+          variants={variants}
+          selected={selected}
+          onSelect={setSelected}
+        />
+      ) : null}
 
       <div className="flex flex-col gap-4">
-        <StockBadge stockQuantity={stockQuantity} />
+        <StockBadge stockQuantity={shownStock} />
 
         <Button
           className="w-full"
-          disabled={soldOut || !size || pending}
-          onClick={() => void addToBag()}
+          disabled={soldOut || !selected || pending}
+          onClick={() => selected && void addToBag(selected)}
         >
           {soldOut
             ? "Esgotado"
@@ -146,7 +171,7 @@ export function AddToBag({
           </p>
         ) : null}
 
-        {!soldOut && !size ? (
+        {!soldOut && sized && !selected ? (
           <p className="text-small text-muted">Escolha um tamanho.</p>
         ) : null}
 
@@ -159,14 +184,19 @@ export function AddToBag({
 }
 
 function SizeRow({
-  size,
+  variants,
+  selected,
   onSelect,
-  soldOut,
 }: {
-  size: string | null;
-  onSelect: (value: string) => void;
-  soldOut: boolean;
+  variants: Variant[];
+  selected: Variant | null;
+  onSelect: (variant: Variant) => void;
 }) {
+  // A size with no stock is struck through, never hidden (§2): the customer
+  // learns the piece exists in their size and is out, which a missing cell
+  // would not tell them.
+  const unavailable = variants.filter((v) => v.stockQuantity <= 0);
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
@@ -175,27 +205,29 @@ function SizeRow({
       </div>
 
       <div className="flex gap-2">
-        {SIZES.map((label) => {
-          const unavailable = soldOut || UNAVAILABLE.includes(label);
-
-          return (
-            <SizeCell
-              key={label}
-              label={label}
-              state={
-                unavailable
-                  ? "unavailable"
-                  : size === label
-                    ? "selected"
-                    : "available"
-              }
-              onSelect={() => onSelect(label)}
-            />
-          );
-        })}
+        {variants.map((variant) => (
+          <SizeCell
+            key={variant.id}
+            label={variant.label}
+            state={
+              variant.stockQuantity <= 0
+                ? "unavailable"
+                : selected?.id === variant.id
+                  ? "selected"
+                  : "available"
+            }
+            onSelect={() => onSelect(variant)}
+          />
+        ))}
       </div>
 
-      <p className="text-small text-muted">GG indisponível nesta cor.</p>
+      {unavailable.length > 0 ? (
+        <p className="text-small text-muted">
+          {unavailable.map((v) => v.label).join(", ")}{" "}
+          {unavailable.length === 1 ? "indisponível" : "indisponíveis"} nesta
+          cor.
+        </p>
+      ) : null}
     </div>
   );
 }

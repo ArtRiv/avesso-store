@@ -17,8 +17,8 @@ import { customerApi } from "@/lib/auth/session";
  */
 const COPY = {
   400: "Não foi possível adicionar. Confira a quantidade.",
-  404: "Esta peça não está mais disponível.",
-  409: "Esta peça acabou de esgotar.",
+  404: "Este tamanho não está mais disponível.",
+  409: "Este tamanho acabou de esgotar.",
 } as const;
 
 export async function POST(request: NextRequest) {
@@ -30,10 +30,12 @@ export async function POST(request: NextRequest) {
     return badRequest("Requisição inválida.");
   }
 
-  const form = body as { productId?: unknown; quantity?: unknown };
+  const form = body as { variantId?: unknown; quantity?: unknown };
 
-  if (typeof form.productId !== "string") {
-    return badRequest("Peça inválida.");
+  // The sellable unit is the variant, not the product: one size can be gone
+  // while the next is on the shelf, and the cart has to say which.
+  if (typeof form.variantId !== "string") {
+    return badRequest("Tamanho inválido.");
   }
 
   const quantity =
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
     // The whole cart comes back, not just the line that changed.
     const cart = unwrap(
       await api.POST("/cart/items", {
-        body: { productId: form.productId, quantity },
+        body: { variantId: form.variantId, quantity },
       }),
     );
 

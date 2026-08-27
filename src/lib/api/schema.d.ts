@@ -264,6 +264,8 @@ export interface paths {
         /**
          * Create a product
          * @description Products are born DRAFT and stay off the storefront until moved to ACTIVE. Omitting `slug` generates one from the name, adding a numeric suffix on collision; sending one that is already taken is a 409 instead, because a caller who chose the slug wants that slug.
+         *
+         *     Send `variants` in display order — `[{ "label": "P" }, { "label": "M" }, …]` — and their `position` follows the array. Omit it and the product is born with exactly one variant labelled `Único`: a product is never created without at least one, because stock lives on the variant and a product with none would be unbuyable.
          */
         post: operations["ProductsController_create"];
         delete?: never;
@@ -294,7 +296,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/products/{id}/stock": {
+    "/products/{id}/variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a size to a product
+         * @description Adds one variant. `position` defaults to the end of the list; `stockQuantity` defaults to 0, which is a real state — the size exists and has none left.
+         *
+         *     There is deliberately no route to rename, reorder or remove a variant. Adding cannot invalidate anything; removing has to decide what happens to a size somebody already bought, and that is a policy decision rather than a detail (docs/specs/product-variants.md).
+         */
+        post: operations["ProductsController_addVariant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/products/{id}/variants/{variantId}/stock": {
         parameters: {
             query?: never;
             header?: never;
@@ -308,8 +332,10 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Set stock to an absolute quantity
-         * @description An inventory correction — "the shelf holds N" — not a delta. Selling is the other path: checkout decrements atomically inside its transaction, and nothing here is involved in that.
+         * Set one size's stock to an absolute quantity
+         * @description An inventory correction — "the shelf holds N of this size" — not a delta. Selling is the other path: checkout decrements the variant atomically inside its transaction, and nothing here is involved in that.
+         *
+         *     Stock belongs to the variant, never to the product: `ProductResponse.stockQuantity` is the sum across sizes, computed on read, so it cannot drift from what checkout takes.
          *
          *     Be aware this is last-write-wins against a concurrent sale, which is accepted for v1 (docs/specs/catalog.md).
          */
@@ -420,9 +446,13 @@ export interface paths {
         };
         /**
          * Get the current cart
-         * @description Always succeeds for an authenticated caller. A user who has never added anything gets `{ "items": [] }` rather than a 404 — the cart is created lazily on the first add, and its absence is not an error.
+         * @description Always succeeds for an authenticated caller. A user who has never added anything gets an empty cart with both totals at `0` rather than a 404 — the cart is created lazily on the first add, and its absence is not an error.
          *
-         *     Product data on each line is read **live from the catalog**, not frozen: price, status and stock are current as of this request. That is what lets a storefront warn "only 2 left" or "no longer available". Prices freeze at checkout and not before.
+         *     Catalogue data on each line is read **live**, not frozen: price, status and the size’s own stock are current as of this request. That is what lets a storefront warn "only 2 left" or "no longer available". Prices freeze at checkout and not before.
+         *
+         *     Each line names a **variant** — `variantId` is what PATCH and DELETE address, and the stock that matters is `variant.stockQuantity`, the count for that size, not a product-wide total.
+         *
+         *     `itemsSubtotalCents` and `itemCount` are computed here from those same live prices, so no client has to sum money. There is deliberately **no order total** on this route: without a postal code there is no freight, and a "total" that is missing the freight is precisely the number a checkout must never show. That one comes from POST /shipping/quote, as `orderTotalCents` per option.
          */
         get: operations["CartController_get"];
         put?: never;
@@ -448,9 +478,11 @@ export interface paths {
         put?: never;
         /**
          * Add to the cart
-         * @description Additive: adding a product already in the cart **increases** its quantity rather than creating a second line. Use PATCH below to set an absolute quantity.
+         * @description Takes a **variantId** — a size — not a product id. A product id does not say which size, and this API refuses to pick one on your behalf (docs/specs/product-variants.md).
          *
-         *     Only ACTIVE products can be added. A DRAFT, ARCHIVED or nonexistent product is the same 404 — the public does not get to tell an unreleased product from one that never existed.
+         *     Additive: adding a variant already in the cart **increases** its quantity rather than creating a second line, while a different size of the same product is its own line. Use PATCH below to set an absolute quantity.
+         *
+         *     Only variants of ACTIVE products can be added. A variant of a DRAFT or ARCHIVED product and a variant that does not exist are the same 404 — the public does not get to tell an unreleased product from one that never existed.
          */
         post: operations["CartController_addItem"];
         delete?: never;
@@ -459,7 +491,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/cart/items/{productId}": {
+    "/cart/items/{variantId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -475,7 +507,7 @@ export interface paths {
         head?: never;
         /**
          * Set a line to an absolute quantity
-         * @description Absolute — "make it 5" — as opposed to POST /cart/items, which adds. To remove a line use DELETE; zero is not a valid quantity here.
+         * @description Absolute — "make it 5" — as opposed to POST /cart/items, which adds. The line is addressed by its **variantId**. To remove a line use DELETE; zero is not a valid quantity here.
          */
         patch: operations["CartController_setQuantity"];
         trace?: never;
@@ -707,6 +739,8 @@ export interface paths {
          *
          *     Take the `code` of the option the customer picks and send it to POST /orders as `shippingOptionCode`, along with the `priceCents` you displayed as `quotedShippingCents`.
          *
+         *     The response carries the money as well as the options: `itemsSubtotalCents` for the cart, and `orderTotalCents` on every option — the exact amount that option will be charged, which is the same number POST /orders answers with as `totalCents`. Render it directly; do not add two numbers in the browser.
+         *
          *     POST rather than GET despite being a read: a postal code is personal data, and query strings end up in access logs and browser history.
          */
         post: operations["ShippingQuoteController_quote"];
@@ -832,6 +866,25 @@ export interface components {
              */
             refreshToken: string;
         };
+        ProductVariantResponse: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description What the customer picks. `Único` is what a product with no sizes of its own carries — every product has at least one variant, always.
+             * @example M
+             */
+            label: string;
+            /**
+             * @description Display order, ascending. Explicit because alphabetical is wrong: P/M/G/GG/XGG sorts to G, GG, M, P, XGG. Ties break by `id`, so the order is stable across requests.
+             * @example 1
+             */
+            position: number;
+            /**
+             * @description Stock for THIS size. Zero means sold out, not missing — render the size struck through rather than dropping it.
+             * @example 4
+             */
+            stockQuantity: number;
+        };
         ProductCategoryResponse: {
             /** Format: uuid */
             id: string;
@@ -874,10 +927,12 @@ export interface components {
              */
             weightGrams: number | null;
             /**
-             * @description Never negative. Checkout decrements it atomically.
+             * @description The SUM across `variants`, computed on read — there is no stock column on a product any more. Good enough for a grid that says "Esgotado" from one number; useless for deciding whether a specific size can be bought. For that, read `variants[].stockQuantity`.
              * @example 42
              */
             stockQuantity: number;
+            /** @description The sellable units, ordered by `position`. **Never empty** — a product with no sizes of its own carries one labelled `Único`. Sold-out sizes are present with `stockQuantity: 0`; strike them through rather than hiding them. */
+            variants: components["schemas"]["ProductVariantResponse"][];
             categories: components["schemas"]["ProductCategoryResponse"][];
             /** Format: date-time */
             createdAt: string;
@@ -898,6 +953,24 @@ export interface components {
              * @example 20
              */
             perPage: number;
+        };
+        CreateVariantDto: {
+            /**
+             * @description What the customer picks — `P`, `M`, `G`, `GG`, `XGG`, `Único`, `42`. Must be unique within the product.
+             * @example M
+             */
+            label: string;
+            /**
+             * @description Display order. Omit and it becomes this variant's index in the list, which is why sending P, M, G, GG, XGG in order simply works. Never sorted alphabetically — that would put GG before M.
+             * @example 1
+             */
+            position?: number;
+            /**
+             * @description Stock for this size. Zero is a legitimate starting point — the size exists and has none left.
+             * @default 0
+             * @example 12
+             */
+            stockQuantity: number;
         };
         CreateProductDto: {
             /** @example Camiseta Azul */
@@ -921,11 +994,8 @@ export interface components {
              * @enum {string}
              */
             status: "DRAFT" | "ACTIVE" | "ARCHIVED";
-            /**
-             * @default 0
-             * @example 42
-             */
-            stockQuantity: number;
+            /** @description The sellable sizes, in display order. Omit and the product gets one variant labelled `Único` at zero stock — a product is never created without at least one. Labels must be unique within the product. */
+            variants?: components["schemas"]["CreateVariantDto"][];
             /**
              * @description Unit weight in grams, used to price freight. Omit and quotes fall back to a configured default — which the store pays for when the guess is low, so it is worth filling in.
              * @example 180
@@ -955,8 +1025,6 @@ export interface components {
              * @enum {string}
              */
             status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
-            /** @example 42 */
-            stockQuantity?: number;
             /** @example 180 */
             weightGrams?: number;
             /** @description Absent leaves the associations alone; present REPLACES the whole set. */
@@ -1018,32 +1086,57 @@ export interface components {
              * @enum {string}
              */
             status: "DRAFT" | "ACTIVE" | "ARCHIVED";
-            /**
-             * @description Current stock. Lower than the line quantity is not an error here — it becomes one at checkout.
-             * @example 3
-             */
-            stockQuantity: number;
             /** @example 180 */
             weightGrams: number | null;
         };
-        CartItemResponse: {
+        CartVariantResponse: {
             /** Format: uuid */
-            productId: string;
+            id: string;
+            /** @example M */
+            label: string;
+            /**
+             * @description The size’s display order on its product.
+             * @example 1
+             */
+            position: number;
+            /**
+             * @description Current stock of THIS size. Lower than the line quantity is not an error here — it becomes one at checkout, with a 409 naming the piece.
+             * @example 3
+             */
+            stockQuantity: number;
+        };
+        CartItemResponse: {
+            /**
+             * Format: uuid
+             * @description The line’s identity. PATCH /cart/items/{variantId} and DELETE /cart/items/{variantId} address this, not the product — two sizes of one shirt are two lines.
+             */
+            variantId: string;
             /** @example 2 */
             quantity: number;
             product: components["schemas"]["CartProductResponse"];
+            variant: components["schemas"]["CartVariantResponse"];
         };
         CartResponse: {
             items: components["schemas"]["CartItemResponse"][];
+            /**
+             * @description Sum of `product.priceCents × quantity` over the lines, in cents, computed server-side against LIVE catalogue prices. Reprice a product and this follows on the next read — the cart freezes nothing; checkout does. An empty cart is `0`, never null and never absent.
+             * @example 12480
+             */
+            itemsSubtotalCents: number;
+            /**
+             * @description Sum of quantities — pieces, not lines. This is the cart badge: two shirts and a pair of trousers is 3, not 2. An empty cart is `0`.
+             * @example 3
+             */
+            itemCount: number;
         };
         AddCartItemDto: {
             /**
              * Format: uuid
-             * @description Must exist and be ACTIVE, or the answer is 404.
+             * @description The **variant** (size) to add — from `ProductResponse.variants[].id`. Its product must exist and be ACTIVE, or the answer is 404. A product id is not accepted: it does not say which size.
              */
-            productId: string;
+            variantId: string;
             /**
-             * @description How many to ADD. A product already in the cart has its quantity increased rather than duplicated. The 999 bound applies per request, not to the resulting line.
+             * @description How many to ADD. The same variant already in the cart has its quantity increased rather than duplicated; a DIFFERENT size of the same product is a separate line. The 999 bound applies per request, not to the resulting line.
              * @example 2
              */
             quantity: number;
@@ -1100,6 +1193,16 @@ export interface components {
              * @example Camiseta Azul
              */
             productName: string;
+            /**
+             * Format: uuid
+             * @description The size that was bought. Traceability, like productId.
+             */
+            variantId: string;
+            /**
+             * @description The size's label at the moment of purchase — a snapshot, exactly like the name and the price. Renaming a size later never rewrites an order that already exists.
+             * @example M
+             */
+            variantLabel: string;
             /**
              * @description The price at the moment of purchase, in cents.
              * @example 7990
@@ -1372,9 +1475,19 @@ export interface components {
             estimatedDays: number | null;
             /** @example Correios */
             carrier: string | null;
+            /**
+             * @description THE AMOUNT THAT WILL BE CHARGED if the customer picks this option — `itemsSubtotalCents + priceCents`. It is what a checkout button renders ("Finalizar pedido — R$ 522,30") before any order exists, and it is the same number POST /orders produces as `totalCents`. On a free option it equals the subtotal exactly: zero is a real price, not a missing one.
+             * @example 52230
+             */
+            orderTotalCents: number;
         };
         ShippingQuoteResponse: {
             options: components["schemas"]["ShippingOptionResponse"][];
+            /**
+             * @description The item subtotal of the cart this quote was measured against — the same number GET /cart reports, from the same definition. Present even when `options` is empty: what the cart is worth is a fact about the cart, not about whether anyone will carry it.
+             * @example 49740
+             */
+            itemsSubtotalCents: number;
         };
     };
     responses: never;
@@ -1884,7 +1997,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProductResponse"];
                 };
             };
-            /** @description `priceCents` is not an integer above zero, a category id is not a UUID, an image is not a URL, or the slug is not lowercase-hyphenated. */
+            /** @description `priceCents` is not an integer above zero, a category id is not a UUID, an image is not a URL, the slug is not lowercase-hyphenated, or two variants share a label. */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -1962,12 +2075,84 @@ export interface operations {
             };
         };
     };
+    ProductsController_addVariant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateVariantDto"];
+            };
+        };
+        responses: {
+            /** @description The whole product, with its variants in display order. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductResponse"];
+                };
+            };
+            /** @description `label` is empty or too long, or `position` is negative. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `products.update` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No product with that id. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description This product already has a variant with that label. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     ProductsController_setStock: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 id: string;
+                variantId: string;
             };
             cookie?: never;
         };
@@ -2012,7 +2197,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description No product with that id. */
+            /** @description No such product, or that variant does not belong to it. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -2444,7 +2629,7 @@ export interface operations {
                     "application/json": components["schemas"]["CartResponse"];
                 };
             };
-            /** @description `productId` is not a UUID, or `quantity` is outside 1–999. */
+            /** @description `variantId` is not a UUID, or `quantity` is outside 1–999. */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -2462,7 +2647,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description No such product, or it is not ACTIVE. */
+            /** @description No such variant, or its product is not ACTIVE. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -2478,7 +2663,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                productId: string;
+                variantId: string;
             };
             cookie?: never;
         };
@@ -2501,7 +2686,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description That product is not in the cart. */
+            /** @description That variant is not in the cart. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -2517,7 +2702,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                productId: string;
+                variantId: string;
             };
             cookie?: never;
         };
@@ -2553,7 +2738,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description That product is not in the cart. */
+            /** @description That variant is not in the cart. */
             404: {
                 headers: {
                     [name: string]: unknown;

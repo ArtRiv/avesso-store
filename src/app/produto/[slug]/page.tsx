@@ -102,7 +102,7 @@ export default async function ProductPage(
             ) : null}
 
             <AddToBag
-              productId={product.id}
+              variants={product.variants}
               stockQuantity={product.stockQuantity}
             />
 

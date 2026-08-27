@@ -14,16 +14,19 @@ export function ProductImage({
   name,
   aspect,
   className,
+  /** Off at thumbnail size — see ToneBlock. */
+  showLabel = true,
 }: {
   slug: string;
   name: string;
   aspect?: string;
   className?: string;
+  showLabel?: boolean;
 }) {
   return (
     <ToneBlock
       tone={toneFor(slug)}
-      label={name}
+      label={showLabel ? name : undefined}
       aspect={aspect}
       className={className}
     />

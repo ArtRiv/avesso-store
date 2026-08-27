@@ -104,18 +104,43 @@ decisão caiu e por quê.
 
 ### Em aberto — vai subir para o commerce-core
 
-- **Totais da sacola.** `GET /cart` devolve `{ items }` e nada mais: nenhum
-  subtotal. O subtotal da sacola (artboard 06), o total da revisão do checkout
-  (07) e o total novo do conflito de estoque (10) sairiam todos de somar
-  `priceCents × quantity` no front-end — exatamente a aritmética de dinheiro que
-  o teste de decisão trata como lacuna do backend. **Decidido subir**, com o PR
-  aberto quando a sacola for construída, e não antes.
-- **Tamanhos.** O design tem seletor P/M/G/GG/XGG; a API não tem variantes de
-  produto (um produto = um preço = um estoque). A decisão de subir agora ou
-  adiar se toma quando o PDP for construído. Até lá, o seletor é renderizado
-  como estado-alvo e a seleção não é enviada a lugar nenhum.
-- **Tamanho na linha da sacola.** Pelo mesmo motivo, a linha da sacola omite o
-  tamanho que o artboard 06 mostra.
+- **As doze peças de hoje só têm a variante `Único`.** A migration do
+  [#19](https://github.com/ArtRiv/commerce-core/pull/19) deu a cada produto
+  existente uma única variante `Único` carregando o estoque original, que é o
+  que preserva o catálogo. Dar tamanhos reais a essas peças esbarra em não
+  existir rota para remover variante — `POST /products/{id}/variants` só
+  adiciona, e `docs/specs/product-variants.md` deixa a remoção de fora de
+  propósito, porque remover exige decidir o que acontece com um tamanho que
+  alguém já comprou. Enquanto isso, o PDP não mostra linha de tamanhos nessas
+  peças: uma peça com só `Único` se autoseleciona e esconde a linha.
+
+  Saídas possíveis, nenhuma tomada ainda: (a) subir uma rota de remoção de
+  variante no commerce-core, recusando remover variante que já apareça em linha
+  de pedido — a política que falta, e pequena; (b) recriar o catálogo do zero
+  com `POST /products` mandando `variants`, o que o
+  [`scripts/seed-catalog.mjs`](scripts/seed-catalog.mjs) já faz, mas exige
+  apagar as doze peças de hoje, e `DELETE /products/{id}` arquiva em vez de
+  apagar, então o slug continua ocupado. Enquanto não se decidir, a loja vende
+  peça sem tamanho, o que funciona e é honesto.
+
+### Resolvidas upstream
+
+- **Totais da sacola.** `GET /cart` devolvia `{ items }` e nada mais, e o
+  subtotal sairia de somar `priceCents × quantity` no front-end — a aritmética
+  de dinheiro que o teste de decisão trata como lacuna do backend. Subiu no
+  [#18](https://github.com/ArtRiv/commerce-core/pull/18): `itemsSubtotalCents` e
+  `itemCount` vêm calculados no servidor, contra preços vivos do catálogo.
+- **Contador da sacola no header.** O `Sacola (2)` do artboard 02 voltou, lendo
+  `itemCount` do #18. Fica `Sacola` sem número quando não há sessão — não existe
+  sacola de visitante, então zero seria uma afirmação falsa.
+- **Tamanhos.** O design tem seletor P/M/G/GG/XGG e a API tinha um produto = um
+  preço = um estoque. Subiu no #19: a variante é a unidade vendável,
+  `AddCartItemDto` recebe `variantId`, e `ProductResponse.stockQuantity` passou
+  a ser a soma das variantes calculada na leitura. Cada célula da linha de
+  tamanhos é uma variante real, e a riscada é estoque zero de verdade — nada
+  disso é mais constante no código.
+- **Tamanho na linha da sacola.** `CartItemResponse.variant.label` existe, e o
+  `Tamanho X` do artboard 06 é ele.
 
 ### Adiadas — resolvidas aqui, de propósito
 
@@ -124,10 +149,11 @@ decisão caiu e por quê.
   dentro de uma frase. O artboard 10 precisa saber *qual linha* riscar. Em vez
   de fazer parsing de prosa ou de duplicar a regra, o front-end relê
   `GET /cart` e trata como culpada qualquer linha com
-  `product.stockQuantity < quantity` ou `status !== 'ACTIVE'` — dado que a API
-  já entrega — e então chama `DELETE /cart/items/{productId}`, o que torna
-  verdadeiro o "Removemos da sacola" da tela. Se o 409 um dia ganhar corpo
-  estruturado, esta reconciliação sai.
+  `variant.stockQuantity < quantity` ou `product.status !== 'ACTIVE'` — dado que
+  a API já entrega, e entrega *vivo* justamente para isso — e então chama
+  `DELETE /cart/items/{variantId}`, o que torna verdadeiro o "Removemos da
+  sacola" da tela. Se o 409 um dia ganhar corpo estruturado, esta reconciliação
+  sai.
 - **Faixa de newsletter da home.** O artboard 02 tem campo + `Assinar`, e não
   existe endpoint nenhum por trás disso — inventar um seria generalidade antes
   da hora. A faixa fica, sem campo e sem botão. O título também mudou: `Receba
@@ -143,19 +169,19 @@ decisão caiu e por quê.
   estoque importa, porque a peça mais nova de Camisetas é justamente a esgotada,
   e vitrine não abre com o que ninguém pode comprar. Curadoria de verdade é uma
   flag `featured` no commerce-core, se e quando a loja quiser.
-- **Contador da sacola no header.** O artboard 02 mostra `Sacola (2)`. Sai o
-  número enquanto `GET /cart` não devolver `itemCount` — somar quantidades aqui
-  seria justamente o que o PR de totais da sacola existe para evitar. Volta com
-  uma linha quando o PR entrar.
-- **A linha de tamanhos é ficção em 4 das 12 peças, até o PR #19 entrar.** O
-  seletor P/M/G/GG/XGG e a nota `GG indisponível nesta cor.` são constantes no
-  código, porque a API ainda não tem variantes. Num boné ou num kit de meias
-  isso aparece errado na tela — e some sozinho quando o
-  [#19](https://github.com/ArtRiv/commerce-core/pull/19) for implantado: aí cada
-  peça traz suas próprias variantes, um acessório vem com `Único`, e `GG` deixa
-  de ser constante para virar uma variante com estoque zero. Não inventamos aqui
-  uma regra de "acessório não tem tamanho": seria lógica desta loja para tapar um
-  buraco que já tem conserto a caminho.
+- **`Total` da sacola é o subtotal.** O artboard 06 tem três linhas — Subtotal,
+  `Frete: calculado no checkout`, Total — e o canvas mostra os dois valores
+  iguais. `GET /cart` recusa devolver total de propósito: sem CEP não há frete, e
+  um "total" sem frete é exatamente o número que um checkout nunca pode mostrar.
+  Aqui não mostra: a linha do frete diz o que falta, uma linha antes do total. O
+  total de verdade vem de `POST /shipping/quote` como `orderTotalCents`, no
+  artboard 07.
+- **O CTA da sacola é ink, não rust.** O canvas pinta `Ir para o checkout` de
+  `#B0431E`, e a §1 raciona rust a quatro lugares — CTA de recuperação do
+  conflito, barra de espera do pagamento, badge de últimas unidades, hover de
+  link. Este não é nenhum deles. A §1 é o contrato e o canvas é matéria bruta,
+  então o botão é ink. Registrado aqui para que uma reimportação do canvas não
+  desfaça isso sem perceber.
 - **Tabela de especificações do PDP.** O artboard 04 lista Composição,
   Modelagem, Peso e Cuidados. A API tem `description` (texto livre) e
   `weightGrams`, e nada estruturado. `Peso` sai de `weightGrams`, que é dado real

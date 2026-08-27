@@ -7,8 +7,8 @@ import { SiteHeader } from "@/components/site-header";
 import { TextLink } from "@/components/text-link";
 import { ToneBlock } from "@/components/tone-block";
 import { Button } from "@/components/ui/button";
-import { countProducts, listCategories, listProducts } from "@/lib/catalog";
-import type { Product } from "@/lib/catalog";
+import { countProducts, listCategories } from "@/lib/catalog";
+import { pickFeatured } from "@/lib/featured";
 
 export const metadata: Metadata = {
   title: "AVESSO — básicos unissex feitos para durar",
@@ -132,48 +132,4 @@ export default async function HomePage() {
       <SiteFooter />
     </>
   );
-}
-
-/**
- * The three pieces on the home page.
- *
- * The API has no `featured` flag, and the canvas's own choice — one piece from
- * each of Camisetas, Moletons and Calças — is an editorial judgement rather
- * than data. Hard-coding three slugs would be this store's catalogue leaking
- * into its layout, so this reproduces the *rule* instead: the newest in-stock
- * piece from each of the three largest categories.
- *
- * Filtering on stock is the half that matters most: it keeps `Camiseta
- * Listrada Marinho` out: the catalogue's one sold-out piece is also the newest
- * in Camisetas, and a shop window of three should not lead with something
- * nobody can buy. It stays visible in the catalogue grid, greyed and struck,
- * which is where the design does want it. Reading `stockQuantity` to decide
- * that is reading data the API already hands over, not computing anything.
- *
- * Largest-first does *not* reproduce the canvas's trio, and cannot: it picks
- * Camisetas and Calças, then hits a tie between Moletons and Acessórios at two
- * pieces each, where the canvas chose Moletons. No rule over this data breaks
- * that tie — the canvas made an editorial choice, and an editorial choice is
- * not derivable from a catalogue. This picks a defensible window rather than
- * pretending otherwise. Curating it for real is a `featured` flag upstream;
- * it is recorded in README.md as a known divergence rather than faked here.
- */
-const FEATURED_COUNT = 3;
-
-async function pickFeatured(): Promise<Product[]> {
-  const categories = await listCategories();
-
-  const largest = [...categories]
-    .sort((a, b) => b.productCount - a.productCount)
-    .slice(0, FEATURED_COUNT);
-
-  const pages = await Promise.all(
-    largest.map((category) =>
-      listProducts({ category: category.slug, perPage: 12 }),
-    ),
-  );
-
-  return pages
-    .map((page) => page.items.find((item) => item.stockQuantity > 0))
-    .filter((item): item is Product => item !== undefined);
 }

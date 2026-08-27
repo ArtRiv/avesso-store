@@ -9,7 +9,7 @@ front-end que o consome.
 
 ## Stack
 
-- Next.js 15 (App Router) + TypeScript
+- Next.js 16 (App Router) + TypeScript — `create-next-app` instalou **16.3.3**, e o que muda em relação ao 15 está no `CLAUDE.md`
 - Tailwind v4 + shadcn/ui, restilizado para o contrato visual
 - Cliente da API gerado do documento OpenAPI do backend (`openapi-typescript` + `openapi-fetch`)
 - Auth em BFF: tokens em cookies httpOnly, o browser nunca vê o refresh token
@@ -96,6 +96,49 @@ tamanho M`, de camiseta); os outros onze eu inferi. `weightGrams` precifica
 frete, e o que falta o backend cobra da loja — confira contra as peças reais
 antes de cobrar de alguém.
 
+## O que ainda falta
+
+Todas as dez telas do `docs/design-system.md` §3 estão de pé, mais as rotas
+para onde o backend manda gente por e-mail e pela Stripe. O que sobrou:
+
+- **`/minha-conta/pedidos`.** O `Ver meus pedidos` do artboard 08 aponta para
+  lá e é link morto. `GET /orders` já existe e já vem escopado pelo dono — sem
+  `orders.read`, a listagem é silenciosamente limitada aos pedidos de quem
+  pergunta —, então é uma tela pequena e sem lacuna de API atrás dela.
+
+- **O e-mail do admin está com typo no banco, e isso trava login e reset.**
+  `public.users` guarda `arthurfelaco707@gmail.com.br`, com `.br` sobrando.
+  Nenhum e-mail de "esqueci minha senha" chega porque a API não acha o usuário
+  e, por anti-enumeração, responde `200` sem mandar nada. No projeto Supabase
+  **`commerce-core-dev`** (`utnazosqofafekpxbtjg`), no SQL editor:
+
+  ```sql
+  update public.users
+  set email = 'arthurfelaco707@gmail.com', updated_at = now()
+  where email = 'arthurfelaco707@gmail.com.br';
+  ```
+
+  A conta já tem `email_verified_at`, então não precisa reverificar. (O Studio
+  em **Auth → Users** mostra `auth.users`, que o commerce-core não usa; a conta
+  está em **Table Editor → public.users**, e o papel é `role_id` →
+  `public.roles`.) Enquanto isso não roda, **nenhum caminho autenticado da loja
+  dá para ser testado ponta a ponta** — nem sacola, nem checkout, nem pedido.
+
+- **CRUD de variante no commerce-core.** Existe `POST /products` com
+  `variants[]`, `POST /products/:id/variants` e
+  `PATCH /products/:id/variants/:vid/stock`. Falta renomear, reordenar e,
+  principalmente, **remover** — que ficou de fora de propósito, porque exige
+  decidir o que acontece com um tamanho que alguém já comprou. Resposta limpa:
+  recusar se a variante aparecer em alguma linha de pedido, permitir caso
+  contrário. É o que destrava dar `P/M/G/GG/XGG` às doze peças de hoje.
+
+- **Modelo de variante — conversa, não tarefa.** Variante hoje é
+  `{ id, label, position, stockQuantity }`, e `label` é texto livre, então
+  "Com espada" já funciona igual a `P`. O que não existe: preço por variante,
+  imagem por variante, e mais de um eixo (tamanho × cor achataria em
+  `P Preto`, `P Branco`, `M Preto`…). Preço por variante mexe em checkout,
+  subtotal e em todo caminho de dinheiro — é PR próprio, não um campo a mais.
+
 ## Divergências conhecidas entre design e API
 
 Registradas aqui, e não escondidas no código, conforme
@@ -122,6 +165,27 @@ decisão caiu e por quê.
   apagar as doze peças de hoje, e `DELETE /products/{id}` arquiva em vez de
   apagar, então o slug continua ocupado. Enquanto não se decidir, a loja vende
   peça sem tamanho, o que funciona e é honesto.
+
+- **O endereço da API não tem número nem bairro.** `ShippingAddressDto` é
+  `line1 / line2 / city / state / postalCode`, e o artboard 07 desenha
+  `Endereço`, `Número`, `Bairro` e `Cidade / UF` como quatro campos. O número
+  vai dentro de `line1`, que é exatamente como o exemplo do próprio spec o
+  escreve (`Rua das Flores, 100`); o bairro não tem onde entrar. Nada se perde
+  hoje — o CEP determina o bairro e a etiqueta sai com cidade e UF — mas
+  endereço estruturado passa nas três perguntas do teste de decisão com folga:
+  toda loja brasileira quer, é dado persistido, e não dá para resolver aqui sem
+  inventar campo. Candidato a upstream, ainda não decidido.
+
+- **A API não publica a chave publicável da Stripe.** O commerce-core guarda
+  `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` e mais nada — não há rota nem
+  variável que entregue a `pk_...` ao navegador. Sem ela, `loadStripe()` não
+  sobe, e portanto **nenhum storefront consegue montar o checkout `embedded`**,
+  mesmo que `POST /orders` devolva `clientSecret`. Se alguma loja quiser
+  renderizar o próprio checkout, a peça que falta é uma rota pública de
+  configuração no commerce-core; a chave é pública por natureza e é
+  configuração por implantação, então duplicá-la no `.env` de cada front-end
+  seria a mesma verdade guardada em dois lugares. Ver a divergência do checkout
+  abaixo.
 
 ### Resolvidas upstream
 
@@ -201,6 +265,47 @@ decisão caiu e por quê.
   cadastro da hora leva 429. Irrelevante para um portfólio com um usuário, e
   parede em qualquer tráfego real. Não há conserto deste lado. É o próximo
   candidato a upstream depois de tamanhos.
+
+- **O checkout é `hosted`; o artboard 07 foi desenhado para `embedded`.** A
+  instância implantada roda `STRIPE_CHECKOUT_MODE=hosted`, e o modo `embedded`
+  está bloqueado de qualquer forma pela chave publicável que não existe (acima).
+  Então o `/checkout` **não manda `paymentMode`**: qual UI de pagamento uma
+  instância emite é configuração dela, não opinião deste front-end, e mandar
+  `"hosted"` explicitamente carimbaria no código uma escolha que é por
+  implantação. Duas consequências em tela. A seção `02 Pagamento` não desenha a
+  tira em forma de campo de cartão que o canvas mostra — um campo que nunca
+  aceita uma tecla é justamente o tipo de coisa que o resto desta loja se recusa
+  a renderizar — e no lugar dela diz o que de fato vai acontecer: o comprador
+  segue para a página da Stripe e volta. A frase do design sobre quem vê o
+  número do cartão fica literal, porque continua verdadeira nos dois modos.
+
+- **Não há busca de endereço por CEP.** O artboard 07 mostra o endereço
+  preenchido depois do `Calcular frete`, e `POST /shipping/quote` devolve
+  opções de frete e nada mais — não existe rota de consulta de CEP na API. Os
+  campos de endereço são digitados. Chamar um serviço de CEP daqui seria uma
+  integração que só esta loja teria, e o teste de decisão manda isso para o
+  commerce-core se algum dia alguém quiser.
+
+- **Um `409` do checkout nem sempre é estoque.** O mesmo status responde
+  "o frete cotado não bate mais", e aí não há linha nenhuma para riscar. A
+  reconciliação distingue os dois pelo que encontra na sacola: achou linha
+  inelegível, é o artboard 10; não achou, o frete envelheceu — recota, e diz de
+  quanto para quanto ele mudou, uma linha acima do botão. Em nenhum dos dois
+  casos o pedido é reenviado sozinho: o ponto do `quotedShippingCents` é o
+  comprador nunca ser cobrado por um preço que não viu.
+
+- **O artboard 10 é estado do `/checkout`, e só os cinco deltas entram.** A §3
+  lista o que muda: item riscado, banner no resumo, total antigo riscado ao
+  lado do novo, CTA rust e `Nada foi cobrado ainda.` A tela continua com o
+  `Finalizar pedido` no h1 e com as três seções numeradas — o artboard corta a
+  01 e a 02 porque desenha só o que mudou, e trocar o h1 com elas ainda em tela
+  descreveria a página errada.
+
+- **O total do resumo é ink, não rust.** Mesma decisão do CTA da sacola, pelo
+  mesmo motivo: a §1 raciona rust a quatro lugares e um total não é nenhum
+  deles. O canvas pinta `R$ 522,30` de `#B0431E` no artboard 07; a §1 é o
+  contrato. O único rust do checkout é o CTA de recuperação do artboard 10, que
+  é literalmente um dos quatro.
 
 ### Correções: a prosa ficou para trás do spec
 

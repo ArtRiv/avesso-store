@@ -20,6 +20,33 @@ any prose, including this file.
 Known places the prose has already fallen behind the spec are recorded in
 `README.md` under "Divergências conhecidas".
 
+## ⚠️ Qual banco a API implantada usa
+
+**A instância implantada lê o projeto Supabase chamado `commerce-core-dev`**
+(`utnazosqofafekpxbtjg`), e **não** o chamado `commerce-core`
+(`sxjfswfajcaceyywscmb`). Os nomes mentem: o projeto com "dev" no nome é o que
+serve a loja publicada; o outro tem seis produtos de agosto e ficou para trás.
+
+Isso já custou uma vez. O e2e do commerce-core dá `TRUNCATE` nas tabelas do
+`DATABASE_URL` para onde aponta, e `docs/upstream-first.md` avisa para "nunca
+apontar para o Supabase de produção" — só que a verificação óbvia, olhar o nome
+do projeto, dá a resposta errada. Rodar o e2e contra `commerce-core-dev` apagou
+o catálogo da AVESSO, os usuários e o histórico de pedidos, e uma migration
+aplicada ali derrubou `GET /products` com 500 porque o código implantado ainda
+lia uma coluna recém-removida.
+
+**Antes de rodar e2e ou aplicar migration em qualquer banco:**
+
+1. Confirme o alvo pelo **conteúdo**, não pelo nome. O banco que a loja usa é o
+   que tem as doze peças da AVESSO e as quatro categorias do
+   `docs/design-system.md` §5. Se `select count(*) from products` devolver 12,
+   é o banco da loja publicada — pare.
+2. Confirme pelo `DATABASE_URL` real do serviço no Render, não por suposição.
+3. E2E só contra um banco descartável, que não é nenhum dos dois de hoje.
+
+Enquanto os projetos não forem renomeados, este aviso é a única coisa entre a
+próxima sessão e o mesmo acidente.
+
 ## Non-negotiables
 
 - **Never hand-write a request or response type.** They come from

@@ -36,6 +36,33 @@ teste de decisão e o procedimento estão em
 adiar é conjunta, e o que for adiado fica registrado abaixo em vez de ficar
 escondido no código.
 
+## ⚠️ Qual banco a API implantada usa
+
+**A instância implantada lê o projeto Supabase chamado `commerce-core-dev`**
+(`utnazosqofafekpxbtjg`), e **não** o chamado `commerce-core`
+(`sxjfswfajcaceyywscmb`). Os nomes mentem: o projeto com "dev" no nome é o que
+serve a loja publicada; o outro tem seis produtos de agosto e ficou para trás.
+
+Isso já custou uma vez. O e2e do commerce-core dá `TRUNCATE` nas tabelas do
+`DATABASE_URL` para onde aponta, e `docs/upstream-first.md` avisa para "nunca
+apontar para o Supabase de produção" — só que a verificação óbvia, olhar o nome
+do projeto, dá a resposta errada. Rodar o e2e contra `commerce-core-dev` apagou
+o catálogo da AVESSO, os usuários e o histórico de pedidos, e uma migration
+aplicada ali derrubou `GET /products` com 500 porque o código implantado ainda
+lia uma coluna recém-removida.
+
+**Antes de rodar e2e ou aplicar migration em qualquer banco:**
+
+1. Confirme o alvo pelo **conteúdo**, não pelo nome. O banco que a loja usa é o
+   que tem as doze peças da AVESSO e as quatro categorias do
+   `docs/design-system.md` §5. Se `select count(*) from products` devolver 12,
+   é o banco da loja publicada — pare.
+2. Confirme pelo `DATABASE_URL` real do serviço no Render, não por suposição.
+3. E2E só contra um banco descartável, que não é nenhum dos dois de hoje.
+
+Enquanto os projetos não forem renomeados, este aviso é a única coisa entre a
+próxima sessão e o mesmo acidente.
+
 ## Catálogo de demonstração
 
 As 12 peças e 4 categorias do `docs/design-system.md` §5 entram na API pelo
@@ -49,6 +76,15 @@ Ele é idempotente por slug — `PATCH` no que existe, `POST` no que falta — e
 aceita `--dry-run` para imprimir o plano sem escrever nada. Rode de novo
 sempre que o e2e do commerce-core passar por cima do banco: ele dá `TRUNCATE`
 no catálogo e nos usuários.
+
+> **O seed quebra quando o PR de variantes entrar.** Ele manda `stockQuantity`
+> no corpo de `POST /products`, e o PR
+> [#19](https://github.com/ArtRiv/commerce-core/pull/19) tira esse campo do DTO
+> em favor de `variants: [{ label, position, stockQuantity }]`. Como a validação
+> do backend rejeita campo desconhecido em vez de ignorar, isso vira **400**, não
+> um aviso. Atualizar o script junto com a regeneração de `pnpm api:types`, assim
+> que o PR estiver implantado — e é a hora de dar tamanhos de verdade às doze
+> peças, já que hoje elas viram todas `Único`.
 
 O seed mora aqui, e não no `prisma/demo-catalog.ts` do commerce-core, de
 propósito: aquele arquivo é dado de exemplo neutro num repositório

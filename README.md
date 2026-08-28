@@ -145,15 +145,6 @@ decisão caiu e por quê.
 
 ### Em aberto — vai subir para o commerce-core
 
-- **O pedido não diz quem comprou.** `OrderResponse` carrega `userId` e mais
-  nada sobre o comprador, e o painel tem coluna `Cliente` na lista e um card
-  com nome e e-mail no detalhe. Subiu como
-  [#24](https://github.com/ArtRiv/commerce-core/pull/24): `buyer` com `id`,
-  `name` e `email`, preenchido só para quem carrega `orders.read`. **Enquanto
-  o PR não for mergeado e implantado, as duas telas de pedido ficam
-  bloqueadas** — mostrar um UUID truncado no lugar foi considerado e recusado,
-  porque seria o front-end fingindo ter um dado que a API não dá.
-
 - **Não há como saber que um tamanho foi vendido antes de tentar removê-lo.**
   O artboard do editor desenha um cadeado e a lixeira apagada na linha de um
   tamanho vendido, ou seja, assume que a tela sabe disso ao renderizar.
@@ -172,6 +163,14 @@ decisão caiu e por quê.
   está intacta**: nenhuma linha de carrinho é destruída sem o operador ler a
   contagem e aceitá-la, e se ela mudar entre o aviso e a confirmação a caixa
   desmarca sozinha.
+
+- **A lista de pedidos não tem busca nem contagem por status.** O artboard
+  mostra um número em cada chip do filtro (`Pago 9`, `Enviado 12`). Cada um
+  seria uma requisição própria — seis viagens a mais para decorar um filtro — e
+  `GET /orders` não devolve contagem por status. Os chips vão sem número, e a
+  contagem que aparece é a do filtro aplicado, que é a que o operador está
+  realmente olhando. Busca por cliente ou por número de pedido também não
+  existe na API; `userId` é o único filtro por pessoa.
 
 - **O painel não sabe o e-mail de quem está logado.** O artboard mostra
   `admin@[loja].com.br` na barra do topo. Não existe `/auth/me`, nem rota
@@ -222,6 +221,19 @@ decisão caiu e por quê.
   abaixo.
 
 ### Resolvidas upstream
+
+- **Quem comprou, na resposta do pedido.** `OrderResponse` dizia `userId` e
+  mais nada, e o painel precisa de nome e e-mail na lista e no detalhe.
+  `customers.read` está no catálogo de permissões sem rota atrás, e construir o
+  diretório de clientes era decisão maior do que a tela pedia. Subiu no
+  [#24](https://github.com/ArtRiv/commerce-core/pull/24): `buyer` com `id`,
+  `name` e `email`, preenchido **só** para quem carrega `orders.read` e `null`
+  para todo mundo mais — inclusive o próprio comprador, que não precisa da API
+  para saber o próprio nome. As três colunas são selecionadas e copiadas uma a
+  uma, nunca por spread nem `include: { user: true }`, porque `User` carrega
+  `passwordHash` e a forma genérica é como uma listagem de back-office
+  distribui hash de senha. `name` é anulável: conta criada pelo Google nunca
+  passou por `RegisterDto`.
 
 - **Totais da sacola.** `GET /cart` devolvia `{ items }` e nada mais, e o
   subtotal sairia de somar `priceCents × quantity` no front-end — a aritmética

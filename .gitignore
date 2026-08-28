@@ -40,3 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Test harness caches: cookie jars and the seeding token, kept only so a
+# re-run does not spend the 5-per-15-minutes login budget. Never secrets
+# worth keeping, always safe to delete.
+test/.jars.json
+test/.seed-token

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -p 5173",
     "lint": "eslint",
-    "api:types": "node --env-file-if-exists=.env.local scripts/api-types.mjs"
+    "api:types": "node --env-file-if-exists=.env.local scripts/api-types.mjs",
+    "test": "node --env-file-if-exists=.env.local --env-file-if-exists=../commerce-core/.env test/run.mjs"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -26,11 +27,13 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.11.10",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
     "openapi-typescript": "^7.13.0",
+    "pg": "^8.23.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

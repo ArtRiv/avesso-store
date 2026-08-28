@@ -96,8 +96,8 @@ export default async function ProductsPage({
           </span>
         }
       >
-        <Button size="admin" disabled>
-          Novo produto
+        <Button asChild size="admin">
+          <Link href="/admin/produtos/novo">Novo produto</Link>
         </Button>
       </PageHeader>
 

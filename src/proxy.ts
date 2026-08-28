@@ -21,6 +21,12 @@ import { ACCESS_COOKIE, SESSION_COOKIE } from "@/lib/auth/cookie-names";
  * together are the only case worth a redirect.
  */
 export function proxy(request: NextRequest) {
+  const signIn = adminSignIn(request);
+
+  if (signIn) {
+    return NextResponse.redirect(signIn);
+  }
+
   if (!shouldRenew(request)) {
     return NextResponse.next();
   }
@@ -33,6 +39,39 @@ export function proxy(request: NextRequest) {
   );
 
   return NextResponse.redirect(refresh);
+}
+
+/**
+ * Sends a visitor with no session at all to sign in before /admin renders.
+ *
+ * This is the only thing the proxy can decide about the panel, and it is worth
+ * being precise about why: authorisation is by PERMISSION, resolved from the
+ * database on every request, and a cookie cannot carry that answer. All the
+ * proxy sees here is whether a session marker exists. Whether that session may
+ * run the back office is asked of the API during the render — see
+ * src/lib/admin/session.ts — and enforced, for real, by the backend on every
+ * call the panel makes.
+ *
+ * So this saves an anonymous visitor a render and a wasted API round trip. It
+ * is not a security boundary and removing it would not open one.
+ */
+function adminSignIn(request: NextRequest): URL | null {
+  const { pathname, search } = request.nextUrl;
+
+  if (!pathname.startsWith("/admin")) {
+    return null;
+  }
+
+  // A browser holding the marker may still have an expired access token; that
+  // is shouldRenew's job below, and it has to run instead of this.
+  if (request.cookies.get(SESSION_COOKIE)?.value === "1") {
+    return null;
+  }
+
+  const target = new URL("/entrar", request.nextUrl.origin);
+  target.searchParams.set("next", `${pathname}${search}`);
+
+  return target;
 }
 
 function shouldRenew(request: NextRequest): boolean {

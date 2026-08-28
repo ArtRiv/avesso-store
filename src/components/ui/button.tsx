@@ -41,6 +41,15 @@ const buttonVariants = cva(
         // reaching for this anywhere else.
         recovery: "bg-rust text-paper hover:opacity-90",
         ghost: "bg-transparent text-ink hover:text-rust",
+        // Back office. `destructive` cancels an order and `danger` removes a
+        // size or refunds — clay for the state that ends a thing, rust for
+        // the one that destroys data or moves money back. Rust here is the
+        // same ration §1 allows: it marks the act you cannot undo.
+        destructive:
+          "border-clay bg-transparent text-clay hover:bg-clay hover:text-paper",
+        danger: "bg-rust text-paper hover:opacity-90",
+        "danger-outline":
+          "border-rust bg-transparent text-rust hover:bg-rust hover:text-paper",
         // There is no `link` variant on purpose. A link in this design is body
         // text with a rust hover, not a 48px mono uppercase control — see
         // src/components/text-link.tsx.
@@ -52,6 +61,12 @@ const buttonVariants = cva(
         // The sacola stepper and other inline controls sitting on a hairline.
         compact: "h-8 gap-1.5 px-3",
         "icon-compact": "size-8",
+        // The back office runs tighter than the store: the canvas draws page
+        // actions at 40px and dialog actions at 44px, against the store's 48.
+        // A denser screen earns a denser control; the type inside is unchanged.
+        admin: "h-10 gap-2.5 px-[18px]",
+        "admin-lg": "h-11 gap-2.5 px-5",
+        "icon-admin": "size-10",
         // A link is text, so it carries no control box at all.
         inline: "h-auto p-0",
       },

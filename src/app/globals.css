@@ -37,6 +37,26 @@
   --color-tone-label: #8c8781;
   --color-tone-label-inverse: rgb(255 255 255 / 0.55);
 
+  /* ---- Back office -------------------------------------------------
+     The panel's canvas carries its own neutrals, a shade off the store's:
+     page #F4F3F0 against warm #F5F3EF, hairline #E2E0DA against #E4E0D8.
+     The gap is invisible and the temptation is to collapse it — but
+     docs/design-system.md is the STORE's contract and beats the code, so
+     the panel gets its own three tokens instead of editing those. The
+     third is a dimmer grey the store never needed: column headings, empty
+     counts, the label under a disabled control.
+
+     Two order statuses also need colours the store has no use for. The
+     storefront collapses SHIPPED and DELIVERED into moss because a
+     customer only wants to know the parcel is coming; an operator reads a
+     column of six states at once and needs them apart. Neither is a second
+     accent — rust stays rationed to the four places §1 allows. */
+  --color-admin-bg: #f4f3f0;
+  --color-admin-hairline: #e2e0da;
+  --color-admin-dim: #9a948e;
+  --color-shipped: #2c5c8a;
+  --color-delivered: #14513c;
+
   /* ---- Type (§1) ---------------------------------------------------- */
   --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;

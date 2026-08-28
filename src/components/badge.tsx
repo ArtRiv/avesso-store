@@ -8,12 +8,31 @@ import { cn } from "@/lib/utils";
  * list and this is not on it, which is right — there is no behaviour here to
  * inherit, only type and a border.
  */
-type BadgeTone = "moss" | "rust" | "clay";
+/**
+ * The store needs three tones. The back office adds four, and none of them is
+ * a second accent: `shipped` and `delivered` exist because an operator reads
+ * six order states down a column and the storefront's collapse of both into
+ * moss would make two of them the same badge. `neutral` is a state with no
+ * colour to earn — CREATED, a draft product — and `dim` is one that is over,
+ * like an archived piece.
+ */
+type BadgeTone =
+  | "moss"
+  | "rust"
+  | "clay"
+  | "shipped"
+  | "delivered"
+  | "neutral"
+  | "dim";
 
 const TONE_CLASS: Readonly<Record<BadgeTone, string>> = {
   moss: "border-moss text-moss",
   rust: "border-rust text-rust",
   clay: "border-clay text-clay",
+  shipped: "border-shipped text-shipped",
+  delivered: "border-delivered text-delivered",
+  neutral: "border-muted text-muted",
+  dim: "border-admin-dim text-admin-dim",
 };
 
 export function Badge({

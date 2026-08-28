@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; font-family: Archivo, system-ui, sans-serif; color: #0A0A0A; background: #E7E5E0; -webkit-font-smoothing: antialiased; }
+    a { color: #0A0A0A; text-decoration: none; } a:hover { color: #B0431E; }
+    .meta { font: 500 12px/1.4 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+    .num { font: 500 14px/1.2 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .body { font: 400 15px/1.55 Archivo; color: #0A0A0A; }
+    .sub { font: 400 13px/1.5 Archivo; color: #6B6560; }
+    .btn-ghost { height: 44px; padding: 0 20px; background: transparent; color: #0A0A0A; border: 1px solid #0A0A0A; border-radius: 2px; cursor: pointer; font: 500 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+    .btn-danger { height: 44px; padding: 0 20px; background: #B0431E; color: #FFFFFF; border: none; border-radius: 2px; cursor: pointer; font: 500 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+    .btn-off { height: 44px; padding: 0 20px; background: #E2E0DA; color: #9A948E; border: none; border-radius: 2px; font: 500 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; min-height: 900px; background: #E7E5E0; padding: 48px; display: flex; flex-direction: column; gap: 28px; box-sizing: border-box;">
+
+  <div style="display: flex; flex-direction: column; gap: 8px;">
+    <h2 style="margin: 0; font: 600 24px/1.2 Archivo; letter-spacing: -.015em;">Remover um tamanho</h2>
+    <span class="sub">A confirmação tem duas metades: autorizar a destruição, e confirmar o tamanho dela. Marcar a caixa envia as duas — o número que você leu é o número que vale.</span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; align-items: start;">
+
+    <!-- 1 · warning -->
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <span class="meta" style="color: #6B6560;">1 · Aviso</span>
+      <div style="background: #FFFFFF; border: 1px solid #0A0A0A; padding: 28px; display: flex; flex-direction: column; gap: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <h3 style="margin: 0; font: 500 20px/1.3 Archivo; letter-spacing: -.01em;">Remover o tamanho M?</h3>
+          <span class="body">Este tamanho está em <strong class="num" style="font-size: 15px;">3</strong> sacolas. Removê-lo apaga essas linhas — as pessoas perdem o item sem aviso.</span>
+        </div>
+
+        <div style="border-top: 1px solid #E2E0DA; padding-top: 18px; display: flex; gap: 12px; align-items: flex-start;">
+          <div style="width: 18px; height: 18px; border: 1px solid #0A0A0A; border-radius: 2px; background: #0A0A0A; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#FFFFFF" stroke-width="2"><path d="M2.5 6l2.5 2.5L9.5 3.5"></path></svg>
+          </div>
+          <span class="body">Autorizo descartar as <strong class="num" style="font-size: 15px;">3</strong> linhas de carrinho que revisei.</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button class="btn-ghost">Cancelar</button>
+          <button class="btn-danger">Remover tamanho</button>
+        </div>
+      </div>
+      <span class="sub">O número está dentro da frase que se aceita. Não dá para autorizar sem lê-lo.</span>
+    </div>
+
+    <!-- 2 · stale -->
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <span class="meta" style="color: #6B6560;">2 · O número mudou</span>
+      <div style="background: #FFFFFF; border: 1px solid #0A0A0A; padding: 28px; display: flex; flex-direction: column; gap: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <h3 style="margin: 0; font: 500 20px/1.3 Archivo; letter-spacing: -.01em;">Remover o tamanho M?</h3>
+          <div style="border-left: 2px solid #B0431E; padding: 12px 0 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+            <span class="meta" style="color: #B0431E;">Nada foi removido</span>
+            <span class="body">Uma quarta sacola entrou enquanto você lia. Eram <span class="num" style="font-size: 15px;">3</span>, agora são <strong class="num" style="font-size: 15px;">4</strong>.</span>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid #E2E0DA; padding-top: 18px; display: flex; gap: 12px; align-items: flex-start;">
+          <div style="width: 18px; height: 18px; border: 1px solid #0A0A0A; border-radius: 2px; background: #FFFFFF; flex-shrink: 0; margin-top: 2px;"></div>
+          <span class="body">Autorizo descartar as <strong class="num" style="font-size: 15px;">4</strong> linhas de carrinho que revisei.</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button class="btn-ghost">Cancelar</button>
+          <button class="btn-off">Remover tamanho</button>
+        </div>
+      </div>
+      <span class="sub">A caixa desmarca sozinha. A autorização era para três, e três não é mais verdade.</span>
+    </div>
+
+    <!-- 3 · sold -->
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <span class="meta" style="color: #6B6560;">3 · Vendido — sem porta</span>
+      <div style="background: #FFFFFF; border: 1px solid #0A0A0A; padding: 28px; display: flex; flex-direction: column; gap: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <h3 style="margin: 0; font: 500 20px/1.3 Archivo; letter-spacing: -.01em;">O tamanho G não pode ser removido</h3>
+          <span class="body">Alguém comprou este tamanho. Pedido é registro financeiro, e o banco recusa apagar o que ele aponta — não há confirmação que passe por cima.</span>
+        </div>
+
+        <div style="border-top: 1px solid #E2E0DA; padding-top: 18px; display: flex; flex-direction: column; gap: 8px;">
+          <span class="meta" style="color: #6B6560;">O que dá para fazer</span>
+          <span class="body"><strong>Renomear</strong> resolve o mesmo problema: o rótulo do pedido é uma cópia congelada, então trocar “Único” por “P” não reescreve venda nenhuma.</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button class="btn-ghost">Fechar</button>
+          <button style="height: 44px; padding: 0 20px; background: #0A0A0A; color: #FFFFFF; border: none; border-radius: 2px; cursor: pointer; font: 500 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase;">Renomear</button>
+        </div>
+      </div>
+      <span class="sub">Mesmo diálogo para a última variante de um produto, trocando o motivo.</span>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

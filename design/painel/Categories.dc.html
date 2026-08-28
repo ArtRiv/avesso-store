@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; font-family: Archivo, system-ui, sans-serif; color: #0A0A0A; background: #F4F3F0; -webkit-font-smoothing: antialiased; }
+    a { color: #0A0A0A; text-decoration: none; } a:hover { color: #B0431E; }
+    .meta { font: 500 12px/1.4 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+    .num { font: 500 14px/1.2 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    th { text-align: left; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; min-height: 900px; background: #F4F3F0; display: flex; flex-direction: column;">
+
+  <div style="height: 64px; background: #FFFFFF; border-bottom: 1px solid #E2E0DA; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#0A0A0A" stroke-width="1.5"><rect x="2.5" y="2.5" width="15" height="15"></rect><path d="M2.5 7.5h15M7.5 7.5v10"></path></svg>
+      <span class="meta" style="letter-spacing: .22em;">Back office</span>
+      <span style="width: 1px; height: 20px; background: #E2E0DA;"></span>
+      <span class="meta" style="color: #6B6560;">[LOJA]</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 24px;">
+      <span class="meta" style="color: #6B6560;">admin@[loja].com.br</span>
+      <span class="meta" style="border: 1px solid #E2E0DA; padding: 4px 8px; color: #6B6560;">Admin</span>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-grow: 1; align-items: stretch;">
+    <div style="width: 240px; background: #FFFFFF; border-right: 1px solid #E2E0DA; padding: 32px 0; display: flex; flex-direction: column; gap: 32px; flex-shrink: 0;">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div class="meta" style="color: #9A948E; padding: 0 24px 8px;">Catálogo</div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 24px; border-left: 2px solid transparent;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5"><rect x="2" y="2" width="12" height="12"></rect><path d="M2 6h12"></path></svg>
+          <span style="font: 400 14px/1.2 Archivo; color: #6B6560;">Produtos</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 24px; background: #F4F3F0; border-left: 2px solid #0A0A0A;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0A0A0A" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h7"></path></svg>
+          <span style="font: 500 14px/1.2 Archivo;">Categorias</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div class="meta" style="color: #9A948E; padding: 0 24px 8px;">Vendas</div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 24px; border-left: 2px solid transparent;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5"><path d="M2 3h2l1.5 8h7L14 5H4.5"></path><circle cx="6.5" cy="13.5" r="1"></circle><circle cx="12" cy="13.5" r="1"></circle></svg>
+          <span style="font: 400 14px/1.2 Archivo; color: #6B6560;">Pedidos</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex-grow: 1; padding: 40px 48px; display: flex; flex-direction: column; gap: 32px;">
+      <div style="display: flex; align-items: flex-end; justify-content: space-between;">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <h1 style="margin: 0; font: 600 32px/1.15 Archivo; letter-spacing: -.015em;">Categorias</h1>
+          <span class="meta" style="color: #6B6560;">4 categorias</span>
+        </div>
+        <button style="height: 40px; padding: 0 20px; background: #0A0A0A; color: #FFFFFF; border: none; border-radius: 2px; cursor: pointer; font: 500 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase;">Nova categoria</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;">
+        <div style="background: #FFFFFF; border: 1px solid #E2E0DA;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 1px solid #E2E0DA;">
+                <th class="meta" style="color: #9A948E; padding: 14px 20px; font-weight: 500;">Nome</th>
+                <th class="meta" style="color: #9A948E; padding: 14px 20px; font-weight: 500;">Slug</th>
+                <th class="meta" style="color: #9A948E; padding: 14px 20px; font-weight: 500; text-align: right; width: 100px;">Peças</th>
+                <th style="width: 80px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid #E2E0DA;">
+                <td style="padding: 16px 20px; font: 400 15px/1.2 Archivo;">Camisetas</td>
+                <td class="num" style="padding: 16px 20px; color: #6B6560; font-size: 13px;">camisetas</td>
+                <td class="num" style="padding: 16px 20px; text-align: right;">5</td>
+                <td style="padding: 16px 20px;">
+                  <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5" style="cursor: pointer;"><path d="M11 2.5l2.5 2.5L6 12.5H3.5V10z"></path></svg>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5" style="cursor: pointer;"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.5 8.5h6l.5-8.5"></path></svg>
+                  </div>
+                </td>
+              </tr>
+              <tr style="border-bottom: 1px solid #E2E0DA;">
+                <td style="padding: 16px 20px; font: 400 15px/1.2 Archivo;">Moletons</td>
+                <td class="num" style="padding: 16px 20px; color: #6B6560; font-size: 13px;">moletons</td>
+                <td class="num" style="padding: 16px 20px; text-align: right;">3</td>
+                <td style="padding: 16px 20px;">
+                  <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5" style="cursor: pointer;"><path d="M11 2.5l2.5 2.5L6 12.5H3.5V10z"></path></svg>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5" style="cursor: pointer;"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.5 8.5h6l.5-8.5"></path></svg>
+                  </div>
+                </td>
+              </tr>
+              <tr style="border-bottom: 1px solid #E2E0DA;">
+                <td style="padding: 16px 20px; font: 400 15px/1.2 Archivo;">Calças</td>
+                <td class="num" style="padding: 16px 20px; color: #6B6560; font-size: 13px;">calcas</td>
+                <td class="num" style="padding: 16px 20px; text-align: right;">2</td>
+                <td style="padding: 16px 20px;">
+                  <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5" style="cursor: pointer;"><path d="M11 2.5l2.5 2.5L6 12.5H3.5V10z"></path></svg>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5" style="cursor: pointer;"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.5 8.5h6l.5-8.5"></path></svg>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 16px 20px; font: 400 15px/1.2 Archivo;">Básicos</td>
+                <td class="num" style="padding: 16px 20px; color: #6B6560; font-size: 13px;">basicos</td>
+                <td class="num" style="padding: 16px 20px; text-align: right; color: #9A948E;">0</td>
+                <td style="padding: 16px 20px;">
+                  <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5" style="cursor: pointer;"><path d="M11 2.5l2.5 2.5L6 12.5H3.5V10z"></path></svg>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5" style="cursor: pointer;"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.5 8.5h6l.5-8.5"></path></svg>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="background: #FFFFFF; border: 1px solid #E2E0DA; padding: 28px; display: flex; flex-direction: column; gap: 20px;">
+          <span class="meta">Nova categoria</span>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <span class="meta" style="color: #6B6560;">Nome</span>
+            <div style="height: 44px; border: 1px solid #E2E0DA; border-radius: 2px; padding: 0 14px; display: flex; align-items: center; font: 400 15px/1 Archivo; color: #9A948E;">Ex.: Camisas</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <span class="meta" style="color: #6B6560;">Slug</span>
+            <div style="height: 44px; border: 1px solid #E2E0DA; border-radius: 2px; padding: 0 14px; display: flex; align-items: center; font: 400 14px/1 'JetBrains Mono', monospace; color: #9A948E;">gerado do nome</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <span class="meta" style="color: #6B6560;">Descrição</span>
+            <div style="min-height: 80px; border: 1px solid #E2E0DA; border-radius: 2px; padding: 14px; font: 400 15px/1.55 Archivo; color: #9A948E;">Opcional</div>
+          </div>
+          <button style="height: 44px; background: #0A0A0A; color: #FFFFFF; border: none; border-radius: 2px; cursor: pointer; font: 500 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase;">Criar</button>
+          <span style="font: 400 12px/1.5 Archivo; color: #9A948E;">Apagar uma categoria solta as peças dela. As peças continuam existindo.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

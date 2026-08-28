@@ -1,0 +1,153 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; font-family: Archivo, system-ui, sans-serif; color: #0A0A0A; background: #F4F3F0; -webkit-font-smoothing: antialiased; }
+    a { color: #0A0A0A; text-decoration: none; } a:hover { color: #B0431E; }
+    .meta { font: 500 12px/1.4 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+    .num { font: 500 14px/1.2 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .chip { font: 500 12px/1.4 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; padding: 4px 8px; border: 1px solid; }
+    th { text-align: left; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; min-height: 1100px; background: #F4F3F0; display: flex; flex-direction: column;">
+
+  <div style="height: 64px; background: #FFFFFF; border-bottom: 1px solid #E2E0DA; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#0A0A0A" stroke-width="1.5"><rect x="2.5" y="2.5" width="15" height="15"></rect><path d="M2.5 7.5h15M7.5 7.5v10"></path></svg>
+      <span class="meta" style="letter-spacing: .22em;">Back office</span>
+      <span style="width: 1px; height: 20px; background: #E2E0DA;"></span>
+      <span class="meta" style="color: #6B6560;">[LOJA]</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 24px;">
+      <span class="meta" style="color: #6B6560;">admin@[loja].com.br</span>
+      <span class="meta" style="border: 1px solid #E2E0DA; padding: 4px 8px; color: #6B6560;">Admin</span>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-grow: 1; align-items: stretch;">
+    <div style="width: 240px; background: #FFFFFF; border-right: 1px solid #E2E0DA; padding: 32px 0; display: flex; flex-direction: column; gap: 32px; flex-shrink: 0;">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div class="meta" style="color: #9A948E; padding: 0 24px 8px;">Catálogo</div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 24px; border-left: 2px solid transparent;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5"><rect x="2" y="2" width="12" height="12"></rect><path d="M2 6h12"></path></svg>
+          <span style="font: 400 14px/1.2 Archivo; color: #6B6560;">Produtos</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 24px; border-left: 2px solid transparent;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h7"></path></svg>
+          <span style="font: 400 14px/1.2 Archivo; color: #6B6560;">Categorias</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div class="meta" style="color: #9A948E; padding: 0 24px 8px;">Vendas</div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 24px; background: #F4F3F0; border-left: 2px solid #0A0A0A;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0A0A0A" stroke-width="1.5"><path d="M2 3h2l1.5 8h7L14 5H4.5"></path><circle cx="6.5" cy="13.5" r="1"></circle><circle cx="12" cy="13.5" r="1"></circle></svg>
+          <span style="font: 500 14px/1.2 Archivo;">Pedidos</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex-grow: 1; padding: 40px 48px; display: flex; flex-direction: column; gap: 28px;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <h1 style="margin: 0; font: 600 32px/1.15 Archivo; letter-spacing: -.015em;">Pedidos</h1>
+        <span class="meta" style="color: #6B6560;">47 pedidos</span>
+      </div>
+
+      <!-- status filter as a rail of chips: the six states are the spine of this screen -->
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+        <span style="height: 36px; display: flex; align-items: center; padding: 0 14px; border: 1px solid #0A0A0A; background: #0A0A0A; color: #FFFFFF; font: 500 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase;">Todos <span class="num" style="font-size: 12px; margin-left: 8px;">47</span></span>
+        <span style="height: 36px; display: flex; align-items: center; padding: 0 14px; border: 1px solid #6B6560; color: #6B6560; font: 500 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase;">Criado <span class="num" style="font-size: 12px; margin-left: 8px;">4</span></span>
+        <span style="height: 36px; display: flex; align-items: center; padding: 0 14px; border: 1px solid #1F6F52; color: #1F6F52; font: 500 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase;">Pago <span class="num" style="font-size: 12px; margin-left: 8px;">9</span></span>
+        <span style="height: 36px; display: flex; align-items: center; padding: 0 14px; border: 1px solid #2C5C8A; color: #2C5C8A; font: 500 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase;">Enviado <span class="num" style="font-size: 12px; margin-left: 8px;">12</span></span>
+        <span style="height: 36px; display: flex; align-items: center; padding: 0 14px; border: 1px solid #14513C; color: #14513C; font: 500 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase;">Entregue <span class="num" style="font-size: 12px; margin-left: 8px;">19</span></span>
+        <span style="height: 36px; display: flex; align-items: center; padding: 0 14px; border: 1px solid #8C2F2F; color: #8C2F2F; font: 500 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase;">Cancelado <span class="num" style="font-size: 12px; margin-left: 8px;">2</span></span>
+        <span style="height: 36px; display: flex; align-items: center; padding: 0 14px; border: 1px solid #B0431E; color: #B0431E; font: 500 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase;">Reembolsado <span class="num" style="font-size: 12px; margin-left: 8px;">1</span></span>
+      </div>
+
+      <div style="background: #FFFFFF; border: 1px solid #E2E0DA;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid #E2E0DA;">
+              <th class="meta" style="color: #9A948E; padding: 14px 20px; font-weight: 500; width: 140px;">Pedido</th>
+              <th class="meta" style="color: #9A948E; padding: 14px 20px; font-weight: 500;">Cliente</th>
+              <th class="meta" style="color: #9A948E; padding: 14px 20px; font-weight: 500;">Itens</th>
+              <th class="meta" style="color: #9A948E; padding: 14px 20px; font-weight: 500; width: 150px;">Status</th>
+              <th class="meta" style="color: #9A948E; padding: 14px 20px; font-weight: 500; width: 130px; text-align: right;">Total</th>
+              <th class="meta" style="color: #9A948E; padding: 14px 20px; font-weight: 500; width: 120px; text-align: right;">Data</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid #E2E0DA;">
+              <td class="num" style="padding: 16px 20px;">#a3f10c</td>
+              <td style="padding: 16px 20px; font: 400 15px/1.2 Archivo;">Marina Duarte</td>
+              <td style="padding: 16px 20px; font: 400 14px/1.4 Archivo; color: #6B6560;">Camiseta Preta · <span class="num" style="font-size: 13px;">M</span> ×2</td>
+              <td style="padding: 16px 20px;"><span class="chip" style="border-color: #1F6F52; color: #1F6F52;">Pago</span></td>
+              <td class="num" style="padding: 16px 20px; text-align: right;">R$ 179,70</td>
+              <td class="num" style="padding: 16px 20px; text-align: right; color: #6B6560; font-size: 13px;">27/08</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E2E0DA;">
+              <td class="num" style="padding: 16px 20px;">#9e2b74</td>
+              <td style="padding: 16px 20px; font: 400 15px/1.2 Archivo;">Caio Ribeiro</td>
+              <td style="padding: 16px 20px; font: 400 14px/1.4 Archivo; color: #6B6560;">Moletom Cru · <span class="num" style="font-size: 13px;">Único</span> ×1</td>
+              <td style="padding: 16px 20px;"><span class="chip" style="border-color: #2C5C8A; color: #2C5C8A;">Enviado</span></td>
+              <td class="num" style="padding: 16px 20px; text-align: right;">R$ 259,80</td>
+              <td class="num" style="padding: 16px 20px; text-align: right; color: #6B6560; font-size: 13px;">26/08</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E2E0DA;">
+              <td class="num" style="padding: 16px 20px;">#71cd05</td>
+              <td style="padding: 16px 20px; font: 400 15px/1.2 Archivo;">Ana Prado</td>
+              <td style="padding: 16px 20px; font: 400 14px/1.4 Archivo; color: #6B6560;">Calça Reta Areia · <span class="num" style="font-size: 13px;">Único</span> ×1 <span style="color: #9A948E;">+1</span></td>
+              <td style="padding: 16px 20px;"><span class="chip" style="border-color: #14513C; color: #14513C;">Entregue</span></td>
+              <td class="num" style="padding: 16px 20px; text-align: right;">R$ 509,70</td>
+              <td class="num" style="padding: 16px 20px; text-align: right; color: #6B6560; font-size: 13px;">21/08</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E2E0DA;">
+              <td class="num" style="padding: 16px 20px;">#5b8a91</td>
+              <td style="padding: 16px 20px; font: 400 15px/1.2 Archivo;">Rafael Nunes</td>
+              <td style="padding: 16px 20px; font: 400 14px/1.4 Archivo; color: #6B6560;">Camiseta Preta · <span class="num" style="font-size: 13px;">GG</span> ×1</td>
+              <td style="padding: 16px 20px;"><span class="chip" style="border-color: #6B6560; color: #6B6560;">Criado</span></td>
+              <td class="num" style="padding: 16px 20px; text-align: right;">R$ 99,80</td>
+              <td class="num" style="padding: 16px 20px; text-align: right; color: #6B6560; font-size: 13px;">27/08</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E2E0DA;">
+              <td class="num" style="padding: 16px 20px;">#2d40f8</td>
+              <td style="padding: 16px 20px; font: 400 15px/1.2 Archivo;">Júlia Marques</td>
+              <td style="padding: 16px 20px; font: 400 14px/1.4 Archivo; color: #6B6560;">Camisa Sage · <span class="num" style="font-size: 13px;">P</span> ×1</td>
+              <td style="padding: 16px 20px;"><span class="chip" style="border-color: #B0431E; color: #B0431E;">Reembolsado</span></td>
+              <td class="num" style="padding: 16px 20px; text-align: right; color: #6B6560;">R$ 199,80</td>
+              <td class="num" style="padding: 16px 20px; text-align: right; color: #6B6560; font-size: 13px;">18/08</td>
+            </tr>
+            <tr>
+              <td class="num" style="padding: 16px 20px;">#c07e33</td>
+              <td style="padding: 16px 20px; font: 400 15px/1.2 Archivo;">Pedro Salles</td>
+              <td style="padding: 16px 20px; font: 400 14px/1.4 Archivo; color: #6B6560;">Regata Off · <span class="num" style="font-size: 13px;">M</span> ×1</td>
+              <td style="padding: 16px 20px;"><span class="chip" style="border-color: #8C2F2F; color: #8C2F2F;">Cancelado</span></td>
+              <td class="num" style="padding: 16px 20px; text-align: right; color: #6B6560;">R$ 119,80</td>
+              <td class="num" style="padding: 16px 20px; text-align: right; color: #6B6560; font-size: 13px;">15/08</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span class="meta" style="color: #6B6560;">6 de 47</span>
+        <div style="display: flex; gap: 8px;">
+          <span class="num" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid #0A0A0A;">1</span>
+          <span class="num" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E0DA; color: #9A948E;">2</span>
+          <span class="num" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E0DA; color: #9A948E;">3</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

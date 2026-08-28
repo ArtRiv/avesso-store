@@ -1,0 +1,227 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; font-family: Archivo, system-ui, sans-serif; color: #0A0A0A; background: #F4F3F0; -webkit-font-smoothing: antialiased; }
+    a { color: #0A0A0A; text-decoration: none; } a:hover { color: #B0431E; }
+    .meta { font: 500 12px/1.4 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+    .num { font: 500 14px/1.2 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+    th { text-align: left; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; min-height: 1200px; background: #F4F3F0; display: flex; flex-direction: column;">
+
+  <!-- top bar -->
+  <div style="height: 64px; background: #FFFFFF; border-bottom: 1px solid #E2E0DA; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#0A0A0A" stroke-width="1.5"><rect x="2.5" y="2.5" width="15" height="15"></rect><path d="M2.5 7.5h15M7.5 7.5v10"></path></svg>
+      <span class="meta" style="letter-spacing: .22em;">Back office</span>
+      <span style="width: 1px; height: 20px; background: #E2E0DA;"></span>
+      <span class="meta" style="color: #6B6560;">[LOJA]</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 24px;">
+      <span class="meta" style="color: #6B6560;">admin@[loja].com.br</span>
+      <span class="meta" style="border: 1px solid #E2E0DA; padding: 4px 8px; color: #6B6560;">Admin</span>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-grow: 1; align-items: stretch;">
+
+    <!-- left rail -->
+    <div style="width: 240px; background: #FFFFFF; border-right: 1px solid #E2E0DA; padding: 32px 0; display: flex; flex-direction: column; gap: 32px; flex-shrink: 0;">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div class="meta" style="color: #9A948E; padding: 0 24px 8px;">Catálogo</div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 24px; background: #F4F3F0; border-left: 2px solid #0A0A0A;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0A0A0A" stroke-width="1.5"><rect x="2" y="2" width="12" height="12"></rect><path d="M2 6h12"></path></svg>
+          <span style="font: 500 14px/1.2 Archivo;">Produtos</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 24px; border-left: 2px solid transparent;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h7"></path></svg>
+          <span style="font: 400 14px/1.2 Archivo; color: #6B6560;">Categorias</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div class="meta" style="color: #9A948E; padding: 0 24px 8px;">Vendas</div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 24px; border-left: 2px solid transparent;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5"><path d="M2 3h2l1.5 8h7L14 5H4.5"></path><circle cx="6.5" cy="13.5" r="1"></circle><circle cx="12" cy="13.5" r="1"></circle></svg>
+          <span style="font: 400 14px/1.2 Archivo; color: #6B6560;">Pedidos</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- content -->
+    <div style="flex-grow: 1; padding: 40px 48px; display: flex; flex-direction: column; gap: 32px;">
+
+      <div style="display: flex; align-items: flex-end; justify-content: space-between;">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <h1 style="margin: 0; font: 600 32px/1.15 Archivo; letter-spacing: -.015em;">Produtos</h1>
+          <span class="meta" style="color: #6B6560;">12 peças · 3 rascunhos</span>
+        </div>
+        <button style="height: 40px; padding: 0 20px; background: #0A0A0A; color: #FFFFFF; border: none; border-radius: 2px; cursor: pointer; font: 500 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase;">Novo produto</button>
+      </div>
+
+      <!-- filters -->
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px; height: 40px; border: 1px solid #E2E0DA; border-radius: 2px; background: #FFFFFF; padding: 0 14px; width: 320px;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#9A948E" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5L14 14"></path></svg>
+          <span style="font: 400 14px/1 Archivo; color: #9A948E;">Buscar por nome</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; height: 40px; border: 1px solid #0A0A0A; border-radius: 2px; background: #FFFFFF; padding: 0 14px;">
+          <span class="meta" style="color: #6B6560;">Status</span>
+          <span style="font: 400 14px/1 Archivo;">Todos</span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#0A0A0A" stroke-width="1.5"><path d="M3 4.5L6 7.5L9 4.5"></path></svg>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; height: 40px; border: 1px solid #E2E0DA; border-radius: 2px; background: #FFFFFF; padding: 0 14px;">
+          <span class="meta" style="color: #6B6560;">Ordem</span>
+          <span style="font: 400 14px/1 Archivo;">Mais recentes</span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#0A0A0A" stroke-width="1.5"><path d="M3 4.5L6 7.5L9 4.5"></path></svg>
+        </div>
+        <div style="flex-grow: 1;"></div>
+        <span class="meta" style="color: #9A948E;">Filtrar por status exige products.read</span>
+      </div>
+
+      <!-- table -->
+      <div style="background: #FFFFFF; border: 1px solid #E2E0DA;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid #E2E0DA;">
+              <th class="meta" style="color: #9A948E; padding: 14px 20px; font-weight: 500;">Produto</th>
+              <th class="meta" style="color: #9A948E; padding: 14px 20px; font-weight: 500; width: 120px;">Status</th>
+              <th class="meta" style="color: #9A948E; padding: 14px 20px; font-weight: 500; width: 300px;">Tamanhos</th>
+              <th class="meta" style="color: #9A948E; padding: 14px 20px; font-weight: 500; width: 100px; text-align: right;">Estoque</th>
+              <th class="meta" style="color: #9A948E; padding: 14px 20px; font-weight: 500; width: 120px; text-align: right;">Preço</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- migrated product -->
+            <tr style="border-bottom: 1px solid #E2E0DA;">
+              <td style="padding: 16px 20px;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div style="width: 40px; height: 50px; background: #EDE9E1; border: 1px solid #E2E0DA; flex-shrink: 0;"></div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font: 400 15px/1.2 Archivo;">Camiseta Preta</span>
+                    <span class="meta" style="color: #9A948E; font-size: 11px;">camiseta-preta</span>
+                  </div>
+                </div>
+              </td>
+              <td style="padding: 16px 20px;"><span class="meta" style="border: 1px solid #1F6F52; color: #1F6F52; padding: 4px 8px;">Ativo</span></td>
+              <td style="padding: 16px 20px;">
+                <div style="display: flex; gap: 6px;">
+                  <span class="num" style="width: 34px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E0DA; font-size: 12px;">P</span>
+                  <span class="num" style="width: 34px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E0DA; font-size: 12px;">M</span>
+                  <span class="num" style="width: 34px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E0DA; font-size: 12px;">G</span>
+                  <span class="num" style="width: 34px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E0DA; color: #9A948E; text-decoration: line-through; font-size: 12px;">GG</span>
+                  <span class="num" style="width: 34px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E0DA; font-size: 12px;">XGG</span>
+                </div>
+              </td>
+              <td class="num" style="padding: 16px 20px; text-align: right;">38</td>
+              <td class="num" style="padding: 16px 20px; text-align: right;">R$ 79,90</td>
+            </tr>
+            <!-- unmigrated: the twelve on Único -->
+            <tr style="border-bottom: 1px solid #E2E0DA;">
+              <td style="padding: 16px 20px;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div style="width: 40px; height: 50px; background: #D8D3C9; border: 1px solid #E2E0DA; flex-shrink: 0;"></div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font: 400 15px/1.2 Archivo;">Moletom Cru</span>
+                    <span class="meta" style="color: #9A948E; font-size: 11px;">moletom-cru</span>
+                  </div>
+                </div>
+              </td>
+              <td style="padding: 16px 20px;"><span class="meta" style="border: 1px solid #1F6F52; color: #1F6F52; padding: 4px 8px;">Ativo</span></td>
+              <td style="padding: 16px 20px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <span class="num" style="height: 28px; display: flex; align-items: center; padding: 0 10px; border: 1px solid #B0431E; color: #B0431E; font-size: 12px;">Único</span>
+                  <span class="meta" style="color: #B0431E; font-size: 11px;">Sem grade de tamanho</span>
+                </div>
+              </td>
+              <td class="num" style="padding: 16px 20px; text-align: right;">14</td>
+              <td class="num" style="padding: 16px 20px; text-align: right;">R$ 219,90</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E2E0DA;">
+              <td style="padding: 16px 20px;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div style="width: 40px; height: 50px; background: #C9BCB0; border: 1px solid #E2E0DA; flex-shrink: 0;"></div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font: 400 15px/1.2 Archivo;">Calça Reta Areia</span>
+                    <span class="meta" style="color: #9A948E; font-size: 11px;">calca-reta-areia</span>
+                  </div>
+                </div>
+              </td>
+              <td style="padding: 16px 20px;"><span class="meta" style="border: 1px solid #1F6F52; color: #1F6F52; padding: 4px 8px;">Ativo</span></td>
+              <td style="padding: 16px 20px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <span class="num" style="height: 28px; display: flex; align-items: center; padding: 0 10px; border: 1px solid #B0431E; color: #B0431E; font-size: 12px;">Único</span>
+                  <span class="meta" style="color: #B0431E; font-size: 11px;">Sem grade de tamanho</span>
+                </div>
+              </td>
+              <td class="num" style="padding: 16px 20px; text-align: right;">9</td>
+              <td class="num" style="padding: 16px 20px; text-align: right;">R$ 289,90</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E2E0DA;">
+              <td style="padding: 16px 20px;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div style="width: 40px; height: 50px; background: #C3C9BC; border: 1px solid #E2E0DA; flex-shrink: 0;"></div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font: 400 15px/1.2 Archivo;">Camisa Sage</span>
+                    <span class="meta" style="color: #9A948E; font-size: 11px;">camisa-sage</span>
+                  </div>
+                </div>
+              </td>
+              <td style="padding: 16px 20px;"><span class="meta" style="border: 1px solid #6B6560; color: #6B6560; padding: 4px 8px;">Rascunho</span></td>
+              <td style="padding: 16px 20px;">
+                <div style="display: flex; gap: 6px;">
+                  <span class="num" style="width: 34px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E0DA; font-size: 12px;">P</span>
+                  <span class="num" style="width: 34px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E0DA; font-size: 12px;">M</span>
+                  <span class="num" style="width: 34px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E0DA; font-size: 12px;">G</span>
+                </div>
+              </td>
+              <td class="num" style="padding: 16px 20px; text-align: right;">0</td>
+              <td class="num" style="padding: 16px 20px; text-align: right;">R$ 179,90</td>
+            </tr>
+            <tr>
+              <td style="padding: 16px 20px;">
+                <div style="display: flex; align-items: center; gap: 14px; opacity: .5;">
+                  <div style="width: 40px; height: 50px; background: #EDE9E1; border: 1px solid #E2E0DA; flex-shrink: 0; filter: grayscale(1);"></div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font: 400 15px/1.2 Archivo;">Regata Off</span>
+                    <span class="meta" style="color: #9A948E; font-size: 11px;">regata-off</span>
+                  </div>
+                </div>
+              </td>
+              <td style="padding: 16px 20px;"><span class="meta" style="border: 1px solid #9A948E; color: #9A948E; padding: 4px 8px;">Arquivado</span></td>
+              <td style="padding: 16px 20px;">
+                <div style="display: flex; gap: 6px; opacity: .5;">
+                  <span class="num" style="width: 34px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E0DA; font-size: 12px;">M</span>
+                  <span class="num" style="width: 34px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E0DA; font-size: 12px;">G</span>
+                </div>
+              </td>
+              <td class="num" style="padding: 16px 20px; text-align: right; color: #6B6560;">6</td>
+              <td class="num" style="padding: 16px 20px; text-align: right; color: #6B6560;">R$ 99,90</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span class="meta" style="color: #6B6560;">12 de 12</span>
+        <div style="display: flex; gap: 8px;">
+          <span class="num" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid #0A0A0A;">1</span>
+          <span class="num" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E0DA; color: #9A948E;">2</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

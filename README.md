@@ -164,6 +164,15 @@ decisão caiu e por quê.
   contagem e aceitá-la, e se ela mudar entre o aviso e a confirmação a caixa
   desmarca sozinha.
 
+- **A categoria não sabe quantas peças tem.** `CategoryResponse` traz `id`,
+  `name`, `slug` e `description` — a categoria não conhece os produtos que
+  apontam para ela. A coluna `Peças` do artboard sai de um `GET /products` por
+  categoria com `perPage: 1`, lendo o `total` que o servidor conta. São N
+  requisições para N categorias, em paralelo, e é aceitação deliberada e não
+  descuido: a própria API declara a lista de categorias não paginada porque o
+  conjunto é pequeno. Um `productCount` na categoria colapsaria isso para uma
+  requisição só — candidato a upstream, não decidido.
+
 - **A lista de pedidos não tem busca nem contagem por status.** O artboard
   mostra um número em cada chip do filtro (`Pago 9`, `Enviado 12`). Cada um
   seria uma requisição própria — seis viagens a mais para decorar um filtro — e

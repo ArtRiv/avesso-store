@@ -307,15 +307,73 @@ export interface paths {
         put?: never;
         /**
          * Add a size to a product
-         * @description Adds one variant. `position` defaults to the end of the list; `stockQuantity` defaults to 0, which is a real state — the size exists and has none left.
+         * @description Adds one variant. `position` defaults to one past the highest in use — the end of the list — and `stockQuantity` defaults to 0, which is a real state: the size exists and has none left.
          *
-         *     There is deliberately no route to rename, reorder or remove a variant. Adding cannot invalidate anything; removing has to decide what happens to a size somebody already bought, and that is a policy decision rather than a detail (docs/specs/product-variants.md).
+         *     Renaming, reordering and removing are the three routes below (docs/specs/variant-management.md). Removal is the only one that can refuse: a size that was sold, or the last one a product has, stays.
          */
         post: operations["ProductsController_addVariant"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/products/{id}/variants/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Reorder a product’s sizes
+         * @description Restates the whole display order: send **exactly** this product’s variants, in the order they should appear, and each `position` becomes its index in that list.
+         *
+         *     A partial list is a 400 rather than a partial reorder — it does not say where the sizes it omitted should go. All positions are written in one transaction, so a failure cannot leave half an ordering behind.
+         *
+         *     Ordering is explicit because alphabetical is wrong: P/M/G/GG/XGG sorts to G, GG, M, P, XGG.
+         */
+        patch: operations["ProductsController_reorderVariants"];
+        trace?: never;
+    };
+    "/products/{id}/variants/{variantId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a size
+         * @description Three refusals, in the order you cannot argue with them:
+         *
+         *     1. **The last variant never goes.** Every product has at least one size, always — one with none is unbuyable. No parameter overrides this; archive the product instead (`DELETE /products/{id}`).
+         *     2. **A size somebody bought never goes.** Order items reference it forever and the database RESTRICTs the deletion; this route turns that refusal into a 409 with a sentence rather than a 500. If a size is stuck this way, **rename it** — that is the escape hatch, and it costs history nothing.
+         *     3. **Carts do not veto, but they are not discarded silently either.** A size sitting in any cart is a 409 carrying `cartLineCount`. To go through, send both `discardCartLines=true` (authorising the destruction) and `expectedCartLineCount` (confirming the impact you just reviewed). The count is taken again under a row lock inside the transaction: if it changed in either direction, nothing is deleted and the 409 carries the new number.
+         *
+         *     The variant and the cart lines are removed by this route, in one transaction — not left to the FK cascade, which remains only as a referential safety net.
+         */
+        delete: operations["ProductsController_removeVariant"];
+        options?: never;
+        head?: never;
+        /**
+         * Rename a size
+         * @description **Placed orders are untouched.** `OrderItem.variantLabel` is a snapshot taken at purchase, so renaming a size cannot rewrite what somebody bought — which is exactly why this operation is safe and why the snapshot exists.
+         *
+         *     Carts are the deliberate opposite: they hold no snapshot, so a cart line immediately shows the new label. That is the current truth a cart promises.
+         *
+         *     Renaming a size to the label it already has does nothing and answers 200.
+         */
+        patch: operations["ProductsController_renameVariant"];
         trace?: never;
     };
     "/products/{id}/variants/{variantId}/stock": {
@@ -1003,6 +1061,40 @@ export interface components {
             weightGrams?: number;
             /** @description Category ids. A product in no category is valid. */
             categoryIds?: string[];
+        };
+        ReorderVariantsDto: {
+            /**
+             * @description **Exactly** this product's variants, in the order they should display — no repeats, none missing, none belonging to another product. Anything else is a 400 rather than a partial reorder.
+             *
+             *     `position` becomes the index in this array, so the list you send is the list you get back.
+             * @example [
+             *       "3f1c0a5e-1d9b-4a1e-8c2f-6a0b7d5e4c31",
+             *       "9b2d1e6f-2c8a-4b7d-9e3f-1a5c8d7b2e40"
+             *     ]
+             */
+            variantIds: string[];
+        };
+        RenameVariantDto: {
+            /**
+             * @description The new label. Must be unique within the product — a label another size already holds is a 409. Renaming a size to what it already is does nothing and answers 200.
+             *
+             *     **Placed orders are unaffected**: `OrderItem.variantLabel` is a snapshot taken at purchase. Carts are the opposite and equally deliberate — they hold no snapshot, so a cart line starts showing the new label immediately.
+             * @example Médio
+             */
+            label: string;
+        };
+        VariantInCartsResponse: {
+            /**
+             * @description Human-readable, and names the count in both variations.
+             * @example This size is in 3 shopping carts
+             * @example Cart line count changed from 3 to 4; review and confirm again
+             */
+            message: string;
+            /**
+             * @description How many cart lines hold this size **right now**. Send it back as `expectedCartLineCount` to confirm you reviewed this impact.
+             * @example 3
+             */
+            cartLineCount: number;
         };
         SetStockDto: {
             /**
@@ -2136,6 +2228,215 @@ export interface operations {
                 };
             };
             /** @description This product already has a variant with that label. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ProductsController_reorderVariants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderVariantsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductResponse"];
+                };
+            };
+            /** @description `variantIds` is not exactly this product’s variants — one missing, one repeated, or one belonging to another product. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `products.update` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No product with that id. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ProductsController_removeVariant: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Authorises deleting the cart lines of everyone holding this size. Omit it and a size sitting in any cart is refused with a 409 carrying the count.
+                 *
+                 *     Must be sent together with `expectedCartLineCount`. Named for what it does rather than `force`, because it cannot be ticked without reading the consequence.
+                 */
+                discardCartLines?: boolean;
+                /** @description The `cartLineCount` from the 409 you just reviewed. The count is taken again under a row lock inside the deletion transaction, and **any** difference — in either direction — aborts the whole thing with a 409 carrying the current number, changing nothing. A fourth cart arriving between the warning and the confirmation is therefore never deleted unseen. */
+                expectedCartLineCount?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+                variantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The product, now without that size. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductResponse"];
+                };
+            };
+            /** @description One half of the confirmation was sent without the other, or `discardCartLines` was neither `true` nor `false`. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `products.delete` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such product, or that variant does not belong to it. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Refused: it is the last variant, it has been sold, or carts hold it and the impact was not authorised and confirmed. Only the cart cases carry `cartLineCount`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VariantInCartsResponse"];
+                };
+            };
+        };
+    };
+    ProductsController_renameVariant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                variantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RenameVariantDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductResponse"];
+                };
+            };
+            /** @description `label` is empty or longer than 20 characters. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `products.update` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such product, or that variant does not belong to it. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Another size of this product already has that label. */
             409: {
                 headers: {
                     [name: string]: unknown;

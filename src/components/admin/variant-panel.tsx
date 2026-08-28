@@ -6,7 +6,9 @@ import {
   DragHandleIcon,
   PencilIcon,
   PlusIcon,
+  TrashIcon,
 } from "@/components/admin-icons";
+import { RemoveVariantDialog } from "@/components/admin/remove-variant-dialog";
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,9 +27,11 @@ type Variant = components["schemas"]["ProductVariantResponse"];
  * body: it replaces what it holds with what the server said, and the two
  * cannot drift.
  *
- * Removal is not here yet — it arrives with the confirmation dialog it cannot
- * exist without, since two of its three refusals are things only the API can
- * tell us and the third destroys other people's cart lines.
+ * Removal goes through its own dialog, because two of its three refusals are
+ * things only the API can tell us and the third destroys other people's cart
+ * lines. The panel knows exactly one of them locally — a product always keeps
+ * at least one size — so the trash on a lone size opens straight into the
+ * refusal rather than spending a request to be told.
  */
 export function VariantPanel({
   productId,
@@ -53,6 +57,9 @@ export function VariantPanel({
    */
   const [dragOrder, setDragOrder] = useState<Variant[] | null>(null);
   const dragFrom = useRef<number | null>(null);
+
+  /** The size whose removal dialog is open, if any. */
+  const [removing, setRemoving] = useState<Variant | null>(null);
 
   const rows = dragOrder ?? variants;
 
@@ -228,9 +235,81 @@ export function VariantPanel({
                 },
               )
             }
+            onRemove={() => {
+              setRemoving(variant);
+            }}
           />
         ))}
       </div>
+
+      {removing ? (
+        <RemoveVariantDialog
+          key={removing.id}
+          label={removing.label}
+          isLast={variants.length === 1}
+          open
+          onOpenChange={(next) => {
+            if (!next) {
+              setRemoving(null);
+            }
+          }}
+          onRename={() => {
+            setRenameError(null);
+            setRenaming(removing.id);
+          }}
+          onRemove={async (expected) => {
+            const query =
+              expected === null
+                ? ""
+                : `?discardCartLines=true&expectedCartLineCount=${String(expected)}`;
+
+            try {
+              const response = await apiFetch(
+                `/api/admin/products/${productId}/variants/${removing.id}${query}`,
+                { method: "DELETE" },
+              );
+
+              if (response.ok) {
+                onProductChange((await response.json()) as Product);
+                return { ok: true as const };
+              }
+
+              if (response.status === 409) {
+                const body = (await response.json()) as {
+                  reason?: string;
+                  cartLineCount?: number;
+                };
+
+                // The count is the whole mechanism — it renumbers the sentence
+                // and clears the box. A refusal without one has no way through.
+                return body.reason === "carts" &&
+                  typeof body.cartLineCount === "number"
+                  ? {
+                      ok: false as const,
+                      reason: "carts" as const,
+                      count: body.cartLineCount,
+                    }
+                  : { ok: false as const, reason: "blocked" as const };
+              }
+
+              return {
+                ok: false as const,
+                reason: "error" as const,
+                message: await problemMessage(response),
+              };
+            } catch (caught) {
+              return {
+                ok: false as const,
+                reason: "error" as const,
+                message:
+                  caught instanceof SessionEndedError
+                    ? caught.message
+                    : "Não foi possível remover. Tente novamente em instantes.",
+              };
+            }
+          }}
+        />
+      ) : null}
 
       <div className="flex items-center justify-between gap-4">
         {adding ? (
@@ -288,6 +367,7 @@ function VariantRow({
   onCancelRename,
   onRename,
   onStock,
+  onRemove,
 }: {
   variant: Variant;
   index: number;
@@ -302,6 +382,7 @@ function VariantRow({
   onCancelRename: () => void;
   onRename: (label: string) => Promise<void>;
   onStock: (quantity: number) => Promise<boolean>;
+  onRemove: () => void;
 }) {
   const soldOut = variant.stockQuantity === 0;
 
@@ -376,15 +457,26 @@ function VariantRow({
 
       <div className="flex justify-end gap-3">
         {renaming ? null : (
-          <button
-            type="button"
-            aria-label={`Renomear ${variant.label}`}
-            disabled={busy}
-            onClick={onStartRename}
-            className="text-muted outline-none hover:text-ink focus-visible:outline-1 focus-visible:outline-ink disabled:text-admin-hairline"
-          >
-            <PencilIcon />
-          </button>
+          <>
+            <button
+              type="button"
+              aria-label={`Renomear ${variant.label}`}
+              disabled={busy}
+              onClick={onStartRename}
+              className="text-muted outline-none hover:text-ink focus-visible:outline-1 focus-visible:outline-ink disabled:text-admin-hairline"
+            >
+              <PencilIcon />
+            </button>
+            <button
+              type="button"
+              aria-label={`Remover ${variant.label}`}
+              disabled={busy}
+              onClick={onRemove}
+              className="text-muted outline-none hover:text-clay focus-visible:outline-1 focus-visible:outline-ink disabled:text-admin-hairline"
+            >
+              <TrashIcon />
+            </button>
+          </>
         )}
       </div>
     </div>

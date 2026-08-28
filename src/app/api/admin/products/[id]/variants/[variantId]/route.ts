@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { readJson, withAdminApi } from "@/lib/admin/route";
-import { unwrap } from "@/lib/api/client";
+import { assertOk, unwrap } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import { adminAccess } from "@/lib/admin/session";
 import { customerApi } from "@/lib/auth/session";
@@ -66,10 +66,10 @@ export async function PATCH(
  *    difference in either direction aborts and answers 409 with the new
  *    number.
  *
- * This handler does not translate case 3's 409. It passes the body through
- * intact, because the dialog needs `cartLineCount` to renumber its sentence
- * and clear its checkbox — a message alone cannot do that. The other refusals
- * do get pt-BR copy, since there is nothing structured in them to keep.
+ * The 409 is read here rather than translated, because the dialog needs
+ * `cartLineCount` to renumber its sentence and clear its checkbox — a message
+ * alone cannot do that. Everything else becomes pt-BR copy, since there is
+ * nothing structured in it to keep.
  */
 export async function DELETE(
   request: NextRequest,
@@ -121,25 +121,49 @@ export async function DELETE(
     return NextResponse.json({ error: "Sessão expirada." }, { status: 401 });
   }
 
+  // Deliberately NOT `unwrap`. Every other route in this app answers a failure
+  // with the shared `ErrorResponse`, and the shared client keeps a body only
+  // when it carries `statusCode` — which is the right check everywhere else.
+  // This route is the documented exception: its 409 is a
+  // `VariantInCartsResponse`, `{ message, cartLineCount }`, with no
+  // `statusCode` at all. Going through `unwrap` would throw the count away,
+  // and the count is the entire mechanism.
+  const result = await api.DELETE("/products/{id}/variants/{variantId}", {
+    params: {
+      path: { id, variantId },
+      query: discard
+        ? { discardCartLines: true, expectedCartLineCount: expected ?? 0 }
+        : {},
+    },
+  });
+
+  if (result.response.ok && result.error === undefined) {
+    return NextResponse.json(result.data);
+  }
+
+  if (result.response.status === 409) {
+    // Carts hold it, or the count moved under us. Either way the number is
+    // what the dialog needs: it renumbers the sentence and clears the box.
+    // A 409 WITHOUT a count is a refusal with no way through — the last size,
+    // or one somebody bought. Telling them apart by the count's presence is
+    // exactly how the document describes them.
+    return hasCartLineCount(result.error)
+      ? NextResponse.json(
+          { reason: "carts", cartLineCount: result.error.cartLineCount },
+          { status: 409 },
+        )
+      : NextResponse.json({ reason: "blocked" }, { status: 409 });
+  }
+
   try {
-    return NextResponse.json(
-      unwrap(
-        await api.DELETE("/products/{id}/variants/{variantId}", {
-          params: {
-            path: { id, variantId },
-            query: discard
-              ? {
-                  discardCartLines: true,
-                  expectedCartLineCount: expected ?? 0,
-                }
-              : {},
-          },
-        }),
-      ),
-    );
+    assertOk(result);
   } catch (error) {
     return removalRefusal(error);
   }
+
+  // assertOk throws on every non-ok response, so this is unreachable — it
+  // exists so the function has one return type rather than a bare `throw`.
+  return NextResponse.json(result.data);
 }
 
 /** The 409 body the API sends when carts hold this size. */
@@ -154,13 +178,9 @@ function hasCartLineCount(body: unknown): body is VariantInCarts {
 }
 
 /**
- * Turns a refusal into something the dialog can render.
- *
- * A 409 carrying `cartLineCount` keeps it — that number is the whole
- * mechanism, and the dialog uses it to renumber the sentence and uncheck the
- * box. A 409 without one is a refusal with no way through: the last size, or
- * one that was sold. The two are told apart by the count's presence, which is
- * exactly how the document describes them.
+ * Everything that is not a 409 — those are handled above, where the count is
+ * still in hand. This is the ordinary tail: a dead session, a size that has
+ * already gone, a provider failure.
  */
 function removalRefusal(error: unknown): NextResponse {
   if (!(error instanceof ApiError)) {
@@ -172,20 +192,6 @@ function removalRefusal(error: unknown): NextResponse {
 
   if (error.isUnauthorized) {
     return NextResponse.json({ error: "Sessão expirada." }, { status: 401 });
-  }
-
-  if (error.isConflict && hasCartLineCount(error.body)) {
-    return NextResponse.json(
-      { reason: "carts", cartLineCount: error.body.cartLineCount },
-      { status: 409 },
-    );
-  }
-
-  if (error.isConflict) {
-    // Prose, and the two cases read differently enough to tell apart — but
-    // the panel already knows when it is holding the last size, so anything
-    // else reaching here is the sold one.
-    return NextResponse.json({ reason: "blocked" }, { status: 409 });
   }
 
   if (error.isNotFound) {

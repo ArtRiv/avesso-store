@@ -145,6 +145,42 @@ decisão caiu e por quê.
 
 ### Em aberto — vai subir para o commerce-core
 
+- **O pedido não diz quem comprou.** `OrderResponse` carrega `userId` e mais
+  nada sobre o comprador, e o painel tem coluna `Cliente` na lista e um card
+  com nome e e-mail no detalhe. Subiu como
+  [#24](https://github.com/ArtRiv/commerce-core/pull/24): `buyer` com `id`,
+  `name` e `email`, preenchido só para quem carrega `orders.read`. **Enquanto
+  o PR não for mergeado e implantado, as duas telas de pedido ficam
+  bloqueadas** — mostrar um UUID truncado no lugar foi considerado e recusado,
+  porque seria o front-end fingindo ter um dado que a API não dá.
+
+- **Não há como saber que um tamanho foi vendido antes de tentar removê-lo.**
+  O artboard do editor desenha um cadeado e a lixeira apagada na linha de um
+  tamanho vendido, ou seja, assume que a tela sabe disso ao renderizar.
+  `ProductVariantResponse` traz `id`, `label`, `position` e `stockQuantity` —
+  nada sobre pedidos ou carrinhos. A informação só existe dentro do `409` do
+  `DELETE`. Consequência: a lixeira aparece em todas as linhas removíveis, e o
+  motivo da recusa chega no diálogo em vez de na linha. Candidato a upstream
+  (um `soldCount` e um `cartLineCount` na variante resolveriam os dois), ainda
+  não decidido.
+
+- **O diálogo de remoção abre sem o número.** Pelo mesmo motivo acima: o
+  artboard abre em "está em 3 sacolas", e não existe rota que devolva essa
+  contagem sem tentar apagar. Então o primeiro passo é uma confirmação sem
+  número, e a caixa com a frase (`Autorizo descartar as N linhas…`) só aparece
+  depois que a API disse que há carrinho em risco. **A invariante que importa
+  está intacta**: nenhuma linha de carrinho é destruída sem o operador ler a
+  contagem e aceitá-la, e se ela mudar entre o aviso e a confirmação a caixa
+  desmarca sozinha.
+
+- **O painel não sabe o e-mail de quem está logado.** O artboard mostra
+  `admin@[loja].com.br` na barra do topo. Não existe `/auth/me`, nem rota
+  nenhuma que descreva o chamador, e o access token carrega só `{ sub }`. A
+  barra renderiza sem o endereço em vez de inventar um. Isto é resolvível
+  **aqui** — `docs/upstream-first.md` põe cookie e sessão do BFF deste lado —
+  gravando o endereço num cookie no login; ainda não feito porque mexe na rota
+  de login da loja.
+
 - **As doze peças de hoje só têm a variante `Único`.** A migration do
   [#19](https://github.com/ArtRiv/commerce-core/pull/19) deu a cada produto
   existente uma única variante `Único` carregando o estoque original, que é o
@@ -205,6 +241,19 @@ decisão caiu e por quê.
   `Tamanho X` do artboard 06 é ele.
 
 ### Adiadas — resolvidas aqui, de propósito
+
+- **O rótulo de papel na barra do painel é fixo.** Ao lado do e-mail o
+  artboard mostra um chip `Admin`. Papéis são linhas no banco e a autorização é
+  por permissão, nunca por papel — não há rota que devolva o nome do papel do
+  chamador, e chamar de `Admin` quem talvez seja `operator` seria uma
+  afirmação falsa sobre permissão. O chip diz `Operador`, que é o que carregar
+  `products.read` e `orders.read` de fato significa.
+
+- **O painel não tem tela inicial.** `/admin` redireciona para Produtos. O
+  canvas desenha seis telas e nenhuma é um *dashboard*; os números que fariam
+  um valer a pena — faturamento, pedidos do dia — vêm de `reports.read`, uma
+  permissão sem rota atrás. Uma home vazia é pior do que chegar onde o
+  trabalho começa.
 
 - **O corpo do 409 do checkout é prosa.** `POST /orders` responde
   `{ statusCode, message, error }`, e a `message` nomeia as peças esgotadas

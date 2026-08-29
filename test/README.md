@@ -36,6 +36,14 @@ loja de verdade.
    verificado e a senha `correct horse battery staple`. Promover é um `UPDATE`
    no banco — não existe rota para isso, aqui nem na API, e é de propósito.
 
+   **O papel `admin` precisa carregar `reports.read`.** Ela é a permissão das
+   quatro rotas de relatório e é separada de `products.read` e `orders.read`:
+   um `admin` de um schema criado antes da migration de relatórios abre o
+   painel, chega em `/admin/relatorios` e leva 403 em tudo — que é justamente
+   um dos estados que `reports.mjs` verifica, e por isso a suíte inteira
+   falharia sem dizer o motivo. `pnpm e2e:setup` no commerce-core reconstrói o
+   schema com o catálogo de permissões atual.
+
 ## O que cada arquivo é
 
 | arquivo | o que cobre |
@@ -44,6 +52,7 @@ loja de verdade.
 | `removal.mjs` | os três estados da remoção de tamanho, **incluindo a corrida** |
 | `orders.mjs` | `buyer`, as duas telas de pedido, as cinco transições |
 | `categories.mjs` | CRUD, a contagem de peças, e a promessa da copy de apagar |
+| `reports.mjs` | a fronteira de `reports.read` nas quatro rotas, a janela meio-aberta, o snapshot de sacolas, e as duas listas complementares |
 | `drive.mjs` | o cliente HTTP com potes de cookie nomeados |
 | `fixture.mjs` | semeadura — cada execução cria os próprios produtos |
 

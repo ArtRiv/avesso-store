@@ -164,6 +164,24 @@ decisão caiu e por quê.
   contagem e aceitá-la, e se ela mudar entre o aviso e a confirmação a caixa
   desmarca sozinha.
 
+- **O relatório de receita não tem total do período.** `RevenueReportResponse`
+  traz `from`, `to`, `granularity`, `timeZone` e `buckets` — e nenhuma soma da
+  janela. O número que um painel de relatórios naturalmente lidera é
+  "faturamento no período", e ele não existe na resposta.
+
+  Somar os buckets aqui resolveria a tela em uma linha, e é exatamente a
+  aritmética com dinheiro que o `CLAUDE.md` proíbe e que o teste de decisão
+  classifica como lacuna de backend: seria um segundo lugar onde "receita do
+  período" passa a ser definida, e o primeiro a discordar quando um bucket
+  parcial, um reembolso ou um arredondamento entrar na conta. Então
+  `/admin/relatorios` **não mostra número de destaque nenhum** — mostra os
+  buckets, cada um com o valor que a API mandou.
+
+  Passa nas três perguntas com folga: toda loja quer, é dinheiro, e não dá para
+  resolver aqui sem duplicar a regra. Um `totalCents` (com `itemsSubtotalCents`
+  e `shippingCents` ao lado, como já vem no bucket) ao lado de `buckets`
+  resolveria. Candidato a upstream, ainda não decidido.
+
 - **A categoria não sabe quantas peças tem.** `CategoryResponse` traz `id`,
   `name`, `slug` e `description` — a categoria não conhece os produtos que
   apontam para ela. A coluna `Peças` do artboard sai de um `GET /products` por
@@ -271,10 +289,13 @@ decisão caiu e por quê.
   `products.read` e `orders.read` de fato significa.
 
 - **O painel não tem tela inicial.** `/admin` redireciona para Produtos. O
-  canvas desenha seis telas e nenhuma é um *dashboard*; os números que fariam
-  um valer a pena — faturamento, pedidos do dia — vêm de `reports.read`, uma
-  permissão sem rota atrás. Uma home vazia é pior do que chegar onde o
-  trabalho começa.
+  canvas desenha seis telas e nenhuma é um *dashboard*, e uma home vazia é
+  pior do que chegar onde o trabalho começa.
+
+  Os números que fariam uma valer a pena existem agora — `reports.read` ganhou
+  quatro rotas, e `/admin/relatorios` as lê. Mesmo assim a tela é destino no
+  rail, e não porta de entrada: o período é escolha do operador, e cair numa
+  janela já escolhida seria escolher por ele.
 
 - **O corpo do 409 do checkout é prosa.** `POST /orders` responde
   `{ statusCode, message, error }`, e a `message` nomeia as peças esgotadas

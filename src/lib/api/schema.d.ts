@@ -808,6 +808,120 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reports/product-sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Units and revenue per piece, over a period
+         * @description How much of each piece left, best-selling first.
+         *
+         *     A sale is an order that is `PAID`, `SHIPPED` or `DELIVERED`, timed by **`paidAt`** — when the money arrived, not when the cart froze.
+         *
+         *     `CREATED` does not count: the stock left the shelf but nothing was paid, and half of those orders never are. `CANCELLED` and `REFUNDED` do not count either, and both return their units to stock — so "units sold" and "stock that left the shelf" keep saying the same thing.
+         *
+         *     The window is `[from, to)` — start inclusive, end **exclusive**, so asking for two adjacent months never counts an order twice. Both are optional: omit `to` for now, omit `from` for 30 days before `to`.
+         *
+         *     Rows are grouped by **product id** and named from the live catalogue, so renaming a piece mid-period does not split it into two lines. Sizes are summed together: which size to restock is a different question, and this route does not answer it.
+         *
+         *     `itemsRevenueCents` is the goods alone, at the price frozen on each order line. Freight is not attributable to a piece and lives on `GET /reports/revenue`.
+         */
+        get: operations["ReportsController_productSales"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/revenue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Revenue by week or by month
+         * @description A continuous series: a bucket with no sales comes back as zeros rather than as a gap, so a bar chart cannot silently skip the bad week. Not paginated — the window already bounds it.
+         *
+         *     A sale is an order that is `PAID`, `SHIPPED` or `DELIVERED`, timed by **`paidAt`** — when the money arrived, not when the cart froze.
+         *
+         *     `CREATED` does not count: the stock left the shelf but nothing was paid, and half of those orders never are. `CANCELLED` and `REFUNDED` do not count either, and both return their units to stock — so "units sold" and "stock that left the shelf" keep saying the same thing.
+         *
+         *     The window is `[from, to)` — start inclusive, end **exclusive**, so asking for two adjacent months never counts an order twice. Both are optional: omit `to` for now, omit `from` for 30 days before `to`.
+         *
+         *     Buckets are cut in the instance's configured time zone (`REPORTS_TIMEZONE`, default `UTC`), reported back as `timeZone`: cutting a Brazilian store's weeks in UTC would push every Sunday evening into the following Monday. `periodStart` is therefore a calendar date, not an instant.
+         *
+         *     `revenueCents` is what was charged; `itemsSubtotalCents` and `shippingCents` are the two halves of it, broken out because freight is collected rather than earned.
+         */
+        get: operations["ReportsController_revenue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/carts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What is sitting in shopping carts right now
+         * @description A snapshot, with no period — carts have no history, only a present.
+         *
+         *     `unitCount` counts **pieces**, not lines: three of one size in one bag is 3. `cartCount` counts carts that hold at least one line, because checkout consumes the items and leaves the cart row alive and empty — counting carts would count everyone who ever bought once.
+         *
+         *     This number previously existed only inside the 409 from removing a variant, and not even in this shape: that one counts cart *lines* holding a single size.
+         */
+        get: operations["ReportsController_carts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/unsold-products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pieces that are not moving
+         * @description ACTIVE, holding stock, and with no sale in the window — the three conditions together. A sold-out piece is **not** listed: that is the opposite of not moving. Neither is a DRAFT or ARCHIVED one, which is not for sale to begin with.
+         *
+         *     A sale is an order that is `PAID`, `SHIPPED` or `DELIVERED`, timed by **`paidAt`** — when the money arrived, not when the cart froze.
+         *
+         *     `CREATED` does not count: the stock left the shelf but nothing was paid, and half of those orders never are. `CANCELLED` and `REFUNDED` do not count either, and both return their units to stock — so "units sold" and "stock that left the shelf" keep saying the same thing. The same definition decides "no sale", so this list is the exact complement of `GET /reports/product-sales`.
+         *
+         *     The window is `[from, to)` — start inclusive, end **exclusive**, so asking for two adjacent months never counts an order twice. Both are optional: omit `to` for now, omit `from` for 30 days before `to`.
+         *
+         *     `lastSoldAt` reaches outside the window on purpose — it is the last sale of any era, or `null` for a piece that has never sold, which is a different problem from one that stopped.
+         *
+         *     Ordered by stock descending: the piece with the most capital standing still comes first.
+         */
+        get: operations["ReportsController_unsoldProducts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1606,6 +1720,169 @@ export interface components {
              * @example 49740
              */
             itemsSubtotalCents: number;
+        };
+        ProductSalesRowResponse: {
+            /** Format: uuid */
+            productId: string;
+            /**
+             * @description The name the product carries **today**, from the catalogue — not the snapshot frozen onto the order. Rows are grouped by product id, so a piece renamed mid-period is still one line rather than two.
+             * @example Camiseta Preta
+             */
+            name: string;
+            /** @example camiseta-preta */
+            slug: string;
+            /**
+             * @description Pieces, summed across sizes. Two sizes of one shirt in one order are two order lines and one row here.
+             * @example 7
+             */
+            unitsSold: number;
+            /**
+             * @description Integer cents, from the **frozen** unit price of each line — what the customer actually paid, not today’s catalogue price. Items only: freight belongs to the order, not to a piece, and lives on `GET /reports/revenue`. Deliberately not called `revenueCents`, so the two are never added together.
+             * @example 55930
+             */
+            itemsRevenueCents: number;
+            /**
+             * @description How many distinct orders included this piece.
+             * @example 4
+             */
+            orderCount: number;
+        };
+        ProductSalesReportResponse: {
+            /**
+             * Format: date-time
+             * @description Start of the window, inclusive.
+             */
+            from: string;
+            /**
+             * Format: date-time
+             * @description End of the window, **exclusive**.
+             */
+            to: string;
+            /** @description Best-selling first. Ties break on product id. */
+            items: components["schemas"]["ProductSalesRowResponse"][];
+            /**
+             * @description Distinct pieces sold in the window, not the page size.
+             * @example 12
+             */
+            total: number;
+            /** @example 1 */
+            page: number;
+            /**
+             * @description Clamped to 100.
+             * @example 20
+             */
+            perPage: number;
+        };
+        RevenueBucketResponse: {
+            /**
+             * @description First day of the bucket, as a **calendar date** in the instance’s time zone — `YYYY-MM-DD`, deliberately not an instant. An instant would invite the browser to re-read it in *its* zone and draw the bar in the previous week, which is the very error the server-side bucketing exists to avoid. Weeks start on Monday.
+             * @example 2026-08-24
+             */
+            periodStart: string;
+            /**
+             * @description Integer cents actually charged — `itemsSubtotalCents + shippingCents`, guaranteed, because the same sum is a CHECK constraint on every order.
+             * @example 59920
+             */
+            revenueCents: number;
+            /**
+             * @description The goods alone.
+             * @example 55930
+             */
+            itemsSubtotalCents: number;
+            /**
+             * @description Freight, broken out — it is collected, not earned.
+             * @example 3990
+             */
+            shippingCents: number;
+            /** @example 4 */
+            orderCount: number;
+        };
+        RevenueReportResponse: {
+            /**
+             * Format: date-time
+             * @description Start of the window, inclusive.
+             */
+            from: string;
+            /**
+             * Format: date-time
+             * @description End of the window, **exclusive**.
+             */
+            to: string;
+            /**
+             * @example month
+             * @enum {string}
+             */
+            granularity: "week" | "month";
+            /**
+             * @description The IANA zone the buckets were cut in (`REPORTS_TIMEZONE`, default `UTC`). It is here because a chart labelled with dates is unreadable without it: cutting a Brazilian store’s weeks in UTC pushes every Sunday evening into the following Monday.
+             * @example America/Sao_Paulo
+             */
+            timeZone: string;
+            /** @description Ascending, and **continuous**: a week or month with no sales comes back as zeros rather than as a gap, so a bar chart does not silently skip the bad week. Not paginated — a chart needs the whole series, and the window already bounds it. */
+            buckets: components["schemas"]["RevenueBucketResponse"][];
+        };
+        CartsReportResponse: {
+            /**
+             * @description Pieces, not lines: three of one size in one bag counts 3. This is the number `VariantInCartsResponse.cartLineCount` is **not** — that one counts the cart *lines* holding a single variant, which is a different question about a different scope.
+             * @example 40
+             */
+            unitCount: number;
+            /**
+             * @description Cart lines — one per size held, whatever its quantity.
+             * @example 12
+             */
+            lineCount: number;
+            /**
+             * @description Carts holding at least one line. Checkout consumes the items and leaves the cart row alive and empty, so this counts baskets in play rather than everyone who ever bought once.
+             *
+             *     It is here because the unit count alone does not read: 40 units across 2 carts and 40 across 30 are opposite situations.
+             * @example 2
+             */
+            cartCount: number;
+        };
+        UnsoldProductRowResponse: {
+            /** Format: uuid */
+            productId: string;
+            /** @example Calça Cargo */
+            name: string;
+            /** @example calca-cargo */
+            slug: string;
+            /**
+             * @description Summed across the piece’s sizes. Always greater than zero here — sold out is not "not moving", it is the opposite of it.
+             * @example 12
+             */
+            stockQuantity: number;
+            /**
+             * Format: date-time
+             * @description When this piece last sold, **of any era** — not restricted to the window, which by definition holds no sale of it. `null` means it has never sold at all, which is a different problem from having stopped selling.
+             */
+            lastSoldAt: string | null;
+        };
+        UnsoldProductsReportResponse: {
+            /**
+             * Format: date-time
+             * @description Start of the window, inclusive.
+             */
+            from: string;
+            /**
+             * Format: date-time
+             * @description End of the window, **exclusive**.
+             */
+            to: string;
+            /** @description Most stock first — the piece with the most capital standing still is the one a discount gets decided about. Ties break on product id. */
+            items: components["schemas"]["UnsoldProductRowResponse"][];
+            /**
+             * @description Matching pieces, not the page size.
+             * @example 3
+             */
+            total: number;
+            /** @example 1 */
+            page: number;
+            /**
+             * @description Clamped to 100.
+             * @example 20
+             */
+            perPage: number;
         };
     };
     responses: never;
@@ -3723,6 +4000,216 @@ export interface operations {
             };
             /** @description The shipping provider is unreachable. Distinct from an empty option list, which is a 200. */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ReportsController_productSales: {
+        parameters: {
+            query?: {
+                /** @description Start of the window, **inclusive**. ISO-8601; a bare date is read as midnight UTC. Omit it for 30 days before `to`. */
+                from?: string;
+                /**
+                 * @description End of the window, **exclusive** — so two adjacent months never count the same order twice. Omit it for now.
+                 *
+                 *     A `from` at or after `to` is a 400, not an empty list: an impossible window is the caller’s bug, and `[]` would read as "nothing matched".
+                 */
+                to?: string;
+                page?: number;
+                /** @description Values above 100 are clamped, not rejected. */
+                perPage?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductSalesReportResponse"];
+                };
+            };
+            /** @description `from` is at or after `to`, or one of them is not an ISO-8601 date. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `reports.read` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ReportsController_revenue: {
+        parameters: {
+            query?: {
+                /** @description Start of the window, **inclusive**. ISO-8601; a bare date is read as midnight UTC. Omit it for 30 days before `to`. */
+                from?: string;
+                /**
+                 * @description End of the window, **exclusive** — so two adjacent months never count the same order twice. Omit it for now.
+                 *
+                 *     A `from` at or after `to` is a 400, not an empty list: an impossible window is the caller’s bug, and `[]` would read as "nothing matched".
+                 */
+                to?: string;
+                /** @description Bucket size. Weeks start on **Monday** (ISO), and both are cut in the instance’s configured time zone — see the `timeZone` field on the response. */
+                granularity?: "week" | "month";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevenueReportResponse"];
+                };
+            };
+            /** @description `from` is at or after `to`, one of them is not an ISO-8601 date, or `granularity` is outside the enum. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `reports.read` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ReportsController_carts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartsReportResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `reports.read` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ReportsController_unsoldProducts: {
+        parameters: {
+            query?: {
+                /** @description Start of the window, **inclusive**. ISO-8601; a bare date is read as midnight UTC. Omit it for 30 days before `to`. */
+                from?: string;
+                /**
+                 * @description End of the window, **exclusive** — so two adjacent months never count the same order twice. Omit it for now.
+                 *
+                 *     A `from` at or after `to` is a 400, not an empty list: an impossible window is the caller’s bug, and `[]` would read as "nothing matched".
+                 */
+                to?: string;
+                page?: number;
+                /** @description Values above 100 are clamped, not rejected. */
+                perPage?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnsoldProductsReportResponse"];
+                };
+            };
+            /** @description `from` is at or after `to`, or one of them is not an ISO-8601 date. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `reports.read` permission. */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

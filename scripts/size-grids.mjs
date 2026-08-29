@@ -175,6 +175,32 @@ if (APPLY && !TOKEN) {
   console.log('Signed in.\n');
 }
 
+if (APPLY) {
+  // Preflight: the `status` filter requires products.read and answers 403
+  // without it, which makes it a cheap way to ask "may this account edit the
+  // catalogue?" before touching anything. Without this the first rename would
+  // 403 instead — harmless, since nothing has changed yet, but it reads like a
+  // bug in the script rather than a missing permission on the account.
+  const probe = await fetch(`${API_URL}/products?status=all&perPage=1`, {
+    headers: { authorization: `Bearer ${TOKEN}` },
+  });
+
+  if (probe.status === 403) {
+    console.error(
+      'This account is signed in but cannot edit the catalogue.\n' +
+        'It needs the products.read and products.update permissions, which are\n' +
+        'granted by an UPDATE in the database — there is no route for it, here\n' +
+        'or in the API, and that is deliberate.',
+    );
+    process.exit(1);
+  }
+
+  if (!probe.ok) {
+    console.error(`Could not verify permissions: the API answered ${String(probe.status)}.`);
+    process.exit(1);
+  }
+}
+
 const catalogue = await api('/products?perPage=100');
 let changed = 0;
 let skipped = 0;

@@ -62,6 +62,13 @@ assim. Por isso `drive.mjs` guarda os potes de cookie em `.jars.json` e
 pelo git. Se esbarrar no limite mesmo assim, reiniciar o commerce-core zera o
 contador, que é em memória.
 
+## Uma falha que não é sua
+
+Um `500` isolado com `Connection terminated unexpectedly` no log do
+commerce-core é o *pooler* do Supabase derrubando uma conexão ociosa, não uma
+regressão. Acontece em qualquer checagem, sem padrão. **Rode de novo antes de
+investigar** — se passar, era isso. Se repetir no mesmo lugar, aí é código.
+
 ## O que eles não são
 
 Não são teste de unidade e não substituem os do commerce-core, que é onde as

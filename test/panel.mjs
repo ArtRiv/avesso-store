@@ -164,6 +164,48 @@ check('omitting sizes gives the API-made `Único`, not an invented grid',
   r.status === 201 && r.body.variants.length === 1 && r.body.variants[0].label === 'Único',
   JSON.stringify(r.body.variants?.map((v) => v.label)));
 
+console.log('\n== images ==');
+const A = 'https://cdn.example.com/a.jpg';
+const B = 'https://cdn.example.com/b.jpg';
+
+r = await call(`/api/admin/products/${PRODUCT}`, {
+  method: 'PATCH', headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ imageUrls: [A, B] }),
+});
+check('urls are saved in the order sent — the first is the cover',
+  r.status === 200 && r.body.imageUrls.join() === [A, B].join(),
+  JSON.stringify(r.body.imageUrls));
+
+r = await call(`/admin/produtos/${PRODUCT}`);
+check('the editor renders them', r.status === 200 && r.text.includes(A), String(r.status));
+check('and marks the first one as the cover', r.text.includes('Capa'));
+
+r = await call(`/api/admin/products/${PRODUCT}`, {
+  method: 'PATCH', headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ imageUrls: [B, A] }),
+});
+check('reordering changes which one is the cover',
+  r.status === 200 && r.body.imageUrls[0] === B, JSON.stringify(r.body.imageUrls));
+
+// The half that a `present replaces the whole list` field gets wrong: removing.
+r = await call(`/api/admin/products/${PRODUCT}`, {
+  method: 'PATCH', headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ imageUrls: [B] }),
+});
+check('sending a shorter list actually removes the missing one',
+  r.status === 200 && r.body.imageUrls.join() === B, JSON.stringify(r.body.imageUrls));
+
+r = await call(`/api/admin/products/${PRODUCT}`, {
+  method: 'PATCH', headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ imageUrls: [] }),
+});
+check('and an empty list clears them all', r.status === 200 && r.body.imageUrls.length === 0,
+  JSON.stringify(r.body.imageUrls));
+
+r = await call(`/admin/produtos/${PRODUCT}`);
+check('with none, the editor says so rather than showing a broken box',
+  r.text.includes('Sem foto'));
+
 console.log('\n== product save ==');
 r = await call(`/api/admin/products/${PRODUCT}`, {
   method: 'PATCH', headers: { 'content-type': 'application/json' },

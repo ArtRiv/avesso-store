@@ -328,21 +328,31 @@ console.log('\n== the screen ==');
 r = await call('/admin/relatorios');
 check('the reports screen renders', r.status === 200 && r.text.includes('Relatórios'), String(r.status));
 check('the rail links to it from Vendas', r.text.includes('/admin/relatorios'));
-check('the four panels are all there',
-  r.text.includes('Sacolas agora') && r.text.includes('Receita') &&
-  r.text.includes('Peças vendidas') && r.text.includes('Peças paradas'));
+check('the four sections the artboard names are all there',
+  r.text.includes('Sacolas abertas agora') && r.text.includes('Receita no tempo') &&
+  r.text.includes('Mais vendidas') && r.text.includes('Peças paradas'));
+check('the three period segments are drawn',
+  r.text.includes('30 dias') && r.text.includes('12 semanas') && r.text.includes('12 meses'));
+check('and the note saying what the period scopes',
+  r.text.includes('O período vale para as três seções'));
 check('the window is shown with the zone it was cut in, not the reader’s',
-  r.text.includes('fuso ') && r.text.includes('fim exclusivo'));
-check('the exclusive end is explained in words, not just labelled',
-  r.text.includes('O fim não entra na conta'));
+  r.text.includes('fuso '));
 check('the chart is inline SVG with no library behind it',
-  r.text.includes('<svg') && r.text.includes('Receita por'));
+  r.text.includes('<svg') && r.text.includes('Receita paga por'));
+check('the window total the API does not send is stated, never summed',
+  r.text.includes('não a soma da janela'));
 check('the sale is on the screen', r.text.includes(sale.product.name), sale.product.name);
 check('and the piece that never sold reads as never, not as a dash',
   r.text.includes('Nunca vendeu'));
 
-r = await call('/admin/relatorios?granularity=week');
-check('granularity travels in the query string', r.status === 200, String(r.status));
+r = await call('/admin/relatorios?periodo=12s');
+check('a period preset travels in the query string', r.status === 200, String(r.status));
+check('and the header names the window it actually got',
+  r.text.includes('Últimas 12 semanas'), 'header did not name the preset');
+
+r = await call('/admin/relatorios?periodo=nao-existe');
+check('an unknown preset falls back to 30 days rather than erroring',
+  r.status === 200 && r.text.includes('Últimos 30 dias'), String(r.status));
 
 r = await call('/admin/relatorios?granularity=trimestre');
 check('an unreadable granularity falls back rather than erroring',
@@ -350,9 +360,13 @@ check('an unreadable granularity falls back rather than erroring',
 
 r = await call('/admin/relatorios?from=2020-01-06&to=2020-02-03&granularity=week');
 check('a quiet period reads as an honest zero, not as a broken screen',
-  r.status === 200 && r.text.includes('Nenhuma venda paga neste período'), String(r.status));
-check('and it still says so about the two lists',
-  r.text.includes('Nenhuma peça vendida neste período'));
+  r.status === 200 && r.text.includes('Nenhuma venda no período'), String(r.status));
+check('the zero caption counts the periods it measured',
+  r.text.includes('desenhada sobre o zero'));
+check('and the two lists say what is empty rather than showing a dash',
+  r.text.includes('Nenhuma peça vendida'));
+check('a window given by date carries no preset name in the header',
+  !r.text.includes('Últimos 30 dias ·'));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

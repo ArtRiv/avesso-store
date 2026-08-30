@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body { margin:0; font-family:Archivo, system-ui, sans-serif; color:#0A0A0A; background:#DDDBD6; -webkit-font-smoothing:antialiased; }
+a { color:#0A0A0A; text-decoration:none; } a:hover { color:#B0431E; }
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;gap:64px;padding:64px;width:max-content;background:#DDDBD6">
+
+<div style="display:flex;gap:48px;align-items:flex-start">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B6560">Relatórios · loja sem vendas na janela · 1440</div>
+
+<div style="width:1440px;min-height:1900px;background:#F4F3F0;display:flex;flex-direction:column">
+
+  <div style="height:64px;background:#FFFFFF;border-bottom:1px solid #E2E0DA;display:flex;align-items:center;justify-content:space-between;padding:0 32px;flex-shrink:0">
+    <div style="display:flex;align-items:center;gap:16px">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#0A0A0A" stroke-width="1.5"><rect x="2.5" y="2.5" width="15" height="15"></rect><path d="M2.5 7.5h15M7.5 7.5v10"></path></svg>
+      <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.22em;text-transform:uppercase">Back office</span>
+      <span style="width:1px;height:20px;background:#E2E0DA"></span>
+      <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B6560">AVESSO</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:24px">
+      <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B6560">admin@avesso.com.br</span>
+      <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;border:1px solid #E2E0DA;padding:4px 8px;color:#6B6560">Admin</span>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-grow:1;align-items:stretch">
+    <div style="width:240px;background:#FFFFFF;border-right:1px solid #E2E0DA;padding:32px 0;display:flex;flex-direction:column;gap:32px;flex-shrink:0">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#9A948E;padding:0 24px 8px">Catálogo</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 24px;border-left:2px solid transparent">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5"><rect x="2" y="2" width="12" height="12"></rect><path d="M2 6h12"></path></svg>
+          <span style="font:400 14px/1.2 Archivo;color:#6B6560">Produtos</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 24px;border-left:2px solid transparent">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h7"></path></svg>
+          <span style="font:400 14px/1.2 Archivo;color:#6B6560">Categorias</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#9A948E;padding:0 24px 8px">Vendas</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 24px;border-left:2px solid transparent">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6560" stroke-width="1.5"><path d="M2 3h2l1.5 8h7L14 5H4.5"></path><circle cx="6.5" cy="13.5" r="1"></circle><circle cx="12" cy="13.5" r="1"></circle></svg>
+          <span style="font:400 14px/1.2 Archivo;color:#6B6560">Pedidos</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 24px;background:#F4F3F0;border-left:2px solid #0A0A0A">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0A0A0A" stroke-width="1.5"><path d="M2 13h12M5 10.5v2.5M8 6.5v6.5M11 9v4"></path></svg>
+          <span style="font:500 14px/1.2 Archivo">Relatórios</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex-grow:1;padding:40px 48px 64px;display:flex;flex-direction:column;gap:28px">
+
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <h1 style="margin:0;font:600 32px/1.15 Archivo;letter-spacing:-.015em">Relatórios</h1>
+          <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B6560">{{ periodRange }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+          <div style="display:flex">
+            <sc-for list="{{ periods }}" as="p" hint-placeholder-count="3">
+              <span style="height:36px;display:flex;align-items:center;padding:0 14px;border:1px solid {{ p.border }};background:{{ p.bg }};color:{{ p.color }};font:500 12px/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-left:-1px;cursor:pointer">{{ p.label }}</span>
+            </sc-for>
+          </div>
+          <span style="font:400 12px/1.5 Archivo;color:#9A948E">O período vale para as três seções abaixo da faixa de sacolas.</span>
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF;border:1px solid #E2E0DA;padding:24px 28px;display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;gap:64px">
+          <sc-for list="{{ cartSnapshot }}" as="c" hint-placeholder-count="3">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#9A948E">{{ c.label }}</span>
+              <span style="font:500 28px/1.1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;letter-spacing:-.02em">{{ c.value }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;max-width:360px;text-align:right">
+          <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B6560">Sacolas abertas agora</span>
+          <span style="font:400 12px/1.5 Archivo;color:#9A948E">Uma sacola só tem presente. Esta faixa não muda com o período.</span>
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF;border:1px solid #E2E0DA;padding:28px;display:flex;flex-direction:column;gap:24px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Receita no tempo</span>
+            <span style="font:400 13px/1.5 Archivo;color:#6B6560">A série é contínua. Uma semana sem venda chega como R$ 0,00 e é desenhada como tal.</span>
+          </div>
+          <div style="display:flex">
+            <sc-for list="{{ buckets }}" as="b" hint-placeholder-count="2">
+              <span style="height:36px;display:flex;align-items:center;padding:0 14px;border:1px solid {{ b.border }};background:{{ b.bg }};color:{{ b.color }};font:500 12px/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-left:-1px;cursor:pointer">{{ b.label }}</span>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;border-top:1px solid #E2E0DA;border-bottom:1px solid #E2E0DA;padding:20px 0">
+          <sc-for list="{{ totalsZero }}" as="t" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#9A948E">{{ t.label }}</span>
+              <span style="font:500 20px/1.2 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:{{ t.color }}">{{ t.value }}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;gap:20px;align-items:stretch">
+          <div style="display:flex;flex-direction:column;justify-content:space-between;height:220px;padding:6px 0;align-items:flex-end;width:72px">
+            <span style="font:400 12px/1.2 'JetBrains Mono',monospace;color:#9A948E">{{ zeroAxisTop }}</span>
+            <span style="font:400 12px/1.2 'JetBrains Mono',monospace;color:#9A948E">{{ zeroAxisMid }}</span>
+            <span style="font:400 12px/1.2 'JetBrains Mono',monospace;color:#0A0A0A">R$ 0,00</span>
+          </div>
+          <div style="flex-grow:1;display:flex;flex-direction:column;gap:10px">
+            {{ zeroChart }}
+            <div style="display:grid;grid-template-columns:repeat({{ zeroCols }},minmax(0,1fr))">
+              <sc-for list="{{ zeroSeries }}" as="p" hint-placeholder-count="5">
+                <div style="display:flex;flex-direction:column;gap:4px;align-items:center">
+                  <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#0A0A0A">{{ p.label }}</span>
+                  <span style="font:400 12px/1.2 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#6B6560">{{ p.money }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #E2E0DA;padding-top:16px;font:400 13px/1.5 Archivo;color:#6B6560">Nenhuma venda nos últimos 30 dias. A linha está desenhada sobre o zero — cinco semanas medidas, cinco semanas em R$ 0,00.</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start">
+
+        <div style="background:#FFFFFF;border:1px solid #E2E0DA;display:flex;flex-direction:column">
+          <div style="padding:24px 28px;border-bottom:1px solid #E2E0DA;display:flex;flex-direction:column;gap:6px">
+            <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Mais vendidas</span>
+            <span style="font:400 13px/1.5 Archivo;color:#6B6560">Por unidades no período.</span>
+          </div>
+          <div style="padding:56px 28px;display:flex;flex-direction:column;gap:10px;align-items:flex-start">
+            <span style="font:500 20px/1.3 Archivo;letter-spacing:-.01em">Nenhuma peça vendida</span>
+            <span style="font:400 14px/1.55 Archivo;color:#6B6560;max-width:420px">Nos últimos 30 dias não houve pedidos pagos. Quando houver, a lista aparece aqui ordenada por unidades.</span>
+          </div>
+        </div>
+
+        <div style="background:#FFFFFF;border:1px solid #E2E0DA;display:flex;flex-direction:column">
+          <div style="padding:24px 28px;border-bottom:1px solid #E2E0DA;display:flex;align-items:flex-start;justify-content:space-between">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Peças paradas</span>
+              <span style="font:400 13px/1.5 Archivo;color:#6B6560">Estoque que não saiu no período.</span>
+            </div>
+            <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B6560">12 peças</span>
+          </div>
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="border-bottom:1px solid #E2E0DA">
+                <th style="text-align:left;font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#9A948E;padding:14px 20px;font-weight:500">Peça</th>
+                <th style="text-align:right;font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#9A948E;padding:14px 20px;font-weight:500;width:110px">Parado</th>
+                <th style="text-align:right;font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#9A948E;padding:14px 20px;font-weight:500;width:170px">Última venda</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ stalled }}" as="s" hint-placeholder-count="6">
+                <tr style="border-bottom:1px solid #E2E0DA">
+                  <td style="padding:14px 20px;font:400 15px/1.3 Archivo">{{ s.name }}</td>
+                  <td style="padding:14px 20px;text-align:right;font:500 14px/1.2 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">{{ s.stock }}</td>
+                  <td style="padding:14px 20px;text-align:right;font:500 14px/1.2 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:{{ s.color }}">{{ s.last }}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          <div style="padding:18px 20px;display:flex;align-items:center;justify-content:space-between">
+            <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B6560">6 de 12</span>
+            <div style="display:flex;gap:8px">
+              <span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid #0A0A0A;font:500 14px/1.2 'JetBrains Mono',monospace">1</span>
+              <span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid #E2E0DA;color:#9A948E;font:500 14px/1.2 'JetBrains Mono',monospace">2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<sc-if value="{{ showAnnotation }}" hint-placeholder-val="{{ true }}">
+<div style="width:420px;display:flex;flex-direction:column;gap:12px;padding-top:40px">
+  <div style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B6560">Anotação · escopo</div>
+  <div style="font:400 14px/1.6 Archivo;color:#0A0A0A">Quatro leituras, quatro endpoints. Sacolas agora, receita no tempo, mais vendidas, peças paradas.</div>
+  <div style="font:400 14px/1.6 Archivo;color:#6B6560">Nada de desconto, cupom, cliente, conversão ou visita: a API não conta nada disso, e uma tela desenhada para um dado que não existe é o desenho ditando o contrato.</div>
+  <div style="font:400 14px/1.6 Archivo;color:#6B6560">A faixa de sacolas ignora o período de propósito — carrinho não tem passado.</div>
+  <div style="border-top:1px solid #C9C6BF;padding-top:12px;font:400 13px/1.6 Archivo;color:#6B6560">O rail ganha um décimo ícone: três barras sobre uma linha de base, no mesmo traço de 1,5px dos outros nove.</div>
+</div>
+</sc-if>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B6560">Detalhe · a mesma série com vendas, incluindo uma semana em zero</div>
+<div style="width:1440px;background:#F4F3F0;padding:32px 48px;box-sizing:border-box">
+  <div style="background:#FFFFFF;border:1px solid #E2E0DA;padding:28px;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Receita no tempo</span>
+        <span style="font:400 13px/1.5 Archivo;color:#6B6560">{{ liveCaption }}</span>
+      </div>
+      <div style="display:flex">
+        <sc-for list="{{ buckets }}" as="b" hint-placeholder-count="2">
+          <span style="height:36px;display:flex;align-items:center;padding:0 14px;border:1px solid {{ b.border }};background:{{ b.bg }};color:{{ b.color }};font:500 12px/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-left:-1px">{{ b.label }}</span>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;border-top:1px solid #E2E0DA;border-bottom:1px solid #E2E0DA;padding:20px 0">
+      <sc-for list="{{ totalsLive }}" as="t" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#9A948E">{{ t.label }}</span>
+          <span style="font:500 20px/1.2 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:{{ t.color }}">{{ t.value }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;gap:20px;align-items:stretch">
+      <div style="display:flex;flex-direction:column;justify-content:space-between;height:220px;padding:6px 0;align-items:flex-end;width:88px">
+        <span style="font:400 12px/1.2 'JetBrains Mono',monospace;color:#9A948E">{{ liveAxisTop }}</span>
+        <span style="font:400 12px/1.2 'JetBrains Mono',monospace;color:#9A948E">{{ liveAxisMid }}</span>
+        <span style="font:400 12px/1.2 'JetBrains Mono',monospace;color:#0A0A0A">R$ 0,00</span>
+      </div>
+      <div style="flex-grow:1;display:flex;flex-direction:column;gap:10px">
+        {{ liveChart }}
+        <div style="display:grid;grid-template-columns:repeat({{ liveCols }},minmax(0,1fr))">
+          <sc-for list="{{ liveSeries }}" as="p" hint-placeholder-count="12">
+            <div style="display:flex;flex-direction:column;gap:4px;align-items:center">
+              <span style="font:500 11px/1.4 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:{{ p.labelColor }}">{{ p.label }}</span>
+              <span style="font:400 11px/1.2 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:{{ p.moneyColor }}">{{ p.money }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid #E2E0DA;padding-top:16px;display:flex;gap:32px;align-items:center">
+      <span style="display:flex;align-items:center;gap:10px;font:400 13px/1.5 Archivo;color:#6B6560"><span style="width:24px;height:2px;background:#0A0A0A"></span>Receita paga por semana</span>
+      <span style="display:flex;align-items:center;gap:10px;font:400 13px/1.5 Archivo;color:#6B6560"><span style="width:8px;height:8px;background:#0A0A0A"></span>Semana medida em R$ 0,00 — o ponto fica na linha de base</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<div style="display:flex;gap:48px;align-items:flex-start">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B6560">Detalhe · mais vendidas com dados</div>
+<div style="width:696px;background:#F4F3F0;padding:32px;box-sizing:border-box">
+  <div style="background:#FFFFFF;border:1px solid #E2E0DA;display:flex;flex-direction:column">
+    <div style="padding:24px 28px;border-bottom:1px solid #E2E0DA;display:flex;align-items:flex-start;justify-content:space-between">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Mais vendidas</span>
+        <span style="font:400 13px/1.5 Archivo;color:#6B6560">Por unidades no período.</span>
+      </div>
+      <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B6560">11 peças</span>
+    </div>
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="border-bottom:1px solid #E2E0DA">
+          <th style="text-align:left;font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#9A948E;padding:14px 20px;font-weight:500">Peça</th>
+          <th style="text-align:right;font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#9A948E;padding:14px 20px;font-weight:500;width:90px">Un</th>
+          <th style="text-align:right;font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#9A948E;padding:14px 20px;font-weight:500;width:140px">Receita</th>
+          <th style="text-align:right;font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#9A948E;padding:14px 20px;font-weight:500;width:100px">Pedidos</th>
+        </tr>
+      </thead>
+      <tbody>
+        <sc-for list="{{ bestSellers }}" as="b" hint-placeholder-count="6">
+          <tr style="border-bottom:1px solid #E2E0DA">
+            <td style="padding:14px 20px;font:400 15px/1.3 Archivo">{{ b.name }}</td>
+            <td style="padding:14px 20px;text-align:right;font:500 14px/1.2 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">{{ b.units }}</td>
+            <td style="padding:14px 20px;text-align:right;font:500 14px/1.2 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#1F6F52">{{ b.revenue }}</td>
+            <td style="padding:14px 20px;text-align:right;font:500 14px/1.2 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#6B6560">{{ b.orders }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+    <div style="padding:18px 20px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B6560">6 de 11</span>
+      <div style="display:flex;gap:8px">
+        <span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid #0A0A0A;font:500 14px/1.2 'JetBrains Mono',monospace">1</span>
+        <span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid #E2E0DA;color:#9A948E;font:500 14px/1.2 'JetBrains Mono',monospace">2</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B6560">Detalhe · nenhuma peça parada</div>
+<div style="width:696px;background:#F4F3F0;padding:32px;box-sizing:border-box">
+  <div style="background:#FFFFFF;border:1px solid #E2E0DA;display:flex;flex-direction:column">
+    <div style="padding:24px 28px;border-bottom:1px solid #E2E0DA;display:flex;flex-direction:column;gap:6px">
+      <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Peças paradas</span>
+      <span style="font:400 13px/1.5 Archivo;color:#6B6560">Estoque que não saiu no período.</span>
+    </div>
+    <div style="padding:56px 28px;display:flex;flex-direction:column;gap:10px;align-items:flex-start">
+      <span style="font:500 20px/1.3 Archivo;letter-spacing:-.01em">Nenhuma peça parada</span>
+      <span style="font:400 14px/1.55 Archivo;color:#6B6560;max-width:420px">As 12 peças do catálogo venderam pelo menos uma unidade nos últimos 30 dias.</span>
+    </div>
+    <div style="border-top:1px solid #E2E0DA;padding:18px 20px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font:500 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#9A948E">0 de 0</span>
+      <div style="display:flex;gap:8px">
+        <span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid #E2E0DA;color:#9A948E;font:500 14px/1.2 'JetBrains Mono',monospace">1</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1600},&quot;period&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Últimos 30 dias&quot;,&quot;Últimas 12 semanas&quot;,&quot;Últimos 12 meses&quot;],&quot;default&quot;:&quot;Últimos 30 dias&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Período&quot;},&quot;bucket&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Semana&quot;,&quot;Mês&quot;],&quot;default&quot;:&quot;Semana&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Período&quot;},&quot;showAnnotation&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Canvas&quot;}}">
+class Component extends DCLogic {
+  money(cents) {
+    return 'R$ ' + (cents / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  chart(values, max, key) {
+    const W = 1080, H = 220, PAD = 6, base = H - PAD;
+    const top = PAD + 6;
+    const n = values.length, step = W / n;
+    const y = v => (max === 0 ? base : base - (v / max) * (base - top));
+    let d = '';
+    values.forEach((v, i) => {
+      const x0 = i * step, x1 = (i + 1) * step, yy = y(v);
+      d += (i === 0 ? 'M' + x0 + ' ' + yy : 'L' + x0 + ' ' + yy) + ' L' + x1 + ' ' + yy + ' ';
+    });
+    const dots = values.map((v, i) => v === 0
+      ? React.createElement('rect', { key: 'z' + i, x: i * step + step / 2 - 4, y: base - 4, width: 8, height: 8, fill: '#0A0A0A' })
+      : null).filter(Boolean);
+    return React.createElement('svg', {
+      key, width: '100%', height: H, viewBox: '0 0 ' + W + ' ' + H,
+      preserveAspectRatio: 'none', style: { display: 'block', overflow: 'visible' }
+    }, [
+      React.createElement('line', { key: 'b', x1: 0, y1: base, x2: W, y2: base, stroke: '#E2E0DA', strokeWidth: 1 }),
+      React.createElement('path', {
+        key: 'p', d: d.trim(), fill: 'none', stroke: '#0A0A0A',
+        strokeWidth: 2, vectorEffect: 'non-scaling-stroke', strokeLinejoin: 'miter'
+      }),
+      ...dots
+    ]);
+  }
+
+  renderVals() {
+    const period = this.props.period ?? 'Últimos 30 dias';
+    const bucket = this.props.bucket ?? 'Semana';
+    const seg = (label, on) => ({
+      label,
+      border: on ? '#0A0A0A' : '#E2E0DA',
+      bg: on ? '#0A0A0A' : 'transparent',
+      color: on ? '#FFFFFF' : '#6B6560'
+    });
+
+    const zeroLabels = ['01/08', '08/08', '15/08', '22/08', '29/08'];
+    const zeroValues = [0, 0, 0, 0, 0];
+
+    const weekLabels = ['09/06', '16/06', '23/06', '30/06', '07/07', '14/07', '21/07', '28/07', '04/08', '11/08', '18/08', '25/08'];
+    const monthLabels = ['set', 'out', 'nov', 'dez', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago'];
+    const liveValues = [124930, 89950, 0, 178920, 209980, 145990, 98970, 254940, 189960, 0, 112990, 287950];
+    const liveMax = 287950;
+    const liveTotal = liveValues.reduce((a, b) => a + b, 0);
+    const liveLabels = bucket === 'Mês' ? monthLabels : weekLabels;
+
+    const stalledRaw = [
+      ['Camiseta Listrada Marinho', 14, null],
+      ['Boné Aba Curva Preto', 22, null],
+      ['Meia Canelada — kit com 3', 40, '12/06/2026'],
+      ['Jaqueta Corta-Vento Preta', 3, '02/07/2026'],
+      ['Calça Alfaiataria Preta', 9, '28/06/2026'],
+      ['Moletom Careca Preto', 11, null]
+    ];
+
+    const best = [
+      ['Camiseta Pesada Preta', 34, 509660, 28],
+      ['Camiseta Pesada Off-White', 21, 314790, 19],
+      ['Moletom Careca Cinza Mescla', 12, 395880, 11],
+      ['Calça Cargo Bege', 9, 260910, 9],
+      ['Meia Canelada — kit com 3', 18, 143820, 12],
+      ['Camiseta Manga Longa Off-White', 11, 208890, 10]
+    ];
+
+    return {
+      periodRange: period === 'Últimos 12 meses' ? 'Últimos 12 meses · 09/2025 a 08/2026'
+        : period === 'Últimas 12 semanas' ? 'Últimas 12 semanas · 09/06 a 29/08/2026'
+        : 'Últimos 30 dias · 30/07 a 29/08/2026',
+      periods: [
+        seg('30 dias', period === 'Últimos 30 dias'),
+        seg('12 semanas', period === 'Últimas 12 semanas'),
+        seg('12 meses', period === 'Últimos 12 meses')
+      ],
+      buckets: [seg('Semana', bucket === 'Semana'), seg('Mês', bucket === 'Mês')],
+      showAnnotation: this.props.showAnnotation ?? true,
+
+      cartSnapshot: [
+        { label: 'Unidades', value: '7' },
+        { label: 'Linhas', value: '5' },
+        { label: 'Sacolas', value: '3' }
+      ],
+
+      totalsZero: [
+        { label: 'Receita', value: 'R$ 0,00', color: '#0A0A0A' },
+        { label: 'Itens', value: 'R$ 0,00', color: '#6B6560' },
+        { label: 'Frete', value: 'R$ 0,00', color: '#6B6560' },
+        { label: 'Pedidos', value: '0', color: '#6B6560' }
+      ],
+      zeroChart: this.chart(zeroValues, 0, 'zero'),
+      zeroCols: zeroValues.length,
+      zeroSeries: zeroLabels.map(l => ({ label: l, money: 'R$ 0,00' })),
+      zeroAxisTop: 'R$ 0,00',
+      zeroAxisMid: 'R$ 0,00',
+
+      liveCaption: bucket === 'Mês'
+        ? 'A série é contínua. Um mês sem venda chega como R$ 0,00 e é desenhado como tal.'
+        : 'A série é contínua. Uma semana sem venda chega como R$ 0,00 e é desenhada como tal.',
+      totalsLive: [
+        { label: 'Receita', value: this.money(liveTotal), color: '#1F6F52' },
+        { label: 'Itens', value: this.money(liveTotal - 47820), color: '#0A0A0A' },
+        { label: 'Frete', value: this.money(47820), color: '#0A0A0A' },
+        { label: 'Pedidos', value: '118', color: '#0A0A0A' }
+      ],
+      liveChart: this.chart(liveValues, liveMax, 'live-' + bucket),
+      liveCols: liveValues.length,
+      liveSeries: liveValues.map((v, i) => ({
+        label: liveLabels[i],
+        money: this.money(v),
+        labelColor: '#0A0A0A',
+        moneyColor: v === 0 ? '#0A0A0A' : '#6B6560'
+      })),
+      liveAxisTop: this.money(liveMax),
+      liveAxisMid: this.money(Math.round(liveMax / 2)),
+
+      stalled: stalledRaw.map(([name, stock, last]) => ({
+        name, stock: String(stock),
+        last: last === null ? 'Nunca vendeu' : last,
+        color: last === null ? '#9A948E' : '#6B6560'
+      })),
+      bestSellers: best.map(([name, units, rev, orders]) => ({
+        name, units: String(units), revenue: this.money(rev), orders: String(orders)
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

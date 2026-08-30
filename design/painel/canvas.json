@@ -47,6 +47,14 @@
       "w": 1440,
       "h": 1400,
       "title": "Pedido · detalhe e transições"
+    },
+    {
+      "file": "Relatorios.dc.html",
+      "x": 0,
+      "y": 2760,
+      "w": 1440,
+      "h": 1900,
+      "title": "Relatórios · loja sem vendas na janela"
     }
   ],
   "annotations": [
@@ -69,7 +77,14 @@
       "x": 0,
       "y": -180,
       "w": 420,
-      "text": "Só catálogo e pedidos.\nClientes, relatórios e concessão de permissão não têm rota ainda — desenhar essas telas agora seria o desenho ditando o contrato."
+      "text": "Catálogo, pedidos e relatórios.\nClientes e concessão de permissão não têm rota ainda — desenhar essas telas agora seria o desenho ditando o contrato."
+    },
+    {
+      "id": "relatorios",
+      "x": 0,
+      "y": 2580,
+      "w": 420,
+      "text": "Quatro leituras, quatro endpoints.\nSacolas agora, receita no tempo, mais vendidas, peças paradas.\nNada de desconto, cupom, cliente, conversão ou visita: a API não conta nada disso.\nA faixa de sacolas ignora o período de propósito — carrinho não tem passado."
     }
   ],
   "launch": {

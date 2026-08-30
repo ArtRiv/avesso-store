@@ -96,7 +96,7 @@ async function sell({ priceCents, quantity }) {
   }
 
   as('admin');
-  const paid = await call(`/api/admin/orders/${order.id}/mark-paid`, {
+  const paid = await call(`/api/admin/orders/${order.body.id}/mark-paid`, {
     method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}',
   });
 

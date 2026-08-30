@@ -433,12 +433,13 @@ function RevenueCard({
               timeZone={timeZone}
             />
 
+            {/* The caption is one string rather than a row of expressions:
+                React separates adjacent text nodes with comment markers, which
+                would split the sentence in the delivered HTML. It reads better
+                in the source this way too. */}
             {quiet ? (
               <p className="border-t border-admin-hairline pt-4 text-[13px] text-muted">
-                Nenhuma venda {withinPhrase(period.preset)}. A linha está
-                desenhada sobre o zero — {countInWords(buckets.length)} {noun}{" "}
-                {measured(granularity, buckets.length)},{" "}
-                {countInWords(buckets.length)} {noun} em {formatBRL(0)}.
+                {`Nenhuma venda ${withinPhrase(period.preset)}. A linha está desenhada sobre o zero — ${countInWords(buckets.length)} ${noun} ${measured(granularity, buckets.length)}, ${countInWords(buckets.length)} ${noun} em ${formatBRL(0)}.`}
               </p>
             ) : (
               <ChartLegend granularity={granularity} />

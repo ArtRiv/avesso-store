@@ -71,12 +71,11 @@ export function CategoriesIcon(props: AdminIconProps) {
   );
 }
 
-/** Rail: Relatórios. Three columns on a baseline — the screen's own chart. */
+/** Rail: Relatórios. Three bars over a baseline, traced from the artboard. */
 export function ReportsIcon(props: AdminIconProps) {
   return (
     <Icon viewBox="0 0 16 16" {...props}>
-      <path d="M2 13.5h12" />
-      <path d="M4.5 13.5V9M8 13.5V3.5M11.5 13.5V6.5" />
+      <path d="M2 13h12M5 10.5v2.5M8 6.5v6.5M11 9v4" />
     </Icon>
   );
 }

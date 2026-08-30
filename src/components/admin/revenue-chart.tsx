@@ -1,60 +1,45 @@
 import type { components } from "@/lib/api/schema";
-import {
-  bucketAxisLabel,
-  bucketRowLabel,
-  type Granularity,
-} from "@/lib/admin/reports";
+import { bucketLabel, type Granularity } from "@/lib/admin/reports";
 import { formatBRL } from "@/lib/format";
 
 type Bucket = components["schemas"]["RevenueBucketResponse"];
 
 /**
- * Revenue by bucket, as inline SVG.
+ * Revenue over time, traced from the artboard: a step line in ink over a
+ * hairline baseline, with an 8px square sitting ON the baseline wherever a
+ * period measured zero.
  *
- * No chart library, and none is missing. This is one series of columns over a
- * continuous time axis — the whole of it is a scale and a loop — and a library
- * would arrive with a rounded surface, a drop shadow and a gradient fill, all
- * three of which docs/design-system.md §7 forbids outright.
+ * The step is the right mark and not a stylistic choice. A bucket is a value
+ * that holds for a whole week or month, so a flat segment spanning the band
+ * says what happened; a sloped line between midpoints would draw revenue
+ * arriving gradually on days nobody measured.
  *
- * Where the design and the usual chart advice disagree, the design wins:
+ * **The zero marker is the point of the whole chart.** The API returns a
+ * continuous series — an empty week comes back as a zero bucket rather than as
+ * a gap — and a line lying flat on the baseline is invisible against the
+ * baseline itself. The square is what makes a measured zero legible as a
+ * measurement, which is the difference between "we sold nothing that week" and
+ * "we have no data for that week". The legend underneath names it.
  *
- * - **Square columns.** The received wisdom is a 4px rounded data-end. §1 puts
- *   the radius at 2px on buttons and fields and **0 on everything else**, and a
- *   chart is not an exception to a rule that specific.
- * - **One colour, and it is ink.** A second series would need a second hue, and
- *   §1 rations the only accent this design has to four places, none of them a
- *   chart. So the goods/freight split is not stacked here — it lives in the
- *   table underneath, where it costs no colour at all.
- * - **Two gridlines, both true.** The baseline is zero and the top line is the
- *   largest bucket in the window, labelled with that bucket's own value. There
- *   is no "nice" rounded ceiling, because a rounded ceiling is a money figure
- *   this screen would have invented; every number on this axis is one the API
- *   sent.
+ * No library, and none is missing: this is a scale and a loop. A library would
+ * arrive with the rounded surface, the drop shadow and the gradient fill that
+ * docs/design-system.md §7 forbids outright.
  *
- * No total is drawn anywhere, for the same reason. `RevenueReportResponse`
- * carries `buckets` and no period sum, and adding them up here is precisely
- * the arithmetic on money that CLAUDE.md rules out. See README, "Divergências
- * conhecidas".
- *
- * The columns are `<rect>` with a `<title>` each, which is a real tooltip on
- * hover with no JavaScript. The accessible reading is the table beside it —
- * the SVG carries one label and is otherwise a picture of numbers that are all
- * written down in text a few lines below.
+ * `preserveAspectRatio="none"` lets the plot stretch to the card, and
+ * `vector-effect="non-scaling-stroke"` is what keeps the 2px stroke 2px through
+ * that stretch. Both are the artboard's own. No text lives inside the SVG — the
+ * labels are HTML in a grid below, so nothing is distorted by the stretch and
+ * every value is real selectable text.
  */
 
-const WIDTH = 1000;
-const HEIGHT = 300;
-const PAD = { top: 28, right: 12, bottom: 44, left: 96 };
+const W = 1080;
+const H = 220;
+const PAD = 6;
+const BASE = H - PAD;
+const TOP = PAD + 6;
 
-const PLOT_W = WIDTH - PAD.left - PAD.right;
-const PLOT_H = HEIGHT - PAD.top - PAD.bottom;
-const BASELINE = PAD.top + PLOT_H;
-
-/** §2 caps a mark's weight: a column never fills its band, it sits in it. */
-const MAX_BAR = 24;
-
-/** At most this many x labels, so they never collide on a long window. */
-const MAX_TICKS = 12;
+/** The square that marks a measured zero. 8×8, on the baseline. */
+const ZERO_MARK = 8;
 
 export function RevenueChart({
   buckets,
@@ -65,131 +50,132 @@ export function RevenueChart({
   granularity: Granularity;
   timeZone: string;
 }) {
-  if (buckets.length === 0) {
-    return (
-      <p className="py-12 text-center text-small text-muted">
-        A janela não cobre nenhum período inteiro.
-      </p>
-    );
-  }
-
-  // The largest bucket sets the scale. Not a sum, not an average — the biggest
-  // number the API sent, used as the top of the axis and labelled as itself.
   const peak = buckets.reduce(
     (highest, bucket) => Math.max(highest, bucket.revenueCents),
     0,
   );
 
-  const band = PLOT_W / buckets.length;
-  const barWidth = Math.min(MAX_BAR, band * 0.6);
-  const stride = Math.ceil(buckets.length / MAX_TICKS);
+  const step = W / buckets.length;
+
+  const y = (cents: number) =>
+    peak === 0 ? BASE : BASE - (cents / peak) * (BASE - TOP);
+
+  const path = buckets
+    .map((bucket, index) => {
+      const x0 = index * step;
+      const x1 = (index + 1) * step;
+      const yy = y(bucket.revenueCents);
+
+      return `${index === 0 ? "M" : "L"}${String(x0)} ${String(yy)} L${String(x1)} ${String(yy)}`;
+    })
+    .join(" ");
 
   return (
-    <svg
-      viewBox={`0 0 ${String(WIDTH)} ${String(HEIGHT)}`}
-      className="h-auto w-full"
-      role="img"
-      aria-label={`Receita por ${GRANULARITY_NOUN[granularity]}, em ${buckets.length} ${buckets.length === 1 ? "período" : "períodos"}, no fuso ${timeZone}. Os valores estão na tabela abaixo.`}
-    >
-      {/* The top gridline is only drawn when it means something. With every
-          bucket at zero it would sit on top of the baseline and label a
-          number that is not the peak of anything. */}
-      {peak > 0 ? (
-        <>
+    <div className="flex items-stretch gap-5">
+      {/* The axis. Three gradations: the largest bucket, half of it, and zero.
+          The top is a bucket's own value, so the axis never states a rounded
+          ceiling the API never sent; the midpoint is a gradation of the scale
+          rather than a claim about any period. */}
+      <div className="flex h-[220px] w-[88px] shrink-0 flex-col items-end justify-between py-1.5">
+        <span className="font-mono text-[12px] tabular-nums text-admin-dim">
+          {formatBRL(peak)}
+        </span>
+        <span className="font-mono text-[12px] tabular-nums text-admin-dim">
+          {formatBRL(Math.round(peak / 2))}
+        </span>
+        <span className="font-mono text-[12px] tabular-nums">
+          {formatBRL(0)}
+        </span>
+      </div>
+
+      <div className="flex flex-grow flex-col gap-2.5">
+        <svg
+          width="100%"
+          height={H}
+          viewBox={`0 0 ${String(W)} ${String(H)}`}
+          preserveAspectRatio="none"
+          className="block overflow-visible"
+          role="img"
+          aria-label={`Receita paga por período, em ${String(buckets.length)} ${buckets.length === 1 ? "período" : "períodos"}, no fuso ${timeZone}. Cada valor está escrito abaixo do gráfico.`}
+        >
           <line
-            x1={PAD.left}
-            y1={PAD.top}
-            x2={WIDTH - PAD.right}
-            y2={PAD.top}
+            x1={0}
+            y1={BASE}
+            x2={W}
+            y2={BASE}
             className="stroke-admin-hairline"
             strokeWidth={1}
           />
-          <text
-            x={PAD.left - 14}
-            y={PAD.top}
-            textAnchor="end"
-            dominantBaseline="middle"
-            className="fill-admin-dim font-mono text-[12px] tabular-nums"
-          >
-            {formatBRL(peak)}
-          </text>
-        </>
-      ) : null}
-
-      <line
-        x1={PAD.left}
-        y1={BASELINE}
-        x2={WIDTH - PAD.right}
-        y2={BASELINE}
-        className="stroke-admin-hairline"
-        strokeWidth={1}
-      />
-      <text
-        x={PAD.left - 14}
-        y={BASELINE}
-        textAnchor="end"
-        dominantBaseline="middle"
-        className="fill-admin-dim font-mono text-[12px] tabular-nums"
-      >
-        {formatBRL(0)}
-      </text>
-
-      {buckets.map((bucket, index) => {
-        const centre = PAD.left + band * index + band / 2;
-        // A zero bucket is drawn as nothing above the baseline, which is what
-        // zero looks like — but its band and its tick stay, so the series
-        // never appears to skip a week. That continuity is the whole reason
-        // the API returns zero buckets instead of gaps.
-        const height =
-          peak > 0 ? (bucket.revenueCents / peak) * PLOT_H : 0;
-
-        return (
-          <g key={bucket.periodStart}>
-            {height > 0 ? (
+          <path
+            d={path}
+            fill="none"
+            strokeWidth={2}
+            strokeLinejoin="miter"
+            vectorEffect="non-scaling-stroke"
+            className="stroke-ink"
+          />
+          {buckets.map((bucket, index) =>
+            bucket.revenueCents === 0 ? (
               <rect
-                x={centre - barWidth / 2}
-                y={BASELINE - height}
-                width={barWidth}
-                height={height}
+                key={bucket.periodStart}
+                x={index * step + step / 2 - ZERO_MARK / 2}
+                y={BASE - ZERO_MARK / 2}
+                width={ZERO_MARK}
+                height={ZERO_MARK}
                 className="fill-ink"
               />
-            ) : null}
-            <title>
-              {`${bucketRowLabel(bucket.periodStart, granularity)} · ${formatBRL(bucket.revenueCents)} · ${String(bucket.orderCount)} ${bucket.orderCount === 1 ? "pedido" : "pedidos"}`}
-            </title>
-            {index % stride === 0 ? (
-              <text
-                x={centre}
-                y={BASELINE + 22}
-                textAnchor="middle"
-                className="fill-admin-dim font-mono text-[11px] tabular-nums"
-              >
-                {bucketAxisLabel(bucket.periodStart, granularity)}
-              </text>
-            ) : null}
-          </g>
-        );
-      })}
+            ) : null,
+          )}
+        </svg>
 
-      {/* The AVESSO's ordinary view. It is a real answer, not a failure, and
-          it says so in the plot rather than replacing the plot — the axis and
-          the periods underneath are what make the zero readable as a zero. */}
-      {peak === 0 ? (
-        <text
-          x={PAD.left + PLOT_W / 2}
-          y={PAD.top + PLOT_H / 2}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          className="fill-muted text-[14px]"
+        {/* Every bucket's value, under its own band. This is what the chart
+            would otherwise gate behind a pointer: the numbers are text, they
+            are all here, and a zero is set in ink rather than muted because a
+            week that measured nothing is the one worth reading twice. */}
+        <div
+          className="grid"
+          style={{
+            gridTemplateColumns: `repeat(${String(buckets.length)}, minmax(0, 1fr))`,
+          }}
         >
-          Nenhuma venda paga neste período.
-        </text>
-      ) : null}
-    </svg>
+          {buckets.map((bucket) => (
+            <div
+              key={bucket.periodStart}
+              className="flex flex-col items-center gap-1"
+            >
+              <span className="font-mono text-[11px] font-medium tracking-[0.06em] uppercase">
+                {bucketLabel(bucket.periodStart, granularity)}
+              </span>
+              <span
+                className={`font-mono text-[11px] tabular-nums ${
+                  bucket.revenueCents === 0 ? "text-ink" : "text-muted"
+                }`}
+              >
+                {formatBRL(bucket.revenueCents)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
-const GRANULARITY_NOUN: Readonly<Record<Granularity, string>> = {
-  week: "semana",
-  month: "mês",
-};
+/** The two marks the chart uses, named. Only shown when there is a line to read. */
+export function ChartLegend({ granularity }: { granularity: Granularity }) {
+  const noun = granularity === "week" ? "Semana" : "Mês";
+  const adjective = granularity === "week" ? "medida" : "medido";
+
+  return (
+    <div className="flex flex-wrap items-center gap-8 border-t border-admin-hairline pt-4">
+      <span className="flex items-center gap-2.5 text-[13px] text-muted">
+        <span className="h-0.5 w-6 bg-ink" />
+        Receita paga por {noun.toLowerCase()}
+      </span>
+      <span className="flex items-center gap-2.5 text-[13px] text-muted">
+        <span className="size-2 bg-ink" />
+        {noun} {adjective} em {formatBRL(0)} — o ponto fica na linha de base
+      </span>
+    </div>
+  );
+}

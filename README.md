@@ -206,13 +206,22 @@ decisão caiu e por quê.
   realmente olhando. Busca por cliente ou por número de pedido também não
   existe na API; `userId` é o único filtro por pessoa.
 
-- **O painel não sabe o e-mail de quem está logado.** O artboard mostra
-  `admin@[loja].com.br` na barra do topo. Não existe `/auth/me`, nem rota
-  nenhuma que descreva o chamador, e o access token carrega só `{ sub }`. A
-  barra renderiza sem o endereço em vez de inventar um. Isto é resolvível
-  **aqui** — `docs/upstream-first.md` põe cookie e sessão do BFF deste lado —
-  gravando o endereço num cookie no login; ainda não feito porque mexe na rota
-  de login da loja.
+- **Continua não existindo rota que descreva o chamador**, mas a barra do
+  painel já mostra um endereço. Não existe `/auth/me`, `POST /auth/login`
+  responde `{ accessToken, refreshToken }` e o token carrega só `{ sub }` — a
+  API nunca diz quem é quem. O que a loja faz agora é gravar, no login, o
+  endereço que foi digitado no formulário, num cookie `av_profile` httpOnly,
+  que é a saída que o `docs/upstream-first.md` autoriza deste lado.
+
+  **O que ainda não existe é o nome.** O cadastro pede um e nenhuma resposta o
+  devolve, então o menu da conta e a barra do painel mostram endereço — que é a
+  resposta honesta — e não um nome. Dar nome exigiria `/auth/me` no
+  commerce-core, e aí é PR lá.
+
+  Duas consequências que valem saber: uma sessão aberta **antes** desta mudança
+  não tem o cookie e renderiza sem endereço até a próxima entrada; e o
+  `backOffice` gravado junto é uma dica de desenho, nunca permissão — `/admin`
+  repergunta à API a cada render.
 
 - **As doze peças de hoje só têm a variante `Único`.** A migration do
   [#19](https://github.com/ArtRiv/commerce-core/pull/19) deu a cada produto

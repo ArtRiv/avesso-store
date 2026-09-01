@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import { adminAccess } from "@/lib/admin/session";
+import { sessionProfile } from "@/lib/auth/session";
 
 import { AccessDenied, SignedOut } from "./access-refused";
 
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
  * what the panel wants and nothing it has to undo.
  */
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
-  const access = await adminAccess();
+  const [access, profile] = await Promise.all([adminAccess(), sessionProfile()]);
 
   if (access === "signed-out") {
     return <SignedOut />;
@@ -39,8 +40,12 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     return <AccessDenied />;
   }
 
-  // No route reports the signed-in address — there is no /auth/me, and the
-  // access token carries only a subject id. The bar renders without it rather
-  // than showing something invented. See README, "Divergências conhecidas".
-  return <AdminShell email={null}>{children}</AdminShell>;
+  // Still no route that reports the signed-in address — there is no /auth/me,
+  // and the access token carries only a subject id. What changed is that the
+  // address is now recorded at sign-in, in the session profile cookie, so the
+  // bar can show the one this browser typed. A session older than that cookie
+  // has none, and the bar renders without it rather than inventing one.
+  return (
+    <AdminShell email={profile?.email ?? null}>{children}</AdminShell>
+  );
 }

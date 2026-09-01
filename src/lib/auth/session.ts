@@ -4,7 +4,12 @@ import { cookies } from "next/headers";
 
 import { apiAs } from "@/lib/api/client";
 
-import { hasSessionMarker, readAccessToken } from "./cookies";
+import {
+  hasSessionMarker,
+  readAccessToken,
+  readProfile,
+  type SessionProfile,
+} from "./cookies";
 
 /**
  * Reading the session is safe anywhere. Repairing it happens in exactly two
@@ -34,6 +39,17 @@ export async function getAccessToken(): Promise<string | null> {
  */
 export async function hasSession(): Promise<boolean> {
   return hasSessionMarker(await cookies());
+}
+
+/**
+ * Who is signed in, as far as this app was told at sign-in — or null, both for
+ * a visitor with no session and for a session that predates the profile cookie.
+ *
+ * Costs nothing: it is a cookie read, not a request. That is the entire reason
+ * it exists, since the header it feeds renders on every page of the store.
+ */
+export async function sessionProfile(): Promise<SessionProfile | null> {
+  return readProfile(await cookies());
 }
 
 /**

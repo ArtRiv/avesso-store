@@ -40,10 +40,21 @@ export type AdminAccess = "granted" | "denied" | "signed-out";
 export const adminAccess = cache(async (): Promise<AdminAccess> => {
   const api = await customerApi();
 
-  if (!api) {
-    return "signed-out";
-  }
+  return api ? probeAdminAccess(api) : "signed-out";
+});
 
+/**
+ * The question itself, against a client the caller already holds.
+ *
+ * Split out of `adminAccess` for the login route, which has a fresh access
+ * token in hand and no cookie written yet — it records the answer in the
+ * session profile so the store header can draw the Back office entry without
+ * asking again on every navigation. Same probe, one place, so the two cannot
+ * come to disagree about what "has the back office" means.
+ */
+export async function probeAdminAccess(
+  api: ReturnType<typeof apiAs>,
+): Promise<AdminAccess> {
   const { response } = await api.GET("/products", {
     params: { query: { status: "all", perPage: 1 } },
   });
@@ -56,7 +67,7 @@ export const adminAccess = cache(async (): Promise<AdminAccess> => {
   // render. The browser repairs that on its next call; from the panel's point
   // of view there is no usable session right now.
   return response.status === 401 ? "signed-out" : "denied";
-});
+}
 
 /** Thrown when a panel screen runs without the permission it needs. */
 export class AdminAccessError extends Error {

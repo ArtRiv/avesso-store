@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { SearchIcon } from "@/components/icons";
+import { ChevronIcon, SearchIcon } from "@/components/icons";
 
 /**
  * Search, status and ordering — all three writing to the query string, so the
@@ -104,6 +104,12 @@ export function ProductFilters({
  * field with a chevron and no custom popup, and the platform control is
  * already correct on a keyboard, on a screen reader and on a phone. A
  * re-implementation would be more code that does less.
+ *
+ * The chevron is drawn rather than inherited: `appearance-none` takes the
+ * browser's own arrow away, and without a replacement the field reads as a
+ * caption, not as something that opens. That is how the status filter came to
+ * be reported missing when it had been on the screen all along — the store
+ * side already draws it in `catalog-controls.tsx`, and this matches it.
  */
 function Select({
   label,
@@ -120,7 +126,7 @@ function Select({
 
   return (
     <label
-      className={`flex h-10 items-center gap-2.5 border bg-paper px-3.5 focus-within:border-ink ${
+      className={`relative flex h-10 items-center gap-2.5 border bg-paper px-3.5 focus-within:border-ink ${
         active ? "border-ink" : "border-admin-hairline"
       }`}
     >
@@ -130,7 +136,7 @@ function Select({
         onChange={(event) => {
           onChange(event.target.value);
         }}
-        className="cursor-pointer appearance-none bg-transparent pr-1 text-[14px] outline-none"
+        className="cursor-pointer appearance-none bg-transparent pr-6 text-[14px] outline-none"
       >
         {Object.entries(options).map(([key, text]) => (
           <option key={key} value={key}>
@@ -138,6 +144,7 @@ function Select({
           </option>
         ))}
       </select>
+      <ChevronIcon className="pointer-events-none absolute right-3.5 text-admin-dim" />
     </label>
   );
 }

@@ -164,6 +164,31 @@ decisão caiu e por quê.
   contagem e aceitá-la, e se ela mudar entre o aviso e a confirmação a caixa
   desmarca sozinha.
 
+- **O relatório de receita não tem total do período, e o artboard pede quatro.**
+  `Relatorios.dc.html` desenha uma linha de quatro figuras sobre o gráfico —
+  `Receita`, `Itens`, `Frete`, `Pedidos` — entre dois fios. O
+  `RevenueReportResponse` traz `from`, `to`, `granularity`, `timeZone` e
+  `buckets`, e **nenhuma soma da janela**. Não há com o que preencher a linha.
+
+  O canvas preenche somando os próprios buckets em JavaScript
+  (`liveTotal = liveValues.reduce(...)`, no `renderVals()`). Fazer o mesmo aqui
+  é exatamente a aritmética com dinheiro que o `CLAUDE.md` proíbe, e não por
+  purismo: **o spec não diz se o primeiro e o último bucket são recortados na
+  janela ou transbordam dela.** Uma soma feita aqui seria uma segunda definição
+  de "receita do período", e a primeira a discordar da do backend no dia em que
+  alguém pedir de 15/08 a 15/09.
+
+  Então a linha de totais **não é desenhada**, e no lugar dela a tela diz o que
+  falta — em vez de mostrar quatro traços, que leriam como defeito, ou quatro
+  números que ninguém garantiu. É a única divergência do artboard que muda o
+  que se vê.
+
+  Passa nas três perguntas com folga: toda loja quer, é dinheiro, e não dá para
+  resolver aqui sem duplicar a regra. Um objeto `totals` ao lado de `buckets`,
+  com `revenueCents`, `itemsSubtotalCents`, `shippingCents` e `orderCount` — os
+  mesmos quatro campos que o bucket já tem — fecha a linha inteira em um PR
+  pequeno. **É o próximo candidato a upstream**, e o único que esta tela pede.
+
 - **A categoria não sabe quantas peças tem.** `CategoryResponse` traz `id`,
   `name`, `slug` e `description` — a categoria não conhece os produtos que
   apontam para ela. A coluna `Peças` do artboard sai de um `GET /products` por
@@ -271,10 +296,13 @@ decisão caiu e por quê.
   `products.read` e `orders.read` de fato significa.
 
 - **O painel não tem tela inicial.** `/admin` redireciona para Produtos. O
-  canvas desenha seis telas e nenhuma é um *dashboard*; os números que fariam
-  um valer a pena — faturamento, pedidos do dia — vêm de `reports.read`, uma
-  permissão sem rota atrás. Uma home vazia é pior do que chegar onde o
-  trabalho começa.
+  canvas desenha seis telas e nenhuma é um *dashboard*, e uma home vazia é
+  pior do que chegar onde o trabalho começa.
+
+  Os números que fariam uma valer a pena existem agora — `reports.read` ganhou
+  quatro rotas, e `/admin/relatorios` as lê. Mesmo assim a tela é destino no
+  rail, e não porta de entrada: o período é escolha do operador, e cair numa
+  janela já escolhida seria escolher por ele.
 
 - **O corpo do 409 do checkout é prosa.** `POST /orders` responde
   `{ statusCode, message, error }`, e a `message` nomeia as peças esgotadas

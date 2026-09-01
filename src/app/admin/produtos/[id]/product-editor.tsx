@@ -3,10 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { ImageUrls } from "@/components/admin/image-urls";
 import { Card, PageHeader } from "@/components/admin/page-parts";
 import { VariantPanel } from "@/components/admin/variant-panel";
 import { Badge } from "@/components/badge";
-import { ProductImage } from "@/components/product-image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +52,7 @@ export function ProductEditor({
     weight: initial.weightGrams === null ? "" : String(initial.weightGrams),
     description: initial.description ?? "",
     categoryIds: initial.categories.map((category) => category.id),
+    imageUrls: initial.imageUrls,
   });
 
   const dirty =
@@ -64,7 +65,10 @@ export function ProductEditor({
     !sameSet(
       form.categoryIds,
       product.categories.map((category) => category.id),
-    );
+    ) ||
+    // Order matters here, unlike categories: the first url is the cover, so
+    // moving one is a real change even when the set is identical.
+    form.imageUrls.join("\u0000") !== product.imageUrls.join("\u0000");
 
   async function save() {
     const priceCents = centsFrom(form.price);
@@ -93,6 +97,9 @@ export function ProductEditor({
             // says out loud. Absent would leave the associations alone — and
             // that is not what unchecking a category means.
             categoryIds: form.categoryIds,
+            // Same rule as categories — present replaces the whole list, which is
+            // what removing a photo has to mean.
+            imageUrls: form.imageUrls,
             ...(weightFrom(form.weight) === null
               ? {}
               : { weightGrams: weightFrom(form.weight) }),
@@ -242,34 +249,13 @@ export function ProductEditor({
         </div>
 
         <div className="flex flex-col gap-6">
-          <Card
-            title="Imagens"
-            note="A API guarda URLs. Upload é outro assunto, e de propósito."
-          >
-            <div className="grid grid-cols-2 gap-3">
-              {product.imageUrls.length > 0 ? (
-                product.imageUrls.map((url) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={url}
-                    src={url}
-                    alt=""
-                    className="aspect-4/5 w-full border border-admin-hairline object-cover"
-                  />
-                ))
-              ) : (
-                <>
-                  <ProductImage
-                    slug={product.slug}
-                    name={product.name}
-                    showLabel={false}
-                  />
-                  <div className="flex aspect-4/5 items-center justify-center border border-dashed border-admin-hairline text-center type-meta text-[11px] text-admin-dim">
-                    Sem foto
-                  </div>
-                </>
-              )}
-            </div>
+          <Card title="Imagens">
+            <ImageUrls
+              urls={form.imageUrls}
+              onChange={(imageUrls) => {
+                setForm({ ...form, imageUrls });
+              }}
+            />
           </Card>
 
           <Card title="Categorias" note="Salvar substitui o conjunto inteiro.">

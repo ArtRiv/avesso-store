@@ -36,6 +36,38 @@ loja de verdade.
    verificado e a senha `correct horse battery staple`. Promover é um `UPDATE`
    no banco — não existe rota para isso, aqui nem na API, e é de propósito.
 
+   **Criar as duas contas é registrar e depois corrigir no banco**, porque
+   verificar e-mail e promover não têm rota — aqui nem na API, de propósito:
+
+   ```bash
+   # com o commerce-core de pé na :3000, apontado para o schema e2e
+   curl -X POST localhost:3000/auth/register -H 'content-type: application/json' \
+     -d '{"email":"cliente@avesso.test","password":"correct horse battery staple","name":"Marina Duarte"}'
+   curl -X POST localhost:3000/auth/register -H 'content-type: application/json' \
+     -d '{"email":"operador@avesso.test","password":"correct horse battery staple","name":"Operadora AVESSO"}'
+   ```
+
+   ```sql
+   update e2e.users set email_verified_at = now(), updated_at = now()
+   where email in ('operador@avesso.test', 'cliente@avesso.test');
+
+   update e2e.users set role_id = (select id from e2e.roles where name = 'admin'),
+     updated_at = now()
+   where email = 'operador@avesso.test';
+   ```
+
+   `Marina Duarte` não é decorativo: `orders.mjs` afirma que o comprador volta
+   com esse nome.
+
+   **O papel `admin` precisa carregar `reports.read`.** Ela é a permissão das
+   quatro rotas de relatório e é separada de `products.read` e `orders.read`:
+   um `admin` de um schema criado antes da migration de relatórios abre o
+   painel, chega em `/admin/relatorios` e leva 403 em tudo — que é justamente
+   um dos estados que `reports.mjs` verifica, e por isso a suíte inteira
+   falharia sem dizer o motivo. `pnpm e2e:setup` no commerce-core reconstrói o
+   schema com o catálogo de permissões atual, e apaga as contas junto: depois
+   dele, os comandos acima rodam de novo.
+
 ## O que cada arquivo é
 
 | arquivo | o que cobre |
@@ -44,6 +76,7 @@ loja de verdade.
 | `removal.mjs` | os três estados da remoção de tamanho, **incluindo a corrida** |
 | `orders.mjs` | `buyer`, as duas telas de pedido, as cinco transições |
 | `categories.mjs` | CRUD, a contagem de peças, e a promessa da copy de apagar |
+| `reports.mjs` | a fronteira de `reports.read` nas quatro rotas, a janela meio-aberta, o snapshot de sacolas, e as duas listas complementares |
 | `drive.mjs` | o cliente HTTP com potes de cookie nomeados |
 | `fixture.mjs` | semeadura — cada execução cria os próprios produtos |
 
@@ -61,6 +94,13 @@ assim. Por isso `drive.mjs` guarda os potes de cookie em `.jars.json` e
 `fixture.mjs` guarda o token de semeadura em `.seed-token`, ambos ignorados
 pelo git. Se esbarrar no limite mesmo assim, reiniciar o commerce-core zera o
 contador, que é em memória.
+
+## Uma falha que não é sua
+
+Um `500` isolado com `Connection terminated unexpectedly` no log do
+commerce-core é o *pooler* do Supabase derrubando uma conexão ociosa, não uma
+regressão. Acontece em qualquer checagem, sem padrão. **Rode de novo antes de
+investigar** — se passar, era isso. Se repetir no mesmo lugar, aí é código.
 
 ## O que eles não são
 

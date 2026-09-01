@@ -8,18 +8,27 @@ import {
   CategoriesIcon,
   OrdersIcon,
   ProductsIcon,
+  ReportsIcon,
 } from "@/components/admin-icons";
 import { cn } from "@/lib/utils";
 
 /**
  * The chrome every panel screen sits in: a 64px bar and a 240px rail.
  *
- * Two groups, six screens, and no dashboard. The canvas has no home for the
- * panel and this does not invent one — `/admin` redirects to Produtos, because
- * a landing page with nothing on it is worse than arriving somewhere useful.
- * Clientes, Relatórios and Acesso are absent for the reason the canvas records
- * in its own note: the permissions exist, the routes do not, and drawing those
- * screens now would be the design dictating the contract.
+ * Two groups, no dashboard. The canvas has no home for the panel and this does
+ * not invent one — `/admin` redirects to Produtos, because a landing page with
+ * nothing on it is worse than arriving somewhere useful.
+ *
+ * Relatórios was absent while the canvas's own note held: "the permissions
+ * exist, the routes do not, and drawing those screens now would be the design
+ * dictating the contract." The four routes behind `reports.read` are deployed
+ * now, so the screen exists and the link is here. Clientes and Acesso are
+ * still absent, for exactly the reason that note gives.
+ *
+ * The link shows for anyone the panel let in, including an operator who holds
+ * catalogue and orders but not `reports.read`. That is on purpose: the screen
+ * says so plainly when the API refuses, and a hidden link has never been what
+ * protected anything — every one of those four routes re-asks the backend.
  */
 const SECTIONS = [
   {
@@ -31,7 +40,10 @@ const SECTIONS = [
   },
   {
     label: "Vendas",
-    items: [{ href: "/admin/pedidos", label: "Pedidos", Icon: OrdersIcon }],
+    items: [
+      { href: "/admin/pedidos", label: "Pedidos", Icon: OrdersIcon },
+      { href: "/admin/relatorios", label: "Relatórios", Icon: ReportsIcon },
+    ],
   },
 ] as const;
 

@@ -2,8 +2,8 @@
  * The icons the back office needs and the storefront never did, traced from
  * the canvas exactly.
  *
- * §7 forbids an icon library and that stays true here: this is a closed list
- * of nine, drawn once. The store's four live in src/components/icons.tsx —
+ * §7 forbids an icon library and that stays true here: this is a closed list,
+ * drawn once. The store's four live in src/components/icons.tsx —
  * `SearchIcon` and `ChevronIcon` are reused by the panel rather than redrawn,
  * because the same glyph in a second file is how two of them start to drift.
  *
@@ -67,6 +67,15 @@ export function CategoriesIcon(props: AdminIconProps) {
   return (
     <Icon viewBox="0 0 16 16" {...props}>
       <path d="M2 4h12M2 8h12M2 12h7" />
+    </Icon>
+  );
+}
+
+/** Rail: Relatórios. Three bars over a baseline, traced from the artboard. */
+export function ReportsIcon(props: AdminIconProps) {
+  return (
+    <Icon viewBox="0 0 16 16" {...props}>
+      <path d="M2 13h12M5 10.5v2.5M8 6.5v6.5M11 9v4" />
     </Icon>
   );
 }

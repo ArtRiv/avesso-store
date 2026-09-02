@@ -105,15 +105,15 @@ página da Stripe, retorno, e o pedido virando `Pago` pelo webhook. O que
 sobrou:
 
 - **O e-mail do admin está com typo no banco, e isso trava login e reset.**
-  `public.users` guarda `arthurfelaco707@gmail.com.br`, com `.br` sobrando.
-  Nenhum e-mail de "esqueci minha senha" chega porque a API não acha o usuário
-  e, por anti-enumeração, responde `200` sem mandar nada. No projeto Supabase
-  **`commerce-core-dev`** (`utnazosqofafekpxbtjg`), no SQL editor:
+  `public.users` guarda o endereço com um `.br` sobrando no fim. Nenhum e-mail
+  de "esqueci minha senha" chega porque a API não acha o usuário e, por
+  anti-enumeração, responde `200` sem mandar nada. No projeto Supabase
+  **`commerce-core-dev`**, no SQL editor:
 
   ```sql
   update public.users
-  set email = 'arthurfelaco707@gmail.com', updated_at = now()
-  where email = 'arthurfelaco707@gmail.com.br';
+  set email = 'o-endereco-correto@exemplo.com', updated_at = now()
+  where email = 'o-endereco-correto@exemplo.com.br';
   ```
 
   A conta já tem `email_verified_at`, então não precisa reverificar. (O Studio

@@ -7,6 +7,7 @@ import { ImageUrls } from "@/components/admin/image-urls";
 import { Card, PageHeader } from "@/components/admin/page-parts";
 import { VariantPanel } from "@/components/admin/variant-panel";
 import { Badge } from "@/components/badge";
+import { ChevronIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -334,19 +335,22 @@ function StatusSelect({
   onChange: (value: ProductStatus) => void;
 }) {
   return (
-    <select
-      value={value}
-      onChange={(event) => {
-        onChange(event.target.value as ProductStatus);
-      }}
-      className="h-11 w-full cursor-pointer appearance-none rounded-[2px] border border-hairline bg-paper px-3.5 text-[15px] outline-none focus-visible:border-ink"
-    >
-      {(["DRAFT", "ACTIVE", "ARCHIVED"] as const).map((status) => (
-        <option key={status} value={status}>
-          {PRODUCT_STATUS_LABEL[status]}
-        </option>
-      ))}
-    </select>
+    <div className="relative flex items-center">
+      <select
+        value={value}
+        onChange={(event) => {
+          onChange(event.target.value as ProductStatus);
+        }}
+        className="h-11 w-full cursor-pointer appearance-none rounded-[2px] border border-hairline bg-paper pl-3.5 pr-10 text-[15px] outline-none focus-visible:border-ink"
+      >
+        {(["DRAFT", "ACTIVE", "ARCHIVED"] as const).map((status) => (
+          <option key={status} value={status}>
+            {PRODUCT_STATUS_LABEL[status]}
+          </option>
+        ))}
+      </select>
+      <ChevronIcon className="pointer-events-none absolute right-3.5 text-muted" />
+    </div>
   );
 }
 

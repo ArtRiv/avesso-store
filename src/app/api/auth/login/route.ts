@@ -1,12 +1,13 @@
 import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
 
-import { publicApi, unwrap } from "@/lib/api/client";
+import { apiAs, publicApi, unwrap } from "@/lib/api/client";
 import {
   badRequest,
   errorResponse,
   noContent,
 } from "@/lib/auth/api-response";
+import { probeAdminAccess } from "@/lib/admin/session";
 import { setSession } from "@/lib/auth/cookies";
 
 /**
@@ -55,10 +56,37 @@ export async function POST(request: NextRequest) {
       }),
     );
 
-    setSession(await cookies(), pair);
+    setSession(await cookies(), pair, {
+      email: credentials.email,
+      backOffice: await hasBackOffice(pair.accessToken),
+    });
 
     return noContent();
   } catch (error) {
     return errorResponse(error, COPY);
+  }
+}
+
+/**
+ * Asks once, here, whether this account has the back office — so the store
+ * header never has to.
+ *
+ * The header renders on every page of the shop, and `adminAccess()` costs a
+ * request to the API. Asking on each navigation to decide whether to draw one
+ * menu entry is the wrong trade; asking once at sign-in and recording it in the
+ * session profile is the right one.
+ *
+ * A failure answers false rather than propagating. This runs after the tokens
+ * are already in hand, and refusing to sign someone in because a cosmetic probe
+ * timed out would be trading a working session for a menu entry. The worst case
+ * is a real operator who has to reach /admin by typing it until their next
+ * sign-in — where the panel gate, which is the one that decides anything, will
+ * let them in exactly as before.
+ */
+async function hasBackOffice(accessToken: string): Promise<boolean> {
+  try {
+    return (await probeAdminAccess(apiAs(accessToken))) === "granted";
+  } catch {
+    return false;
   }
 }

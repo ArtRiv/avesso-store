@@ -84,7 +84,7 @@ aberto para caber o ícone. Nenhum comportamento mudou.
 
 ## Frontend
 
-### FE-1 · `frontend` · Menu da conta, e a porta de entrada do painel
+### FE-1 · ✅ feito · Menu da conta, e a porta de entrada do painel
 
 Três comentários, um controle só.
 
@@ -123,6 +123,28 @@ e-mail que hoje é `null`.
 **Pronto quando.** Deslogar sai do menu, `Back office` aparece só para conta
 com acesso e não aparece para cliente, e a barra do painel mostra o e-mail de
 verdade em vez de nada.
+
+**Feito, com dois desvios que valem registrar.**
+
+**O nome não era obtenível.** A entrada pedia "o nome de quem está logado".
+`POST /auth/login` responde `TokenPairResponse` — `{ accessToken,
+refreshToken }` e nada mais — e não há `/auth/me`. O cadastro pede um nome e
+nenhuma resposta o devolve. O que **é** obtenível no login é o endereço, porque
+é o que a pessoa acabou de digitar no formulário. Então o menu e a barra do
+painel mostram endereço. Nome exigiria rota nova no commerce-core.
+
+**O dado foi para um cookie próprio, não para o `av_session`.** A entrada dizia
+"grave também no cookie de sessão". O `av_session` é lido pelo `proxy.ts` em
+toda requisição e comparado a `"1"`; enfiar dado de exibição ali põe um parse
+nesse caminho e faz um valor malformado ser lido como "não tem sessão" — um bug
+cosmético que desloga gente. `av_profile` é httpOnly, escrito e apagado junto
+com os outros três no mesmo arquivo, e quando quebra custa um nome no menu e
+mais nada. A intenção da entrada — não pagar uma requisição por navegação —
+está cumprida: o `probeAdminAccess` roda **uma vez, no login**.
+
+**E uma consequência para quem for conferir:** uma sessão aberta antes desta
+mudança não tem o cookie. O menu abre e o `Sair` funciona, mas sem endereço e
+sem `Back office` até sair e entrar de novo.
 
 ---
 

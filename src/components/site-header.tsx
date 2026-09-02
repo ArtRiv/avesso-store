@@ -1,9 +1,14 @@
 import Link from "next/link";
 
+import { AccountMenu } from "@/components/account-menu";
 import { AccountIcon, BagIcon, SearchIcon } from "@/components/icons";
 import { textLinkClass } from "@/components/text-link";
 import { listCategories } from "@/lib/catalog";
-import { customerApi, hasSession } from "@/lib/auth/session";
+import {
+  customerApi,
+  hasSession,
+  sessionProfile,
+} from "@/lib/auth/session";
 import { unwrap } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 
@@ -18,9 +23,10 @@ import { cn } from "@/lib/utils";
  * appearing in the header of the store that owns it.
  */
 export async function SiteHeader() {
-  const [categories, signedIn, itemCount] = await Promise.all([
+  const [categories, signedIn, profile, itemCount] = await Promise.all([
     listCategories(),
     hasSession(),
+    sessionProfile(),
     countSacola(),
   ]);
 
@@ -54,13 +60,24 @@ export async function SiteHeader() {
           Buscar
         </Link>
 
-        <Link
-          href={signedIn ? "/minha-conta/pedidos" : "/entrar"}
-          className={cn(textLinkClass, "type-meta flex items-center gap-2")}
-        >
-          <AccountIcon />
-          Conta
-        </Link>
+        {/* A menu with a session, a link without one. `hasSession()` rather
+            than the profile decides which: the profile cookie is only written
+            at sign-in, so someone signed in before it existed still has a live
+            session and must still get the menu — without the address line. */}
+        {signedIn ? (
+          <AccountMenu
+            email={profile?.email ?? null}
+            backOffice={profile?.backOffice ?? false}
+          />
+        ) : (
+          <Link
+            href="/entrar"
+            className={cn(textLinkClass, "type-meta flex items-center gap-2")}
+          >
+            <AccountIcon />
+            Conta
+          </Link>
+        )}
 
         {/* The count comes from the API, not from summing quantities here —
             that is what `itemCount` on GET /cart exists for. */}

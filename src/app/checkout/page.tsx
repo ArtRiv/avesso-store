@@ -16,15 +16,15 @@ export const metadata: Metadata = {
 type Cart = components["schemas"]["CartResponse"];
 
 /**
- * Artboard 07, and artboard 10 as a state of it.
+ * Página de checkout.
  *
- * The sacola is read on the server so the page arrives with real lines and a
- * real subtotal. Everything after that — the CEP, the freight options, the
- * order — is a conversation with the API that only the browser can hold, so
- * the screen itself is a client component.
+ * O carrinho é lido no servidor para que a página chegue ao cliente com linhas
+ * e subtotal reais. Tudo após isso — CEP, cotação de frete, finalização do
+ * pedido — é uma conversa com a API que apenas o browser pode conduzir, por
+ * isso a tela em si é um Client Component.
  *
- * There is no footer here and the header is stripped back (see
- * CheckoutHeader): the design gives this screen one thing to do.
+ * Sem rodapé e com header simplificado (ver CheckoutHeader): esta tela tem
+ * uma única função.
  */
 export default async function CheckoutPage() {
   const cart = await loadCart();
@@ -43,17 +43,18 @@ async function loadCart(): Promise<Cart> {
   const api = await customerApi();
 
   if (!api) {
-    // No guest cart, so no guest checkout either — and unlike the product
-    // page, there is nothing here to look at while signing in.
+    // Sem carrinho para visitantes — e diferente da página de produto, não há
+    // nada aqui para visualizar enquanto não há sessão.
     redirect(`/entrar?next=${encodeURIComponent("/checkout")}`);
   }
 
+  // A ApiError lançada por unwrap() em caso de falha (502/503) é capturada
+  // pelo boundary checkout/error.tsx, que redireciona para /sacola.
   const cart = unwrap(await api.GET("/cart"));
 
-  // Nothing to check out. The empty state is artboard 09 and it lives on
-  // /sacola; a second one here would be the same screen twice. This is also
-  // the landing after a successful order, since POST /orders consumes the
-  // cart — a customer pressing back finds their sacola, not a dead form.
+  // Carrinho vazio — redireciona para /sacola, que exibe o estado vazio.
+  // É também o destino após um pedido bem-sucedido: POST /orders consome o
+  // carrinho, então pressionar voltar leva à sacola e não a um formulário vazio.
   if (cart.items.length === 0) {
     redirect("/sacola");
   }

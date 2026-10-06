@@ -15,18 +15,11 @@
  */
 
 /**
- * The single in-flight refresh.
+ * Singleton de refresh em voo.
  *
- * This is the module-level promise the brief insists on, and the reason is
- * worth restating: a refresh token is single-use, and presenting a spent one
- * is read as theft and revokes the whole session family. If three components
- * each hit a 401 at once and each called the refresh route, two of them would
- * present a token the first had already retired, and the customer would be
- * signed out for the crime of loading a busy page.
- *
- * A module-level singleton is right *here* and would be wrong on the server:
- * this module exists once per browser tab, so it is already scoped to one
- * customer. The server's copy is keyed by token for exactly that reason.
+ * Garante que apenas uma requisição de refresh aconteça por vez: como o
+ * refresh token é de uso único, chamadas simultâneas causariam invalidação
+ * indevida da sessão do usuário.
  */
 let inFlightRefresh: Promise<boolean> | null = null;
 
@@ -103,6 +96,9 @@ export async function problemMessage(response: Response): Promise<string> {
     : `${message} Tente de novo em ${String(seconds)} segundos.`;
 }
 
+export const GENERIC_FALLBACK =
+  "Não foi possível concluir. Tente novamente em instantes.";
+
 async function bodyMessage(response: Response): Promise<string> {
   try {
     const body = (await response.json()) as ProblemBody;
@@ -114,7 +110,15 @@ async function bodyMessage(response: Response): Promise<string> {
     // No body, or not JSON. Fall through.
   }
 
-  return "Não foi possível concluir. Tente novamente em instantes.";
+  if (response.status === 503) {
+    return "Serviço temporariamente indisponível. Tente novamente em instantes.";
+  }
+
+  if (response.status >= 500) {
+    return "Erro no servidor. Tente novamente em instantes.";
+  }
+
+  return GENERIC_FALLBACK;
 }
 
 /**

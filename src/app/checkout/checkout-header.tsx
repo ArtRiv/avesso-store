@@ -4,13 +4,10 @@ import { textLinkClass } from "@/components/text-link";
 import { cn } from "@/lib/utils";
 
 /**
- * Artboard 07's header, which is not the store's header.
+ * Cabeçalho minimalista do checkout.
  *
- * Same 80px box and same hairline, but the categories, the search and the
- * sacola are all gone: a checkout is the one screen in the store with a single
- * thing to do on it, and every link out of it is a way to lose an order that
- * is halfway made. The wordmark stays clickable because a locked-in page is
- * worse than an abandoned one.
+ * Exibe apenas o logo e indicador de conexão segura, sem links de navegação
+ * concorrentes para manter o foco do usuário na conclusão da compra.
  */
 export function CheckoutHeader() {
   return (

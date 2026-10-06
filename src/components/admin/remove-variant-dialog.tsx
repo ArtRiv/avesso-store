@@ -54,6 +54,7 @@ export function RemoveVariantDialog({
   onOpenChange,
   onRemove,
   onRename,
+  onArchive,
 }: {
   label: string;
   /** Known locally — a product always keeps at least one size. */
@@ -71,6 +72,7 @@ export function RemoveVariantDialog({
     | { ok: false; reason: "error"; message: string }
   >;
   onRename: () => void;
+  onArchive?: () => void;
 }) {
   const [stage, setStage] = useState<Stage>({ kind: "confirm" });
   const [authorised, setAuthorised] = useState(false);
@@ -140,6 +142,14 @@ export function RemoveVariantDialog({
                 onOpenChange(false);
                 onRename();
               }}
+              onArchive={
+                onArchive
+                  ? () => {
+                      onOpenChange(false);
+                      onArchive();
+                    }
+                  : undefined
+              }
             />
           ) : (
             <form
@@ -258,9 +268,8 @@ export function RemoveVariantDialog({
  * The refusal with no door.
  *
  * A size somebody bought stays forever: order items point at it and the
- * database RESTRICTs the delete. Renaming is the way out, and it costs history
- * nothing — `OrderItem.variantLabel` is a snapshot taken at purchase, so
- * changing the label here cannot rewrite a sale.
+ * database RESTRICTs the delete. Archiving is the safe exit, and renaming
+ * is the escape hatch.
  *
  * The last size is the same dialog with a different reason: a product with no
  * sizes is unbuyable, so archiving the product is the other door.
@@ -270,11 +279,13 @@ function Blocked({
   isLast,
   onClose,
   onRename,
+  onArchive,
 }: {
   label: string;
   isLast: boolean;
   onClose: () => void;
   onRename: () => void;
+  onArchive?: () => void;
 }) {
   return (
     <div className="flex flex-col gap-5">
@@ -298,9 +309,7 @@ function Blocked({
             </>
           ) : (
             <>
-              <strong>Renomear</strong> resolve o mesmo problema: o rótulo do
-              pedido é uma cópia congelada, então trocar o nome não reescreve
-              venda nenhuma.
+              <strong>Arquivar o tamanho</strong> tira a variante da vitrine e do checkout com segurança, mantendo o histórico de pedidos. Ou <strong>renomear</strong> caso deseje reutilizá-la.
             </>
           )}
         </p>
@@ -311,9 +320,16 @@ function Blocked({
           Fechar
         </Button>
         {isLast ? null : (
-          <Button size="admin-lg" onClick={onRename}>
-            Renomear
-          </Button>
+          <>
+            <Button variant="secondary" size="admin-lg" onClick={onRename}>
+              Renomear
+            </Button>
+            {onArchive ? (
+              <Button variant="danger" size="admin-lg" onClick={onArchive}>
+                Arquivar tamanho
+              </Button>
+            ) : null}
+          </>
         )}
       </div>
     </div>

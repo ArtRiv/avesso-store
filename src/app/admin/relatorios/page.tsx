@@ -34,32 +34,15 @@ type Unsold = components["schemas"]["UnsoldProductsReportResponse"];
 const PER_PAGE = 6;
 
 /**
- * Four reads, four endpoints — Sacolas agora, Receita no tempo, Mais vendidas,
- * Peças paradas — as the artboard's own scope annotation puts it.
+ * Painel de relatórios administrativos.
  *
- * Everything is read server-side through `requireAdminApi()`, and the period
- * lives in the query string, so a window is a URL worth keeping. The controls
- * are plain links rather than a client component: a segmented control that only
- * changes a query parameter is a set of links, and making it interactive would
- * ship JavaScript to do what an anchor already does.
+ * Exibe quatro blocos de dados:
+ * 1. Sacolas abertas agora (tempo real)
+ * 2. Receita ao longo do tempo (gráfico por período)
+ * 3. Peças mais vendidas
+ * 4. Peças sem vendas no período
  *
- * Three facts about this screen are worth stating before reading the code:
- *
- * **Nothing here is computed.** No total, no average, no percentage. Every
- * number rendered is a field the API sent. The artboard draws a four-figure
- * totals row above the chart — Receita, Itens, Frete, Pedidos — and
- * `RevenueReportResponse` has no window sum to fill it with. It is not summed
- * here; see README, "Divergências conhecidas", and the note the card carries
- * in its place.
- *
- * **Zero is the ordinary view.** The artboard's main state is the store with no
- * sales in the window, and every empty state here names what is empty and why.
- * The chart's zero markers are the load-bearing part: a measured zero has to
- * read as a measurement.
- *
- * **`reports.read` is not what opened the panel.** The layout's gate asks about
- * `products.read`; an operator can hold that, walk in, and be refused by all
- * four of these. That refusal is a state of this screen, not a crash.
+ * Todos os dados são obtidos no servidor via endpoints dedicados da API.
  */
 export default async function ReportsPage({
   searchParams,
@@ -155,8 +138,6 @@ export default async function ReportsPage({
         <>
           <RevenueCard result={revenue} params={params} period={period} />
 
-          {/* Side by side, as the artboard lays them out: the two lists are
-              complements of each other and are read against each other. */}
           <div className="grid grid-cols-2 items-start gap-6">
             <SalesCard result={sales} params={params} />
             <UnsoldCard result={unsold} params={params} timeZone={timeZone} />
@@ -199,7 +180,7 @@ function Unreadable() {
 }
 
 /* -------------------------------------------------------------------------
-   The furniture the artboard draws
+   Componentes de apresentação
    ---------------------------------------------------------------------- */
 
 /** A joined run of chips: one hairline between neighbours, not two. */
@@ -207,7 +188,7 @@ function Segments({ children }: { children: React.ReactNode }) {
   return <div className="flex [&>*+*]:-ml-px">{children}</div>;
 }
 
-/** A card in the artboard's shape: hairline, square, paper. */
+/** Painel em formato de card: borda fina, cantos retos, fundo papel. */
 function Panel({
   className,
   children,
@@ -252,11 +233,7 @@ function PanelHead({
 }
 
 /**
- * What a list says when it has nothing.
- *
- * Left-aligned and generous, the way the artboard draws it — a heading and a
- * sentence, in place of the table rather than inside it. Never a spinner and
- * never a dash: it names what is empty and what would fill it.
+ * Exibição para listas ou tabelas vazias.
  */
 function Blank({ title, children }: { title: string; children: string }) {
   return (
@@ -332,12 +309,9 @@ function CartsBand({ result }: { result: Result<Carts> }) {
 }
 
 /**
- * A count at the artboard's size: mono 28px, tabular, tightened.
- *
- * Zero is rendered in ink like any other value. Dimming it would say something
- * about the number that the number does not say about itself.
+ * Exibição destacada de métrica numérica.
  */
-function Figure({ label, value }: { label: string; value: number }) {
+function Figure({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="flex flex-col gap-2">
       <span className="type-meta text-admin-dim">{label}</span>
@@ -370,7 +344,7 @@ function RevenueCard({
     );
   }
 
-  const { buckets, granularity, timeZone } = result.data;
+  const { buckets, granularity, timeZone, totals } = result.data;
   const quiet = buckets.every((bucket) => bucket.revenueCents === 0);
   const noun = bucketNoun(granularity, buckets.length);
 
@@ -399,26 +373,26 @@ function RevenueCard({
         }
       />
 
-      {/*
-        Where the artboard's totals row goes.
-
-        It draws four figures over the chart — Receita, Itens, Frete, Pedidos —
-        and the canvas fills them by summing its own buckets in JavaScript.
-        `RevenueReportResponse` carries `buckets` and no window sum, so there is
-        nothing to fill them with, and adding them up here is the arithmetic on
-        money that CLAUDE.md rules out. It is not a style choice: the spec never
-        says whether a first or last bucket is clipped to the window or spills
-        past it, so a sum computed here would be a second definition of
-        "revenue in the period" that could disagree with the backend's first.
-
-        So the row is not drawn, and the reason is on the screen rather than
-        hidden in this comment. See README, "Divergências conhecidas".
-      */}
-      <p className="border-y border-admin-hairline px-7 py-5 text-[13px] text-muted">
-        A resposta traz a receita de cada {bucketNoun(granularity, 1)} e não a
-        soma da janela. Somar aqui criaria uma segunda definição de receita do
-        período, então a linha de totais fica de fora até a API mandar a dela.
-      </p>
+      {totals ? (
+        <div className="grid grid-cols-2 gap-8 border-y border-admin-hairline px-7 py-6 sm:grid-cols-4">
+          <Figure
+            label="Receita do período"
+            value={formatBRL(totals.revenueCents)}
+          />
+          <Figure
+            label="Produtos"
+            value={formatBRL(totals.itemsSubtotalCents)}
+          />
+          <Figure
+            label="Frete"
+            value={formatBRL(totals.shippingCents)}
+          />
+          <Figure
+            label="Pedidos pagos"
+            value={totals.orderCount}
+          />
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-6 px-7 py-6">
         {buckets.length === 0 ? (
@@ -510,11 +484,6 @@ function SalesCard({
                 <Cell className="text-right font-mono text-[14px] font-medium tabular-nums">
                   {row.unitsSold}
                 </Cell>
-                {/*
-                  Moss, as the artboard paints it. Not a second accent: §1
-                  rations rust, and moss is already the store's colour for money
-                  that arrived — the "Pago" badge is the same green.
-                */}
                 <Cell className="text-right font-mono text-[14px] font-medium tabular-nums text-moss">
                   {formatBRL(row.itemsRevenueCents)}
                 </Cell>
@@ -635,7 +604,7 @@ function UnsoldCard({
 }
 
 /* -------------------------------------------------------------------------
-   Table parts, at the artboard's density
+   Componentes de tabela
    ---------------------------------------------------------------------- */
 
 function Head({
@@ -686,13 +655,8 @@ function Count({ total }: { total: number }) {
    ---------------------------------------------------------------------- */
 
 /**
- * Each table carries its own page key, and every link rebuilds the whole query
- * string — so paging one table keeps the window, the granularity and the other
- * table's page exactly where they were.
- *
- * `{shown} de {total}` is the artboard's own footer: what is on screen, out of
- * what matched. The count the server returns is of matching pieces, never of
- * the page.
+ * Controles de paginação da tabela.
+ * Cada tabela gerencia sua própria chave de página na query string.
  */
 function Pages({
   param,

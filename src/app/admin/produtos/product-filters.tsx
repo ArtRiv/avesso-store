@@ -17,14 +17,18 @@ export function ProductFilters({
   search,
   status,
   sort,
+  categoria,
   statuses,
   sorts,
+  categories,
 }: {
   search: string;
   status: string;
   sort: string;
+  categoria: string;
   statuses: Readonly<Record<string, string>>;
   sorts: Readonly<Record<string, string>>;
+  categories: Readonly<Record<string, string>>;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -73,6 +77,14 @@ export function ProductFilters({
         />
       </form>
 
+      <Select
+        label="Categoria"
+        value={categoria}
+        options={categories}
+        onChange={(value) => {
+          commit({ categoria: value === "all" ? "" : value });
+        }}
+      />
       <Select
         label="Status"
         value={status}

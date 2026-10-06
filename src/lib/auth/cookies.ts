@@ -25,22 +25,11 @@ const ACCESS_MAX_AGE = 15 * 60;
 const REFRESH_MAX_AGE = 7 * 24 * 60 * 60;
 
 /**
- * The refresh token is scoped to the routes allowed to spend it. A cookie is
- * only sent to paths that match, so it never rides along on a page request, a
- * cart request or anything else that has no business holding it.
+ * Escopo de caminho para o cookie de refresh token.
  *
- * The brief asks for `/api/auth/refresh` exactly, and this is one segment
- * wider than that, deliberately: `POST /auth/logout` needs the refresh token
- * in its body as well as the access token in its header — that is how the
- * backend knows *which* session to end, since the access token carries only a
- * user id and revoking on that alone would sign the customer out of every
- * device. Scoped to the single refresh route, `/api/auth/logout` would never
- * be sent the cookie, and the only way to "log out" would be to drop this
- * app's cookies and leave the session family alive on the backend for its full
- * seven days. A logout that does not revoke anything is not a logout.
- *
- * What the tighter path was protecting is still protected: no page route and
- * no cart or order route is ever sent this cookie.
+ * Restrito ao prefixo `/api/auth` para que o cookie seja enviado apenas
+ * às rotas de renovação (`/api/auth/refresh`) e encerramento (`/api/auth/logout`),
+ * sem vazar em requisições comuns de páginas ou de produtos.
  */
 export const REFRESH_COOKIE_PATH = "/api/auth";
 
@@ -74,6 +63,7 @@ export type TokenPair = {
  */
 export type SessionProfile = {
   email: string;
+  name: string | null;
   backOffice: boolean;
 };
 
@@ -202,13 +192,17 @@ export function readProfile(store: CookieStore): SessionProfile | null {
       return null;
     }
 
-    const { email, backOffice } = parsed as Record<string, unknown>;
+    const { email, name, backOffice } = parsed as Record<string, unknown>;
 
     if (typeof email !== "string" || typeof backOffice !== "boolean") {
       return null;
     }
 
-    return { email, backOffice };
+    return {
+      email,
+      name: typeof name === "string" ? name : null,
+      backOffice,
+    };
   } catch {
     return null;
   }

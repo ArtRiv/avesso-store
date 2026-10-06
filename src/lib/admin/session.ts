@@ -55,12 +55,23 @@ export const adminAccess = cache(async (): Promise<AdminAccess> => {
 export async function probeAdminAccess(
   api: ReturnType<typeof apiAs>,
 ): Promise<AdminAccess> {
-  const { response } = await api.GET("/products", {
-    params: { query: { status: "all", perPage: 1 } },
-  });
+  const { data, response } = await api.GET("/auth/me");
 
-  if (response.ok) {
-    return "granted";
+  if (response.ok && data) {
+    if (
+      data.role === "ADMIN" ||
+      data.role === "STAFF" ||
+      data.permissions.some(
+        (p) =>
+          p.startsWith("products.") ||
+          p.startsWith("orders.") ||
+          p.startsWith("reports.") ||
+          p.startsWith("categories."),
+      )
+    ) {
+      return "granted";
+    }
+    return "denied";
   }
 
   // 401 here means the token expired between the proxy's refresh and this

@@ -23,23 +23,10 @@ export function isGranularity(value: string): value is Granularity {
 }
 
 /**
- * The three lengths the artboard offers, as a segmented control.
+ * Presets de período para o relatório de receitas: 30 dias, 12 semanas ou 12 meses.
  *
- * The artboard draws presets and no date fields, and that is the better
- * control for this screen: an operator asks "how are the last twelve weeks
- * going", not "give me 09/06 to 29/08".
- *
- * `30d` sends nothing at all. That is not a shortcut — omitting `from` and `to`
- * IS the API's documented default (30 days before now), so the commonest view
- * on this screen computes no date anywhere and cannot drift from the backend by
- * a day. The other two send only `from`, leaving `to` as now for the same
- * reason.
- *
- * `days` is a request parameter and nothing more. It is not a business rule —
- * no backend anywhere would offer "twelve weeks" as a concept — so working it
- * out here is presentation, not the arithmetic docs/upstream-first.md is about.
- * It is worked out on the SERVER, so every reader gets the same window from the
- * same URL rather than one cut by their own clock.
+ * `30d` não envia `from` nem `to`, utilizando o padrão de 30 dias da API.
+ * Os demais enviam apenas `from`, deixando `to` como a data atual.
  */
 export const PERIODS = {
   "30d": {
@@ -185,9 +172,7 @@ export function bucketLabel(
 }
 
 /**
- * How many buckets, in words — `cinco semanas`, the way the artboard writes the
- * zero caption. Past the list it falls back to digits rather than growing a
- * number speller nobody asked for.
+ * Contagem por extenso para pequenos intervalos de agrupamento.
  */
 const COUNT_WORD = [
   "nenhuma",
@@ -218,13 +203,7 @@ export function bucketNoun(granularity: Granularity, n: number): string {
 }
 
 /**
- * A date in the zone the instance keeps its books in, not the reader's.
- *
- * Everything dated on this screen — the window, a piece's last sale — is an
- * instant the API sent, and the only zone that makes those agree with the
- * buckets drawn beside them is the one on the revenue response. `Intl` answers
- * an unknown zone with a RangeError, so an unusable one falls back to UTC
- * rather than taking the screen down over a label.
+ * Formata datas no fuso horário do relatório.
  */
 export function zoneFormatter(timeZone: string): (iso: string) => string {
   const options: Intl.DateTimeFormatOptions = {
@@ -245,8 +224,7 @@ export function zoneFormatter(timeZone: string): (iso: string) => string {
 }
 
 /**
- * `Últimos 30 dias · 30/07 a 29/08/2026`, the artboard's meta line — built from
- * the window the API answered with, never from the one that was asked for.
+ * Formata o intervalo do período para exibição (ex: `Últimos 30 dias · 30/07 a 29/08/2026`).
  */
 export function periodRange(
   revenue: components["schemas"]["RevenueReportResponse"],
@@ -256,8 +234,7 @@ export function periodRange(
   const from = format(revenue.from);
   const to = format(revenue.to);
 
-  // The start drops its year when both ends share one — `30/07 a 29/08/2026`,
-  // exactly as the artboard writes it.
+  // Omite o ano do início quando ambas as datas compartilham o mesmo ano.
   const short = from.slice(-4) === to.slice(-4) ? from.slice(0, 5) : from;
   const window = `${short} a ${to}`;
 

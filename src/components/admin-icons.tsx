@@ -71,7 +71,7 @@ export function CategoriesIcon(props: AdminIconProps) {
   );
 }
 
-/** Rail: Relatórios. Three bars over a baseline, traced from the artboard. */
+/** Rail: Relatórios. Três barras verticais sobre linha de base. */
 export function ReportsIcon(props: AdminIconProps) {
   return (
     <Icon viewBox="0 0 16 16" {...props}>
@@ -169,5 +169,17 @@ export function CheckIcon(props: AdminIconProps) {
     >
       <path d="M2.5 6l2.5 2.5L9.5 3.5" />
     </svg>
+  );
+}
+
+/** Rail: Integrações / Canais (marketplaces e conectores externos). */
+export function IntegrationsIcon(props: AdminIconProps) {
+  return (
+    <Icon viewBox="0 0 16 16" {...props}>
+      <circle cx="4" cy="4" r="2" />
+      <circle cx="12" cy="4" r="2" />
+      <circle cx="8" cy="12" r="2" />
+      <path d="M5.5 5.5l1.5 5M10.5 5.5l-1.5 5" />
+    </Icon>
   );
 }

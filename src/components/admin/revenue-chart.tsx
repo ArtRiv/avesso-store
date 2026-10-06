@@ -5,31 +5,12 @@ import { formatBRL } from "@/lib/format";
 type Bucket = components["schemas"]["RevenueBucketResponse"];
 
 /**
- * Revenue over time, traced from the artboard: a step line in ink over a
- * hairline baseline, with an 8px square sitting ON the baseline wherever a
- * period measured zero.
+ * Gráfico de receita ao longo do tempo.
  *
- * The step is the right mark and not a stylistic choice. A bucket is a value
- * that holds for a whole week or month, so a flat segment spanning the band
- * says what happened; a sloped line between midpoints would draw revenue
- * arriving gradually on days nobody measured.
- *
- * **The zero marker is the point of the whole chart.** The API returns a
- * continuous series — an empty week comes back as a zero bucket rather than as
- * a gap — and a line lying flat on the baseline is invisible against the
- * baseline itself. The square is what makes a measured zero legible as a
- * measurement, which is the difference between "we sold nothing that week" and
- * "we have no data for that week". The legend underneath names it.
- *
- * No library, and none is missing: this is a scale and a loop. A library would
- * arrive with the rounded surface, the drop shadow and the gradient fill that
- * docs/design-system.md §7 forbids outright.
- *
- * `preserveAspectRatio="none"` lets the plot stretch to the card, and
- * `vector-effect="non-scaling-stroke"` is what keeps the 2px stroke 2px through
- * that stretch. Both are the artboard's own. No text lives inside the SVG — the
- * labels are HTML in a grid below, so nothing is distorted by the stretch and
- * every value is real selectable text.
+ * Renderiza uma linha em degraus (step line) em SVG sobre linha de base,
+ * com marcadores quadrados sobre a base para períodos de receita zero.
+ * Os rótulos de valores e períodos são renderizados em HTML abaixo do gráfico
+ * para manter acessibilidade e texto selecionável.
  */
 
 const W = 1080;

@@ -33,17 +33,42 @@ export async function PATCH(
     return invalid;
   }
 
-  const { label } = body as { label?: unknown };
+  const { label, heightCm, widthCm, lengthCm } = body as {
+    label?: unknown;
+    heightCm?: unknown;
+    widthCm?: unknown;
+    lengthCm?: unknown;
+  };
 
-  if (typeof label !== "string" || label.trim().length === 0) {
-    return NextResponse.json({ error: RENAME_COPY[400] }, { status: 400 });
+  const payload: {
+    label?: string;
+    heightCm?: number | null;
+    widthCm?: number | null;
+    lengthCm?: number | null;
+  } = {};
+
+  if (typeof label === "string") {
+    if (label.trim().length === 0 || label.length > 20) {
+      return NextResponse.json({ error: RENAME_COPY[400] }, { status: 400 });
+    }
+    payload.label = label.trim();
+  }
+
+  if (typeof heightCm === "number" || heightCm === null) {
+    payload.heightCm = heightCm;
+  }
+  if (typeof widthCm === "number" || widthCm === null) {
+    payload.widthCm = widthCm;
+  }
+  if (typeof lengthCm === "number" || lengthCm === null) {
+    payload.lengthCm = lengthCm;
   }
 
   return withAdminApi(RENAME_COPY, async (api) =>
     unwrap(
       await api.PATCH("/products/{id}/variants/{variantId}", {
         params: { path: { id, variantId } },
-        body: { label: label.trim() },
+        body: payload,
       }),
     ),
   );
@@ -185,7 +210,10 @@ function hasCartLineCount(body: unknown): body is VariantInCarts {
 function removalRefusal(error: unknown): NextResponse {
   if (!(error instanceof ApiError)) {
     return NextResponse.json(
-      { error: "Não foi possível concluir. Tente novamente em instantes." },
+      {
+        error:
+          "Não conseguimos completar a operação. Verifique sua conexão ou tente novamente mais tarde.",
+      },
       { status: 502 },
     );
   }

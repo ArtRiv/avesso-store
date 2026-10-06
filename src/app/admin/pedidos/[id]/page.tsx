@@ -198,6 +198,27 @@ export default async function OrderDetailPage({
                 )}
               </Field>
             </div>
+
+            {order.labelUrl ? (
+              <div className="flex items-center justify-between border-t border-admin-hairline pt-4.5">
+                <div className="flex flex-col gap-1">
+                  <span className="type-meta text-moss">Etiqueta de envio gerada</span>
+                  <span className="text-[13px] text-muted">
+                    {order.labelPurchasedAt
+                      ? `Comprada em ${shortStamp(order.labelPurchasedAt)}`
+                      : "Pronta para impressão"}
+                  </span>
+                </div>
+                <a
+                  href={order.labelUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 border border-admin-hairline bg-paper px-3.5 py-2 font-mono text-[13px] font-medium transition-colors hover:border-admin-dim hover:text-rust"
+                >
+                  📄 Baixar Etiqueta (PDF)
+                </a>
+              </div>
+            ) : null}
           </Card>
         </div>
 
@@ -222,6 +243,32 @@ export default async function OrderDetailPage({
               <span className="text-[14px] text-admin-dim">
                 Não disponível para esta conta.
               </span>
+            )}
+          </Card>
+
+          <Card title="Fiscal & ERP (Bling)">
+            {order.blingOrderId ? (
+              <div className="flex flex-col gap-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="inline-block h-2 w-2 rounded-full bg-moss" />
+                  <span className="text-[14px] font-medium text-moss">
+                    Integrado ao Bling ERP
+                  </span>
+                </div>
+                <Row label="Pedido Bling" value={`#${order.blingOrderId}`} mono />
+                {order.blingExportedAt ? (
+                  <Row label="Exportado em" value={shortStamp(order.blingExportedAt)} />
+                ) : null}
+                <p className="border-t border-admin-hairline pt-2 text-[12px] leading-relaxed text-admin-dim">
+                  Emissão e transmissão da NF-e gerenciadas pelo Bling.
+                </p>
+              </div>
+            ) : (
+              <p className="text-[13px] leading-relaxed text-admin-dim">
+                {order.status === "CREATED"
+                  ? "A exportação para o ERP ocorre automaticamente após a confirmação do pagamento."
+                  : "Pedido não exportado para o ERP (integração offline ou pendente)."}
+              </p>
             )}
           </Card>
 

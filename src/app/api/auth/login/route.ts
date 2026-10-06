@@ -56,8 +56,18 @@ export async function POST(request: NextRequest) {
       }),
     );
 
+    const userApi = apiAs(pair.accessToken);
+    let name: string | null = null;
+    try {
+      const me = unwrap(await userApi.GET("/auth/me"));
+      name = me.name;
+    } catch {
+      // Ignored if /auth/me cannot be reached; name remains null
+    }
+
     setSession(await cookies(), pair, {
       email: credentials.email,
+      name,
       backOffice: await hasBackOffice(pair.accessToken),
     });
 

@@ -46,6 +46,11 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   // bar can show the one this browser typed. A session older than that cookie
   // has none, and the bar renders without it rather than inventing one.
   return (
-    <AdminShell email={profile?.email ?? null}>{children}</AdminShell>
+    <AdminShell
+      name={profile?.name ?? null}
+      email={profile?.email ?? null}
+    >
+      {children}
+    </AdminShell>
   );
 }

@@ -9,7 +9,12 @@ import { DeleteCategoryDialog } from "@/components/admin/delete-category-dialog"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { apiFetch, problemMessage, SessionEndedError } from "@/lib/api/browser";
+import {
+  apiFetch,
+  GENERIC_FALLBACK,
+  problemMessage,
+  SessionEndedError,
+} from "@/lib/api/browser";
 import type { components } from "@/lib/api/schema";
 
 type Category = components["schemas"]["CategoryResponse"];
@@ -55,7 +60,7 @@ export function CategoriesView({
       setError(
         caught instanceof SessionEndedError
           ? caught.message
-          : "Não foi possível concluir. Tente novamente em instantes.",
+          : GENERIC_FALLBACK,
       );
       return false;
     } finally {

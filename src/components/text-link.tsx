@@ -3,14 +3,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
- * A link, as the canvas defines one: no underline, and rust on hover. That
- * hover is the single `a:hover { color:#B0431E }` rule in the whole design
- * file, and one of the four places §1 lets rust appear at all.
- *
- * Deliberately not a Button variant. Buttons in this design are 48px mono
- * uppercase controls, and artboard 05 sets "Esqueci minha senha" in 14px
- * Archivo, muted — the same role as body text. Dressing that up as a button
- * would put a control where the design put a sentence.
+ * Estilo base para links textuais: sem sublinhado por padrão e transição para rust no hover.
  */
 export const textLinkClass = cn(
   "outline-none transition-colors duration-100 hover:text-rust",

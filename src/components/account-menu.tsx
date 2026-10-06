@@ -20,13 +20,17 @@ import { cn } from "@/lib/utils";
  * /entrar: a menu whose only entry is "sign in" is a worse link.
  */
 export function AccountMenu({
+  name,
   email,
   backOffice,
 }: {
   /**
+   * The user's name if available, or null.
+   */
+  name?: string | null;
+  /**
    * The address typed at sign-in, or null for a session that predates the
-   * profile cookie. There is no route that reports a name — see
-   * `SessionProfile` — so this shows an address or nothing, never a guess.
+   * profile cookie.
    */
   email: string | null;
   /** Whether to offer the back office. Decided at sign-in; see below. */
@@ -38,16 +42,15 @@ export function AccountMenu({
   async function signOut() {
     setLeaving(true);
 
-    // The route answers 204 whatever the backend said — the cookies go either
-    // way — so there is nothing here to branch on and nothing to report.
-    await fetch("/api/auth/logout", { method: "POST" });
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Falha de rede: prosseguir com o logout local de qualquer forma.
+    } finally {
+      setLeaving(false);
+    }
 
-    // Home rather than in place: half the store's pages have no meaning without
-    // a session, and staying on one only to be bounced is a worse goodbye.
     router.push("/");
-    // The header, the sacola count and every server component still hold the
-    // signed-in render. Without this they keep it until something else
-    // navigates.
     router.refresh();
   }
 
@@ -57,22 +60,29 @@ export function AccountMenu({
         className={cn(textLinkClass, "type-meta flex items-center gap-2")}
       >
         <AccountIcon />
-        Conta
+        <span className="hidden md:inline">
+          {name ? name.split(" ")[0] : "Conta"}
+        </span>
       </DropdownMenu.Trigger>
 
       <DropdownMenu.Portal>
-        {/* §7: no rounded corner and no shadow. A hairline box on paper, which
-            is what every other surface in this design is. */}
         <DropdownMenu.Content
           align="end"
           sideOffset={12}
           className="min-w-56 border border-ink bg-paper py-1 outline-none"
         >
-          {email ? (
+          {name || email ? (
             <>
               <div className="px-4 py-2.5">
                 <p className="type-meta text-muted">Conectado como</p>
-                <p className="truncate text-[14px] text-ink">{email}</p>
+                {name ? (
+                  <p className="truncate text-[14px] font-medium text-ink">
+                    {name}
+                  </p>
+                ) : null}
+                {email ? (
+                  <p className="truncate text-[13px] text-muted">{email}</p>
+                ) : null}
               </div>
               <DropdownMenu.Separator className="my-1 h-px bg-hairline" />
             </>

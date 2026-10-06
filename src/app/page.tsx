@@ -7,18 +7,18 @@ import { SiteHeader } from "@/components/site-header";
 import { TextLink } from "@/components/text-link";
 import { ToneBlock } from "@/components/tone-block";
 import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/config/site";
 import { countProducts, listCategories } from "@/lib/catalog";
 import { pickFeatured } from "@/lib/featured";
 
 export const metadata: Metadata = {
-  title: "AVESSO — básicos unissex feitos para durar",
-  description:
-    "Doze peças de algodão pesado, em lotes pequenos. Camisetas, moletons, calças e acessórios.",
+  title: `${siteConfig.name} — ${siteConfig.tagline}`,
+  description: siteConfig.description,
 };
 
 /**
- * Artboard 02. A server component: the catalogue is fetched on the server, so
- * the browser never learns the API's origin and the page arrives whole.
+ * Página inicial (Home) da loja.
+ * Server Component: dados de produtos em destaque e categorias são lidos no servidor.
  */
 export default async function HomePage() {
   const [featured, categories, total] = await Promise.all([
@@ -39,8 +39,8 @@ export default async function HomePage() {
             aspect="aspect-video"
             className="border-x-0 border-t-0"
           />
-          <div className="absolute bottom-24 left-24 flex max-w-[720px] flex-col gap-8">
-            <h1 className="text-display text-pretty">
+          <div className="absolute bottom-6 left-6 flex max-w-[720px] flex-col gap-6 md:bottom-12 md:left-12 lg:bottom-24 lg:left-24 lg:gap-8">
+            <h1 className="text-[32px] leading-[1.1] font-semibold tracking-[-0.015em] text-pretty md:text-h2 lg:text-display">
               Doze peças. Feitas para durar anos.
             </h1>
             <Button asChild className="self-start">
@@ -49,7 +49,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="flex flex-col gap-8 p-24">
+        <section className="flex flex-col gap-8 px-6 py-12 md:px-12 md:py-16 lg:p-24">
           <div className="flex items-baseline justify-between border-b border-hairline pb-4">
             <h2 className="text-h2">Em destaque</h2>
             {/* One of the four places §1 allows rust. */}
@@ -58,7 +58,7 @@ export default async function HomePage() {
             </TextLink>
           </div>
 
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
             {featured.map((product) => (
               <ProductTile
                 key={product.id}
@@ -71,13 +71,13 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="px-24">
-          <div className="grid grid-cols-4 border-t border-b border-hairline">
+        <section className="px-6 md:px-12 lg:px-24">
+          <div className="grid grid-cols-2 border-t border-b border-hairline md:grid-cols-4">
             {categories.map((category) => (
               <Link
                 key={category.id}
                 href={`/catalogo?categoria=${category.slug}`}
-                className="group flex flex-col gap-2 border-r border-hairline px-6 py-8 outline-none last:border-r-0 focus-visible:outline-1 focus-visible:outline-ink focus-visible:-outline-offset-1"
+                className="group flex flex-col gap-2 border-r border-hairline px-6 py-8 outline-none last:border-r-0 focus-visible:outline-1 focus-visible:outline-ink focus-visible:-outline-offset-1 max-md:[&:nth-child(2n)]:border-r-0"
               >
                 <span className="text-h3 group-hover:text-rust">
                   {category.name}
@@ -91,12 +91,12 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="grid grid-cols-[5fr_7fr] items-center gap-16 p-24">
+        <section className="grid grid-cols-1 items-center gap-12 px-6 py-12 md:px-12 md:py-16 lg:grid-cols-[5fr_7fr] lg:gap-16 lg:p-24">
           <ToneBlock tone="bone" label="Detalhe de malha · macro" />
 
           <div className="flex flex-col gap-8">
             <h2 className="type-meta text-muted">O tecido</h2>
-            <p className="text-h1 text-pretty">
+            <p className="text-[24px] leading-[1.2] font-semibold tracking-[-0.01em] text-pretty md:text-h1">
               Algodão de 240 g/m², em malha compacta que não perde a forma na
               cinquentésima lavagem.
             </p>
@@ -112,14 +112,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/*
-          Artboard 02 puts a newsletter field and an `Assinar` button here.
-          There is no endpoint behind either, and inventing one upstream would
-          be generality ahead of need — so the band keeps its place and its
-          rhythm, and says something true instead of collecting an address
-          nothing would ever read. Recorded in README.md.
-        */}
-        <section className="grid grid-cols-[5fr_7fr] items-center gap-16 border-t border-b border-hairline px-24 py-16">
+        <section className="grid grid-cols-1 items-center gap-8 border-t border-b border-hairline px-6 py-12 md:px-12 md:py-16 lg:grid-cols-[5fr_7fr] lg:gap-16 lg:px-24 lg:py-16">
           <h2 className="text-h3">Reposição em lotes pequenos</h2>
           <p className="text-body max-w-[560px]">
             As peças voltam conforme os lotes de tingimento saem da facção. Não

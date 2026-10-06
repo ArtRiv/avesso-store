@@ -1,47 +1,16 @@
 import { TextLink } from "@/components/text-link";
+import { formatLegalFooter, siteConfig } from "@/config/site";
 import { listCategories } from "@/lib/catalog";
-
-/**
- * docs/design-system.md §5. Four columns, then a hairline, then the legal line
- * and the payment methods in meta.
- *
- * The Loja column is the live category list; the other three are editorial and
- * belong to the store, not the API. Their destinations do not exist yet — this
- * build is the purchase path, and Trocas e devoluções is not on it — so they
- * are plain text rather than links to a 404. A footer full of dead links is
- * worse than a footer that waits.
- */
-const HELP = [
-  "Trocas e devoluções",
-  "Prazos de entrega",
-  "Guia de medidas",
-  "Falar com atendimento",
-];
-
-const INSTITUTIONAL = [
-  "Sobre a AVESSO",
-  "Onde produzimos",
-  "Política de privacidade",
-  "Termos de uso",
-];
-
-const CONTACT = [
-  "atendimento@avesso.com.br",
-  "Seg a sex 9h às 18h",
-  "São Paulo SP",
-];
 
 const PAYMENT_METHODS = ["Visa", "Mastercard", "Elo", "Pix", "Boleto"];
 
-const LEGAL =
-  "AVESSO Confecções LTDA · CNPJ 42.318.907/0001-55 · Rua Aurora 148, São Paulo SP";
-
 export async function SiteFooter() {
   const categories = await listCategories();
+  const { name, legal } = siteConfig;
 
   return (
-    <footer className="mt-auto flex flex-col gap-12 px-24 pt-16 pb-12">
-      <div className="grid grid-cols-4 gap-6">
+    <footer className="mt-auto flex flex-col gap-12 px-6 md:px-12 lg:px-24 pt-16 pb-12">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
         <Column title="Loja">
           {categories.map((category) => (
             <TextLink
@@ -55,33 +24,46 @@ export async function SiteFooter() {
         </Column>
 
         <Column title="Ajuda">
-          {HELP.map((item) => (
-            <span key={item} className="text-small">
-              {item}
-            </span>
-          ))}
+          <TextLink href="/trocas-e-devolucoes" className="text-small">
+            Trocas e devoluções
+          </TextLink>
+          <TextLink href="/termos#entrega" className="text-small">
+            Prazos de entrega
+          </TextLink>
+          <span className="text-small">Guia de medidas</span>
+          <TextLink
+            href={`mailto:${legal.contact.email}?subject=Atendimento%20ao%20Cliente`}
+            className="text-small"
+          >
+            Falar com atendimento
+          </TextLink>
         </Column>
 
         <Column title="Institucional">
-          {INSTITUTIONAL.map((item) => (
-            <span key={item} className="text-small">
-              {item}
-            </span>
-          ))}
+          <span className="text-small">Sobre a {name}</span>
+          <span className="text-small">Onde produzimos</span>
+          <TextLink href="/privacidade" className="text-small">
+            Política de privacidade
+          </TextLink>
+          <TextLink href="/termos" className="text-small">
+            Termos de uso
+          </TextLink>
         </Column>
 
         <Column title="Contato">
-          {CONTACT.map((item) => (
-            <span key={item} className="text-small">
-              {item}
-            </span>
-          ))}
+          <TextLink href={`mailto:${legal.contact.email}`} className="text-small">
+            {legal.contact.email}
+          </TextLink>
+          <span className="text-small">{legal.contact.hours}</span>
+          <span className="text-small">
+            {legal.address.city} {legal.address.state}
+          </span>
         </Column>
       </div>
 
-      <div className="type-meta flex items-center justify-between border-t border-hairline pt-6 text-muted">
-        <span>{LEGAL}</span>
-        <span className="flex gap-4">
+      <div className="type-meta flex flex-col gap-6 border-t border-hairline pt-6 text-muted md:flex-row md:items-center md:justify-between">
+        <span>{formatLegalFooter(legal)}</span>
+        <span className="flex flex-wrap gap-4">
           {PAYMENT_METHODS.map((method) => (
             <span key={method}>{method}</span>
           ))}

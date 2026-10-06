@@ -37,8 +37,7 @@ const buttonVariants = cva(
         default: "bg-ink text-paper hover:opacity-90",
         secondary:
           "border-ink bg-transparent text-ink hover:bg-ink hover:text-paper",
-        // Stock conflict only (artboard 10). Rust is rationed — see §1 before
-        // reaching for this anywhere else.
+        // Botão de recuperação de conflito de estoque (CTA com destaque em tom rust).
         recovery: "bg-rust text-paper hover:opacity-90",
         ghost: "bg-transparent text-ink hover:text-rust",
         // Back office. `destructive` cancels an order and `danger` removes a

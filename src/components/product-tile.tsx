@@ -15,9 +15,7 @@ export function ProductTile({
   name,
   priceCents,
   stockQuantity,
-  // Artboard 04's "Você também pode gostar" row carries no badges at all —
-  // just the name and the price. The dimming of a sold-out piece stays either
-  // way, so the row never invites a click on something nobody can buy.
+  /** Controla a exibição do badge de escassez/estoque sobre o card. */
   showBadge = true,
 }: {
   slug: string;

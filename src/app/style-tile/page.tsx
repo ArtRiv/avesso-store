@@ -15,17 +15,11 @@ export const metadata: Metadata = {
 };
 
 /**
- * Artboard 01, as a route.
+ * Página de Style Tile.
  *
- * This is the regression surface: everything here is drawn by the same
- * components the store uses, so a component that drifts from
- * docs/design-system.md shows up on this page before it shows up on a screen a
- * customer is looking at. Nothing here is mocked with one-off markup — if
- * something cannot be rendered by a real component, that is the finding.
- *
- * The first sections mirror the artboard exactly, so parity stays checkable
- * against the canvas. The last section holds the component states §2 defines
- * but artboard 01 does not happen to show.
+ * Superfície de validação visual e regressão: renderiza os componentes reais
+ * do storefront contra as especificações de cores, tipografia, espaçamentos
+ * e estados da documentação de design system.
  */
 const SWATCHES = [
   { name: "ink", hex: "#0A0A0A", use: "texto, botão primário" },
@@ -213,11 +207,9 @@ export default function StyleTilePage() {
       </div>
 
       <section className="flex flex-col gap-8 border-t border-hairline pt-8">
-        <SectionLabel>Além do artboard 01</SectionLabel>
+        <SectionLabel>Estados complementares</SectionLabel>
         <p className="text-small max-w-[640px] text-muted">
-          Estados que a §2 define e que o artboard 01 não chega a mostrar. Ficam
-          aqui pelo mesmo motivo que o resto: é nesta página que um componente
-          fora do contrato aparece primeiro.
+          Estados de componentes definidos pelo design system para validação visual.
         </p>
 
         <div className="grid grid-cols-[7fr_5fr] gap-6">

@@ -1,20 +1,13 @@
 import { cn } from "@/lib/utils";
 
 /**
- * docs/design-system.md §2. A hairline box in one colour, with the label in
- * that same colour and nothing behind it.
- *
- * Not a shadcn component on purpose: the brief installs a deliberate short
- * list and this is not on it, which is right — there is no behaviour here to
- * inherit, only type and a border.
+ * Componente Badge. Caixa de 1px com texto na mesma cor e fundo transparente.
+ * Utilizado para indicar status de estoque, status de pedidos e categorias.
  */
 /**
- * The store needs three tones. The back office adds four, and none of them is
- * a second accent: `shipped` and `delivered` exist because an operator reads
- * six order states down a column and the storefront's collapse of both into
- * moss would make two of them the same badge. `neutral` is a state with no
- * colour to earn — CREATED, a draft product — and `dim` is one that is over,
- * like an archived piece.
+ * Tons de badge suportados:
+ * - moss, rust, clay: storefront (estoque, alertas, erros)
+ * - shipped, delivered, neutral, dim: back office (status de pedidos e produtos)
  */
 type BadgeTone =
   | "moss"
@@ -58,20 +51,12 @@ export function Badge({
 }
 
 /**
- * How many units left before a piece is called scarce.
- *
- * The design never states a threshold — it states two pieces, at 2 and 3 units,
- * both wearing "Últimas N unidades", and everything else in stock at 12 or more
- * (§5). Three is the largest value the design actually demonstrates, so it is
- * the choice that reproduces the artboards without inventing a merchandising
- * rule nobody wrote down. A real threshold would be the backend's to hold.
+ * Limite de unidades para considerar o estoque escasso ("Últimas N unidades").
  */
 const SCARCE_AT = 3;
 
 /**
- * The full stock badge, including the moss "Em estoque" — this is the PDP's
- * badge (artboard 04), where the customer is looking at one piece and the
- * reassurance is worth its space.
+ * Badge completo de disponibilidade de estoque (Esgotado, Últimas unidades, Em estoque).
  */
 export function StockBadge({ stockQuantity }: { stockQuantity: number }) {
   if (stockQuantity <= 0) {
@@ -86,10 +71,8 @@ export function StockBadge({ stockQuantity }: { stockQuantity: number }) {
 }
 
 /**
- * The grid's badge, which stays silent about healthy stock. In the canvas a
- * tile renders its badge behind `sc-if`, so twelve "Em estoque" chips never
- * appear down a catalogue page — only scarcity and absence are worth a mark
- * there.
+ * Badge de escassez para vitrines e listagens, exibido apenas quando o estoque
+ * está baixo ou esgotado.
  */
 export function ScarcityBadge({ stockQuantity }: { stockQuantity: number }) {
   if (stockQuantity > SCARCE_AT) {

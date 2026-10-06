@@ -32,10 +32,25 @@ const COPY = {
 } as const;
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   context: RouteContext<"/api/orders/[id]/pay">,
 ) {
   const { id } = await context.params;
+
+  let paymentMethod: "PIX" | "CREDIT_CARD" | "STRIPE" | undefined;
+  try {
+    const body = (await request.json()) as { paymentMethod?: unknown };
+    const validMethods = ["PIX", "CREDIT_CARD", "STRIPE"] as const;
+    if (
+      typeof body?.paymentMethod === "string" &&
+      (validMethods as readonly string[]).includes(body.paymentMethod)
+    ) {
+      paymentMethod = body.paymentMethod as (typeof validMethods)[number];
+    }
+  } catch {
+    // Empty body is valid and expected in normal /pay calls
+  }
+
   const api = await customerApi();
 
   if (!api) {
@@ -46,12 +61,13 @@ export async function POST(
     const order = unwrap(
       await api.POST("/orders/{id}/pay", {
         params: { path: { id } },
-        body: {},
+        body: paymentMethod ? { paymentMethod } : {},
       }),
     );
 
     return NextResponse.json(order);
   } catch (error) {
+
     if (error instanceof ApiError && error.isUnauthorized) {
       return NextResponse.json({ error: "Sessão expirada." }, { status: 401 });
     }

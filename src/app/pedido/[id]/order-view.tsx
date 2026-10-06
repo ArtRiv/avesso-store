@@ -108,7 +108,12 @@ export function OrderView({
     };
   }, [order.id, order.status, gaveUp]);
 
+  const [checking, setChecking] = useState(false);
+
   const paid = order.status === "PAID";
+  const isPix = order.paymentMethod === "PIX";
+  const hasPix = isPix && Boolean(order.pixPayload);
+
   /**
    * An order that has no way to be paid.
    *
@@ -116,17 +121,31 @@ export function OrderView({
    * payment provider can be down at checkout — the order is still created,
    * its stock is still decremented, and `payment` comes back null, because an
    * order with the wrong total would be unfixable while a missing payment
-   * session is not. Or the buyer reached Stripe and came back without paying,
+   * session is not. Or the buyer reached the gateway and came back without paying,
    * which only the marker on the cancel redirect can tell us.
    *
-   * Either way the fix is POST /orders/{id}/pay, which hands back the session
-   * that already exists rather than opening a second way to pay one order.
+   * PIX orders with a payload do not need payment redirection: their QR and
+   * Copia e Cola credentials are right here on this page.
    */
   const needsPayment =
     order.status === "CREATED" &&
+    !hasPix &&
     (order.paymentUrl === null || cancelledAtProvider);
-  const waiting = order.status === "CREATED" && !needsPayment;
+  const waitingCard = order.status === "CREATED" && !needsPayment && !hasPix;
   const arrival = estimatedDelivery(order.paidAt, order.shippingEtaDays);
+
+  async function checkStatus() {
+    setChecking(true);
+    try {
+      const response = await apiFetch(`/api/orders/${order.id}`);
+      if (response.ok) {
+        const next = (await response.json()) as Order;
+        setOrder(next);
+      }
+    } finally {
+      setChecking(false);
+    }
+  }
 
   async function pay() {
     setPaying(true);
@@ -173,8 +192,6 @@ export function OrderView({
   }
 
   return (
-    // Centred body text, which §7 forbids everywhere except artboards 08
-    // and 09. This is 08.
     <section className="mx-auto flex w-full max-w-[560px] flex-col items-center gap-8 px-6 py-16 text-center">
       <p className="type-meta text-muted">
         Pedido #{formatOrderRef(order.id)}
@@ -182,7 +199,15 @@ export function OrderView({
 
       <h1 className="text-h1">Recebemos seu pedido</h1>
 
-      {waiting && !gaveUp ? (
+      {hasPix && order.status === "CREATED" ? (
+        <PixPaymentBlock
+          order={order}
+          checking={checking}
+          onCheckStatus={() => void checkStatus()}
+        />
+      ) : null}
+
+      {waitingCard && !gaveUp ? (
         <div className="flex w-full max-w-[420px] flex-col gap-4">
           <p className="type-meta">Confirmando o pagamento</p>
           <WaitBar label="Confirmando o pagamento" />
@@ -194,7 +219,7 @@ export function OrderView({
         </div>
       ) : null}
 
-      {waiting && gaveUp ? (
+      {waitingCard && gaveUp ? (
         <div className="flex w-full max-w-[420px] flex-col gap-4">
           <p className="type-meta text-muted">Ainda confirmando</p>
           <p className="text-small text-muted">
@@ -232,6 +257,7 @@ export function OrderView({
       ) : null}
 
       {paid ? (
+
         <div className="flex w-full max-w-[420px] flex-col items-center gap-4">
           <Badge tone="moss">Pago</Badge>
           {arrival ? (
@@ -308,3 +334,116 @@ function Row({
     </div>
   );
 }
+
+function PixPaymentBlock({
+  order,
+  checking,
+  onCheckStatus,
+}: {
+  order: Order;
+  checking: boolean;
+  onCheckStatus: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    if (!order.pixPayload) return;
+    try {
+      await navigator.clipboard.writeText(order.pixPayload);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      const el = document.createElement("textarea");
+      el.value = order.pixPayload;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    }
+  }
+
+  const qrSrc = order.pixQrCode
+    ? order.pixQrCode.startsWith("data:")
+      ? order.pixQrCode
+      : `data:image/png;base64,${order.pixQrCode}`
+    : null;
+
+  return (
+    <div className="flex w-full max-w-[460px] flex-col gap-6 border border-hairline bg-paper p-6 text-left">
+      <div className="flex items-center justify-between border-b border-hairline pb-4">
+        <div>
+          <span className="font-mono text-[14px] uppercase tracking-wider font-semibold">
+            Pagamento via PIX
+          </span>
+          <p className="type-meta text-muted">Aprovação imediata</p>
+        </div>
+        <Badge tone="clay">Aguardando pagamento</Badge>
+      </div>
+
+      {qrSrc && (
+        <div className="flex flex-col items-center gap-2 py-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={qrSrc}
+            alt="QR Code PIX"
+            className="h-48 w-48 border border-hairline bg-white p-2"
+          />
+          <p className="text-small text-muted text-center">
+            Aponte a câmera do seu banco para o QR Code acima
+          </p>
+        </div>
+      )}
+
+      {order.pixPayload && (
+        <div className="flex flex-col gap-2">
+          <label className="type-meta text-muted">Código Copia e Cola</label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              readOnly
+              value={order.pixPayload}
+              className="flex-1 border border-hairline bg-surface px-3 py-2 font-mono text-[12px] text-muted select-all"
+              onClick={(e) => (e.target as HTMLInputElement).select()}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => void handleCopy()}
+              className="whitespace-nowrap"
+            >
+              {copied ? "Copiado!" : "Copiar código PIX"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="border-t border-hairline pt-4 text-small text-muted flex flex-col gap-2">
+        <p className="font-medium text-ink">Como pagar:</p>
+        <ol className="list-decimal list-inside space-y-1 pl-1">
+          <li>Abra o aplicativo do seu banco</li>
+          <li>Selecione a opção de pagar com PIX (QR Code ou Copia e Cola)</li>
+          <li>Confirme o valor e autorize a transferência</li>
+        </ol>
+      </div>
+
+      <div className="flex flex-col items-center gap-2 border-t border-hairline pt-4">
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={checking}
+          onClick={onCheckStatus}
+          className="w-full"
+        >
+          {checking ? "Verificando..." : "Já fiz o pagamento (verificar)"}
+        </Button>
+
+        <p className="text-small text-muted text-center">
+          A confirmação é automática e costuma levar poucos segundos.
+        </p>
+      </div>
+    </div>
+  );
+}
+

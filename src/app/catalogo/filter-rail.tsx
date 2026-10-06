@@ -9,14 +9,10 @@ import {
 } from "@/lib/catalog-filters";
 
 /**
- * The left rail from artboard 03: two lists separated by hairlines, an active
- * row in rust. §3 is explicit that this is not an accordion, a chip or a pill —
- * it is rows with rules between them.
+ * Barra lateral de filtros do catálogo: categorias e faixas de preço.
  *
- * Counts come from the API, never from counting an array here. The category
- * counts are `productCount`; the band counts are four `total`s from
- * `GET /products` with the bounds applied, which is also what makes them agree
- * with the grid when a category is already selected.
+ * Contagens são obtidas da API para garantir sincronia com os produtos
+ * retornados na listagem.
  */
 export function FilterRail({
   filters,

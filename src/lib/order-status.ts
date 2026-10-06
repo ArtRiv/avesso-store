@@ -23,9 +23,10 @@ export const ORDER_STATUS_LABEL: Readonly<Record<OrderStatus, string>> = {
 };
 
 /**
- * Rust on `CREATED` is the payment-wait colour of artboard 08, which §1 does
- * allow. Moss is money that arrived, clay is money that went back or never
- * moved.
+ * Mapeamento de cores de texto para cada status do pedido:
+ * - rust: aguardando pagamento
+ * - moss: pago, enviado ou entregue
+ * - clay: cancelado ou reembolsado
  */
 export const ORDER_STATUS_CLASS: Readonly<Record<OrderStatus, string>> = {
   CREATED: "text-rust",

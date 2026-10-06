@@ -17,6 +17,8 @@ import { customerApi } from "@/lib/auth/session";
  *
  * Every other read of the cart happens on the server, during a render.
  */
+// GET /cart não possui erros de domínio específicos além de 401 (tratado acima).
+// Falhas transitórias (429, 503) utilizam as mensagens compartilhadas de errorResponse.
 const COPY = {} as const;
 
 export async function GET() {

@@ -12,16 +12,10 @@ import {
 } from "@/lib/catalog-filters";
 
 /**
- * The search field and the sort control from artboard 03.
+ * Controles do catálogo: campo de busca e seletor de ordenação.
  *
- * Both only ever rewrite the URL. The filters live in the query string, which
- * is what makes a filtered catalogue a page someone can bookmark, share and
- * reload, and what lets the server do all the filtering — the browser holds no
- * catalogue state at all.
- *
- * The current filters arrive as a prop rather than through `useSearchParams`,
- * so this component reads nothing it was not handed and needs no Suspense
- * boundary around it.
+ * Atualizam os parâmetros de busca da URL, mantendo o estado no histórico
+ * e permitindo compartilhamento de links com filtros aplicados.
  */
 export function CatalogControls({ filters }: { filters: CatalogFilters }) {
   const router = useRouter();

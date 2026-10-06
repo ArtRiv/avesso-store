@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
     shippingAddress?: unknown;
     shippingOptionCode?: unknown;
     quotedShippingCents?: unknown;
+    paymentMethod?: unknown;
   };
 
   const address = readAddress(form.shippingAddress);
@@ -70,6 +71,13 @@ export async function POST(request: NextRequest) {
     return badRequest("Recalcule o frete antes de finalizar.");
   }
 
+  const validMethods = ["PIX", "CREDIT_CARD", "STRIPE"] as const;
+  const paymentMethod =
+    typeof form.paymentMethod === "string" &&
+    (validMethods as readonly string[]).includes(form.paymentMethod)
+      ? (form.paymentMethod as (typeof validMethods)[number])
+      : undefined;
+
   const api = await customerApi();
 
   if (!api) {
@@ -83,12 +91,14 @@ export async function POST(request: NextRequest) {
           shippingAddress: address,
           shippingOptionCode: form.shippingOptionCode,
           quotedShippingCents: form.quotedShippingCents,
+          ...(paymentMethod ? { paymentMethod } : {}),
         },
       }),
     );
 
     return NextResponse.json(order, { status: 201 });
   } catch (error) {
+
     if (error instanceof ApiError && error.isUnauthorized) {
       return NextResponse.json({ error: "Sessão expirada." }, { status: 401 });
     }
@@ -98,12 +108,8 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * The address the API actually has: a street line, an optional second line,
- * city, state and CEP.
- *
- * The design's `Número` and `Bairro` have no field to land in, and this does
- * not invent one — see README.md. The number rides in `line1`, exactly as the
- * spec's own example does ("Rua das Flores, 100").
+ * Reads and normalizes the shipping address. Supports both structured fields
+ * (street, number, complement, neighborhood) and legacy line1/line2.
  */
 function readAddress(value: unknown): Address | null {
   if (typeof value !== "object" || value === null) {
@@ -111,20 +117,35 @@ function readAddress(value: unknown): Address | null {
   }
 
   const raw = value as Record<string, unknown>;
-  const line1 = trimmed(raw.line1);
+  const street = trimmed(raw.street);
+  const number = trimmed(raw.number);
+  const complement = trimmed(raw.complement);
+  const neighborhood = trimmed(raw.neighborhood);
   const city = trimmed(raw.city);
   const state = trimmed(raw.state);
   const postalCode = trimmed(raw.postalCode);
+  const line1 =
+    trimmed(raw.line1) ||
+    (street && number
+      ? `${street}, ${number}${neighborhood ? " - " + neighborhood : ""}`
+      : "");
+  const line2 = trimmed(raw.line2) || complement;
 
   if (!line1 || !city || !state || !postalCode) {
     return null;
   }
 
-  const line2 = trimmed(raw.line2);
-
-  // Omitted rather than sent empty: the validation pipe rejects an unknown
-  // field, and an empty string is a value the label would print.
-  return { line1, city, state, postalCode, ...(line2 ? { line2 } : {}) };
+  return {
+    line1,
+    city,
+    state,
+    postalCode,
+    ...(line2 ? { line2 } : {}),
+    ...(street ? { street } : {}),
+    ...(number ? { number } : {}),
+    ...(complement ? { complement } : {}),
+    ...(neighborhood ? { neighborhood } : {}),
+  };
 }
 
 function trimmed(value: unknown): string {

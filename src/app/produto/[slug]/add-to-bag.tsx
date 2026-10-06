@@ -66,8 +66,7 @@ export function AddToBag({
       });
 
       if (response.status === 401) {
-        // Artboard 05: the panel replaces the CTA, the piece stays on screen
-        // and the page does not navigate.
+        // Exibe o painel de login inline mantendo a peça na tela sem navegar.
         setPanel("signIn");
 
         return;

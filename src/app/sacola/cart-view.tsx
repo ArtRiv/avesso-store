@@ -15,14 +15,11 @@ type Cart = components["schemas"]["CartResponse"];
 type CartItem = components["schemas"]["CartItemResponse"];
 
 /**
- * Artboard 06.
+ * Tela da sacola de compras.
  *
- * Every number on this screen comes from the response: `itemsSubtotalCents`
- * and `itemCount` are computed server-side against live catalogue prices, and
- * each mutation answers with the whole cart rather than the line that changed.
- * So nothing here multiplies a price by a quantity — the one exception is a
- * single line's own total, which the API does not break out, and which is
- * unit × quantity by definition rather than a rule anyone could get wrong.
+ * Exibe a lista de itens com stepper de quantidade, remoção por linha e
+ * resumo com subtotal. Todos os valores numéricos são derivados da resposta
+ * da API (`itemsSubtotalCents`, `itemCount`).
  */
 export function CartView({ initialCart }: { initialCart: Cart }) {
   const router = useRouter();
@@ -47,10 +44,8 @@ export function CartView({ initialCart }: { initialCart: Cart }) {
       const next = (await response.json()) as Cart;
 
       if (next.items.length === 0) {
-        // The empty sacola is artboard 09, and it is rendered on the server —
-        // it needs the catalogue count and three pieces to show. Refreshing
-        // inside a transition keeps this screen on the glass until that render
-        // arrives, rather than flashing an artboard 06 with no lines in it.
+        // Quando a sacola esvazia, atualiza via transição para renderizar
+        // a tela de sacola vazia do servidor sem piscar.
         startTransition(() => {
           router.refresh();
         });
@@ -91,9 +86,6 @@ export function CartView({ initialCart }: { initialCart: Cart }) {
       <div className="flex flex-col gap-8">
         <div className="flex items-baseline gap-4">
           <h1 className="text-h1">Sua sacola</h1>
-          {/* `itemCount` is pieces, not lines — two shirts and a pair of
-              trousers is 3. The canvas writes "itens"; the store's word for a
-              garment everywhere else is "peça", and that is what this counts. */}
           <p className="type-meta text-muted">
             {cart.itemCount} {cart.itemCount === 1 ? "peça" : "peças"}
           </p>
@@ -132,12 +124,6 @@ export function CartView({ initialCart }: { initialCart: Cart }) {
           </span>
         </div>
 
-        {/* There is deliberately no order total on GET /cart: without a postal
-            code there is no freight, and the API refuses to hand over a number
-            that is missing it. The row above says so, one line before the
-            total does — which is why the total here can be the subtotal
-            without misleading anyone. The real one comes from
-            POST /shipping/quote at the checkout. */}
         <div className="text-small flex items-baseline justify-between text-muted">
           <span>Frete</span>
           <span>calculado no checkout</span>
@@ -150,11 +136,6 @@ export function CartView({ initialCart }: { initialCart: Cart }) {
           </span>
         </div>
 
-        {/* Ink, not the canvas's rust. §1 rations rust to four places — the
-            stock-conflict CTA, the payment wait bar, the last-units badge and
-            link hover — and this is none of them. The canvas paints this
-            button rust anyway; §1 is the contract and the canvas is the raw
-            material. Recorded in README.md so a reimport does not undo it. */}
         <Button asChild>
           <Link href="/checkout">Ir para o checkout</Link>
         </Button>
@@ -239,13 +220,7 @@ function CartRow({
 }
 
 /**
- * What the live catalogue read on each line is *for*.
- *
- * `GET /cart` reads price, status and the size's own stock as of this request
- * rather than freezing them, precisely so a storefront can say this. None of
- * it blocks the checkout button: the 409 is a designed screen (artboard 10),
- * and a stock count seconds old is not a better authority than the checkout
- * transaction itself.
+ * Nota informativa da linha (estoque insuficiente, produto esgotado ou inativo).
  */
 function LineNote({ item }: { item: CartItem }) {
   const note =
@@ -265,11 +240,8 @@ function LineNote({ item }: { item: CartItem }) {
 }
 
 /**
- * The `− N +` control (artboard 06): 120×40, one hairline box, two dividers.
- *
- * `−` stops at one rather than reaching zero. The API refuses zero as a
- * quantity — removing a line is DELETE — and the design already gives that its
- * own control, `Remover`, one line up.
+ * Controle de incremento/decremento de quantidade (`− N +`).
+ * A quantidade mínima é 1; para remover o item, utiliza-se a ação de remoção.
  */
 function Stepper({
   quantity,

@@ -8,12 +8,10 @@ import { customerApi } from "@/lib/auth/session";
 import type { components } from "@/lib/api/schema";
 
 /**
- * One line of the sacola — the stepper and `Remover` on artboard 06.
+ * Operações por linha da sacola (atualização de quantidade e remoção).
  *
- * A line is addressed by its **variantId**, not by the product: two sizes of
- * the same shirt are two lines, and the id in this path is the one that says
- * which. Both verbs answer with the whole cart, so the page never sums
- * anything to find out what the totals became.
+ * Identificado pelo `variantId`. Ambas as operações respondem com o estado
+ * completo do carrinho atualizado.
  */
 const COPY = {
   400: "Quantidade inválida.",

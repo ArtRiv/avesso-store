@@ -20,8 +20,8 @@ export function formatBRL(cents: number): string {
 }
 
 /**
- * Order ids are UUIDs, and the design shows `#A3F2-91C4` (artboard 08). This
- * shortens for display only — every request still carries the whole id.
+ * Formata o UUID do pedido em uma referência visual amigável (ex: `A3F2-91C4`).
+ * Utilizado apenas para exibição em tela; as requisições continuam usando o UUID completo.
  */
 export function formatOrderRef(id: string): string {
   const hex = id.replace(/-/g, "").toUpperCase();

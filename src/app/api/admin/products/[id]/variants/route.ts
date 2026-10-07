@@ -31,7 +31,12 @@ export async function POST(
     return invalid;
   }
 
-  const { label } = body as { label?: unknown };
+  const { label, heightCm, widthCm, lengthCm } = body as {
+    label?: unknown;
+    heightCm?: unknown;
+    widthCm?: unknown;
+    lengthCm?: unknown;
+  };
 
   if (typeof label !== "string" || label.trim().length === 0) {
     return Response.json({ error: COPY[400] }, { status: 400 });
@@ -47,7 +52,13 @@ export async function POST(
           // the generated type require it. Zero is that default, so this is
           // the same request either way — and zero is a real state: the size
           // exists and has none left.
-          body: { label: label.trim(), stockQuantity: 0 },
+          body: {
+            label: label.trim(),
+            stockQuantity: 0,
+            ...(typeof heightCm === "number" ? { heightCm } : {}),
+            ...(typeof widthCm === "number" ? { widthCm } : {}),
+            ...(typeof lengthCm === "number" ? { lengthCm } : {}),
+          },
         }),
       ),
     201,

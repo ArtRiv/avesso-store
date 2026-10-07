@@ -18,14 +18,11 @@ export const metadata: Metadata = {
 type Cart = components["schemas"]["CartResponse"];
 
 /**
- * Artboards 06 and 09 — one route in two states, chosen by whether the cart
- * has lines.
+ * Página da sacola.
  *
- * There is no guest cart, so this page has no meaning without a session and
- * sends an anonymous visitor to sign in with a `next` back to here. That is
- * different from the product page, where a 401 becomes a panel and the page
- * stays put: there the customer is looking at something, here there is
- * nothing to look at.
+ * Exibe a lista de itens ou o estado vazio quando o carrinho não possui peças.
+ * Como não há carrinho de visitante, requer sessão e redireciona visitantes
+ * anônimos para o login com retorno para cá.
  */
 export default async function BagPage() {
   const cart = await loadCart();
@@ -53,8 +50,7 @@ async function loadCart(): Promise<Cart> {
     redirect(`/entrar?next=${encodeURIComponent("/sacola")}`);
   }
 
-  // `GET /cart` always succeeds for an authenticated caller — a customer who
-  // has never added anything gets an empty cart rather than a 404, because the
-  // cart is created lazily on the first add and its absence is not an error.
+  // Falhas na API (502/503) lançam ApiError via unwrap() e são capturadas
+  // pelo boundary sacola/error.tsx.
   return unwrap(await api.GET("/cart"));
 }

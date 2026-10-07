@@ -38,7 +38,7 @@ export async function generateMetadata(
   };
 }
 
-/** Artboard 04. */
+/** Página de detalhes do produto (PDP). */
 export default async function ProductPage(
   props: PageProps<"/produto/[slug]">,
 ) {
@@ -137,22 +137,10 @@ export default async function ProductPage(
 }
 
 /**
- * Artboard 04 lists Composição, Modelagem, Peso and Cuidados.
+ * Tabela de especificações técnicas do produto (peso, cuidados, etc.).
  *
- * Only two of those can be told truthfully today. `weightGrams` is real,
- * per-product data. Composição and Modelagem are not fields the API has — they
- * live inside the free-text `description`, which is why the paragraph above
- * already says "100% algodão penteado, 240 g/m²" for the shirts. Repeating them
- * as structured rows would mean hard-coding shirt copy onto a cap and a pair of
- * socks, which is worse than a shorter table.
- *
- * Structured per-product attributes are a real backend gap and a fair upstream
- * candidate — every store's PDP has a spec table. It is recorded in README.md
- * rather than papered over with invented rows.
- *
- * The design's "310 g no tamanho M" loses its qualifier for the same reason:
- * there are no sizes yet, so naming one would be a claim about a variant that
- * does not exist.
+ * `weightGrams` é um dado real estruturado da API. Informações de composição
+ * e modelagem constam na descrição textual do produto.
  */
 function SpecTable({
   product,

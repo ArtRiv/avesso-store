@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Archivo, JetBrains_Mono } from "next/font/google";
 
+import { generateThemeCss, siteConfig } from "@/config/site";
+
 import "./globals.css";
 
 // Both are variable fonts on Google Fonts, so the whole weight range arrives in
@@ -20,16 +22,26 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AVESSO",
-  description: "Doze peças. Feitas para durar anos.",
+  title: {
+    default: siteConfig.name,
+    template: `%s · ${siteConfig.name}`,
+  },
+  description: siteConfig.tagline,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  const themeCss = generateThemeCss(siteConfig.theme);
+
   return (
     <html
       lang="pt-BR"
       className={`${archivo.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
+      <head>
+        {themeCss ? (
+          <style dangerouslySetInnerHTML={{ __html: themeCss }} />
+        ) : null}
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

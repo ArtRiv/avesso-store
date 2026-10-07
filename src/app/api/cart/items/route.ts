@@ -7,13 +7,10 @@ import { badRequest, errorResponse } from "@/lib/auth/api-response";
 import { customerApi } from "@/lib/auth/session";
 
 /**
- * Adds a piece to the sacola.
+ * Adiciona uma peça à sacola de compras.
  *
- * There is no guest cart: `POST /cart/items` requires a token, and that is a
- * deliberate property of the backend rather than a gap. So a 401 here is not an
- * error state — it is the cue for artboard 05, where the sign-in panel replaces
- * the CTA on the product page and the page does not navigate. The browser
- * client turns this 401 into that panel.
+ * Requer sessão ativa: caso o usuário não esteja autenticado (401),
+ * o cliente web exibe o painel de login inline mantendo a peça em foco.
  */
 const COPY = {
   400: "Não foi possível adicionar. Confira a quantidade.",
@@ -46,7 +43,7 @@ export async function POST(request: NextRequest) {
   const api = await customerApi();
 
   if (!api) {
-    // The signal artboard 05 is built on, not a failure.
+    // Sinal para o cliente web exibir o painel de autenticação inline.
     return NextResponse.json({ error: "Entre para montar sua sacola." }, {
       status: 401,
     });

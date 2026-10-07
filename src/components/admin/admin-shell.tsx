@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   BackOfficeIcon,
   CategoriesIcon,
+  IntegrationsIcon,
   OrdersIcon,
   ProductsIcon,
   ReportsIcon,
@@ -45,19 +46,23 @@ const SECTIONS = [
       { href: "/admin/relatorios", label: "Relatórios", Icon: ReportsIcon },
     ],
   },
+  {
+    label: "Canais",
+    items: [
+      { href: "/admin/integracoes", label: "Integrações", Icon: IntegrationsIcon },
+    ],
+  },
 ] as const;
 
 export function AdminShell({
+  name,
   email,
   children,
 }: {
   /**
-   * Shown in the bar, and the only thing the panel knows about who is signed
-   * in — there is no route that reports a name, and the token carries only a
-   * subject id. The canvas draws a role chip beside it; that chip would be a
-   * guess, so it says `Operador`, which is what holding `products.read` and
-   * `orders.read` actually makes someone. It is not read from anywhere.
+   * Shown in the bar alongside the email.
    */
+  name?: string | null;
   email: string | null;
   children: React.ReactNode;
 }) {
@@ -73,10 +78,19 @@ export function AdminShell({
           </Link>
         </div>
         <div className="flex items-center gap-6">
-          {email ? (
-            <span className="type-meta text-muted normal-case tracking-normal">
-              {email}
-            </span>
+          {name || email ? (
+            <div className="flex flex-col items-end">
+              {name ? (
+                <span className="text-[13px] font-medium text-ink leading-tight">
+                  {name}
+                </span>
+              ) : null}
+              {email ? (
+                <span className="type-meta text-[11px] text-muted normal-case tracking-normal">
+                  {email}
+                </span>
+              ) : null}
+            </div>
           ) : null}
           <span className="type-meta border border-admin-hairline px-2 py-1 text-muted">
             Operador

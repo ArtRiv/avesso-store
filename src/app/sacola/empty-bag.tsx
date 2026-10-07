@@ -6,13 +6,8 @@ import { countProducts } from "@/lib/catalog";
 import { pickFeatured } from "@/lib/featured";
 
 /**
- * Artboard 09. Centred, which §7 forbids everywhere except artboards 08 and
- * 09 — this is 09.
- *
- * The canvas reads `12 peças disponíveis`. Twelve is the catalogue's size
- * today rather than a fact about empty sacolas, so it comes from
- * `countProducts()`: the thirteenth piece changes this line without anyone
- * remembering to.
+ * Estado vazio da sacola de compras.
+ * Exibe contagem de peças disponíveis no catálogo e sugestões de produtos em destaque.
  */
 export async function EmptyBag() {
   const [total, featured] = await Promise.all([
@@ -34,8 +29,6 @@ export async function EmptyBag() {
         </Button>
       </div>
 
-      {/* The tiles keep their own alignment: §7's exemption is for the
-          centred block above, not licence to centre a product grid. */}
       <div className="grid w-full grid-cols-3 gap-6 text-left">
         {featured.map((product) => (
           <ProductTile

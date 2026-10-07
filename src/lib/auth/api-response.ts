@@ -18,7 +18,9 @@ import { ApiError } from "@/lib/api/errors";
  */
 export type StatusCopy = Readonly<Record<number, string>>;
 
-const FALLBACK = "Não foi possível concluir. Tente novamente em instantes.";
+const FALLBACK = "Ocorreu um erro inesperado. Tente novamente em instantes.";
+const GATEWAY_FALLBACK =
+  "Não conseguimos completar a operação. Verifique sua conexão ou tente novamente mais tarde.";
 
 const SHARED: StatusCopy = {
   429: "Muitas tentativas. Aguarde um momento antes de tentar de novo.",
@@ -27,7 +29,7 @@ const SHARED: StatusCopy = {
 
 export function errorResponse(error: unknown, copy: StatusCopy): NextResponse {
   if (!(error instanceof ApiError)) {
-    return NextResponse.json({ error: FALLBACK }, { status: 502 });
+    return NextResponse.json({ error: GATEWAY_FALLBACK }, { status: 502 });
   }
 
   const message = copy[error.status] ?? SHARED[error.status] ?? FALLBACK;

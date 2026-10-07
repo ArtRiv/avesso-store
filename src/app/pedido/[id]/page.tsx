@@ -18,12 +18,10 @@ export const metadata: Metadata = {
 type Order = components["schemas"]["OrderResponse"];
 
 /**
- * Artboard 08, both variants — which are one page in two states rather than
- * two screens. The order is fetched on the server so the page arrives with a
- * real status, and the client keeps asking only while that status is CREATED.
+ * Página de acompanhamento de pedido.
  *
- * Never renders a success state it has not verified: `PAID` comes from the
- * order, never from the fact that Stripe sent the buyer back here.
+ * O pedido é carregado no servidor com seu status real. Quando o status é
+ * CREATED, o cliente realiza polling até a confirmação do pagamento.
  */
 export default async function OrderPage(props: PageProps<"/pedido/[id]">) {
   const [{ id }, { pagamento }] = await Promise.all([

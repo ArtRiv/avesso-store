@@ -246,6 +246,132 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get current user profile
+         * @description Returns the authenticated caller’s profile, role, and resolved permissions.
+         */
+        get: operations["AuthController_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the staff accounts
+         * @description Everyone with a non-default role, plus anyone holding a per-user grant — the second half matters because a `customer` who was granted a permission is staff by capability whatever their role says.
+         *
+         *     Plain shoppers are **not** listed. That is not an oversight: a customer directory is personal data and a different surface, reserved behind `customers.read`.
+         *
+         *     Which leaves one problem this route has to solve: whoever is about to be promoted is not staff yet. Pass `email` with an exact address to find any account, staff or not — knowing the address is the credential of that use case, and equality matching enumerates nothing. An address with no account is an empty page, not a 404.
+         *
+         *     Each row separates what the **role** gives from what was **granted** to the person, and reports the union as `effectivePermissions` — which is exactly what the guard will see.
+         */
+        get: operations["StaffController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/{userId}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change an account’s role
+         * @description Moves the account to another role, by name. This is how a shopper becomes an `operator`, and how an `operator` stops being one.
+         *
+         *     **Not your own**, ever: a role change adds as easily as it removes — `operator` → `admin` is this same route — so it is not a decision anybody makes about themselves. Ask another holder of `staff.manage`; if you are the only one, that is the store telling you to appoint a second before you step down.
+         *
+         *     Per-user grants **survive** the change. Demoting an account does not take back what was granted to the person, which is visible in the `effectivePermissions` of the response — worth reading before assuming a demotion removed everything.
+         *
+         *     Takes effect on the account’s **next request**, with the token it already holds: permissions are resolved from the database on every request rather than baked into the token. Revoking closes the door now, not in fifteen minutes.
+         */
+        patch: operations["StaffController_changeRole"];
+        trace?: never;
+    };
+    "/staff/{userId}/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Grant a permission to an account
+         * @description One permission on top of the role — the way an `operator` hired to catalogue pieces gets `products.create` without becoming an `admin`.
+         *
+         *     **You cannot grant to yourself.** That refusal is the reason this route cannot be used to promote the account that is calling it.
+         *
+         *     **Granting `staff.manage` is granting everything.** Not in one step, but in two nobody can prevent: whoever manages access can move an account to `admin`, and `admin` is the whole catalogue. Delegate it to somebody you would have made an admin.
+         *
+         *     Granting the same permission twice is a no-op and answers 200; the original `grantedAt` and `grantedById` stay, because the first grant is the record. Granting one the role already carries is allowed — the grant survives a later role change.
+         *
+         *     Takes effect on the account’s **next request**, with the token it already holds: permissions are resolved from the database on every request rather than baked into the token. Revoking closes the door now, not in fifteen minutes.
+         */
+        post: operations["StaffController_grant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/{userId}/permissions/{permission}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke a granted permission
+         * @description Removes one **granted** permission. A permission that comes from the role is not here to remove: that is a 404 whose message points at the role, because clicking again would not help.
+         *
+         *     This is the one route a caller may aim at themselves, and the asymmetry is deliberate: giving up access is never an escalation, and handing the keys back is a legitimate act. What it may **not** do is leave the store with nobody holding `staff.manage` — that is a 409 saying so, because afterwards nobody could grant it to anybody and the only way back would be editing the database.
+         *
+         *     The count behind that refusal is of **holders**, not of admins: an `operator` carrying the grant administers exactly as much as an `admin` does.
+         *
+         *     Takes effect on the account’s **next request**, with the token it already holds: permissions are resolved from the database on every request rather than baked into the token. Revoking closes the door now, not in fifteen minutes.
+         */
+        delete: operations["StaffController_revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/products": {
         parameters: {
             query?: never;
@@ -342,6 +468,46 @@ export interface paths {
         patch: operations["ProductsController_reorderVariants"];
         trace?: never;
     };
+    "/products/{id}/variants/{variantId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Archive a size
+         * @description Archives a variant, removing it from storefront sales while keeping its row and order item references intact.
+         */
+        patch: operations["ProductsController_archiveVariant"];
+        trace?: never;
+    };
+    "/products/{id}/variants/{variantId}/unarchive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Unarchive a size
+         * @description Reactivates an archived variant.
+         */
+        patch: operations["ProductsController_unarchiveVariant"];
+        trace?: never;
+    };
     "/products/{id}/variants/{variantId}": {
         parameters: {
             query?: never;
@@ -366,14 +532,14 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Rename a size
-         * @description **Placed orders are untouched.** `OrderItem.variantLabel` is a snapshot taken at purchase, so renaming a size cannot rewrite what somebody bought — which is exactly why this operation is safe and why the snapshot exists.
+         * Update or rename a size
+         * @description Updates a variant label or physical dimensions.
          *
-         *     Carts are the deliberate opposite: they hold no snapshot, so a cart line immediately shows the new label. That is the current truth a cart promises.
+         *     **Placed orders are untouched.** `OrderItem.variantLabel` is a snapshot taken at purchase, so renaming a size cannot rewrite what somebody bought.
          *
-         *     Renaming a size to the label it already has does nothing and answers 200.
+         *     Carts are the deliberate opposite: they hold no snapshot, so a cart line immediately shows the new label.
          */
-        patch: operations["ProductsController_renameVariant"];
+        patch: operations["ProductsController_updateVariant"];
         trace?: never;
     };
     "/products/{id}/variants/{variantId}/stock": {
@@ -752,6 +918,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/orders/{id}/shipping-quotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Quote available shipping rates for an existing order
+         * @description Calculates real-time carrier shipping rates for an order based on its destination CEP and item weights/dimensions.
+         */
+        get: operations["OrdersController_quoteShipping"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/{id}/label": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Purchase a shipping label for a paid order
+         * @description Purchases a carrier shipping label via Melhor Envio, automatically stamps the tracking code and label download URL, and transitions the order to SHIPPED.
+         */
+        post: operations["OrdersController_purchaseLabel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/payments/webhook": {
         parameters: {
             query?: never;
@@ -762,16 +968,114 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Receive a payment provider event
+         * Receive a payment provider event (generic)
          * @description Called by the payment provider, never by application code. **Do not generate a client for this route** — it exists to be configured as a webhook destination in the provider dashboard.
          *
          *     **There is no request schema, and none is invented here.** The body is the provider's own event envelope, read as raw bytes and never parsed by this API before its signature is checked. It is not part of this API's contract: the provider changes it when it likes, and the only part that matters here — the signature — travels in a header. The global validation pipe never sees this body either, because no DTO describes it.
          *
-         *     Authentication is the `stripe-signature` header, an HMAC over exactly the bytes that were sent. That signature is the only thing standing between this route and anyone on the internet declaring an order paid, which is why the raw bytes are preserved instead of re-serialised from parsed JSON — re-serialising changes key order and spacing, and would invalidate every signature.
+         *     Authentication is the gateway-specific signature header, an HMAC (or token comparison) over exactly the bytes that were sent. That signature is the only thing standing between this route and anyone on the internet declaring an order paid, which is why the raw bytes are preserved instead of re-serialised from parsed JSON — re-serialising changes key order and spacing, and would invalidate every signature.
          *
          *     A 200 means "recorded, stop redelivering", replays included: a redelivered event is acknowledged with `duplicate: true` rather than applied twice. Any non-2xx asks the provider to try again, which is this module's entire retry mechanism — the 503 below is deliberate for exactly that reason.
          */
         post: operations["PaymentWebhookController_handle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/webhook/asaas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive an Asaas payment event
+         * @description Called by the payment provider, never by application code. **Do not generate a client for this route** — it exists to be configured as a webhook destination in the provider dashboard.
+         *
+         *     **There is no request schema, and none is invented here.** The body is the provider's own event envelope, read as raw bytes and never parsed by this API before its signature is checked. It is not part of this API's contract: the provider changes it when it likes, and the only part that matters here — the signature — travels in a header. The global validation pipe never sees this body either, because no DTO describes it.
+         *
+         *     Authentication is the gateway-specific signature header, an HMAC (or token comparison) over exactly the bytes that were sent. That signature is the only thing standing between this route and anyone on the internet declaring an order paid, which is why the raw bytes are preserved instead of re-serialised from parsed JSON — re-serialising changes key order and spacing, and would invalidate every signature.
+         *
+         *     A 200 means "recorded, stop redelivering", replays included: a redelivered event is acknowledged with `duplicate: true` rather than applied twice. Any non-2xx asks the provider to try again, which is this module's entire retry mechanism — the 503 below is deliberate for exactly that reason.
+         */
+        post: operations["PaymentWebhookController_handleAsaas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/webhook/mercadopago": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a Mercado Pago payment event
+         * @description Called by the payment provider, never by application code. **Do not generate a client for this route** — it exists to be configured as a webhook destination in the provider dashboard.
+         *
+         *     **There is no request schema, and none is invented here.** The body is the provider's own event envelope, read as raw bytes and never parsed by this API before its signature is checked. It is not part of this API's contract: the provider changes it when it likes, and the only part that matters here — the signature — travels in a header. The global validation pipe never sees this body either, because no DTO describes it.
+         *
+         *     Authentication is the gateway-specific signature header, an HMAC (or token comparison) over exactly the bytes that were sent. That signature is the only thing standing between this route and anyone on the internet declaring an order paid, which is why the raw bytes are preserved instead of re-serialised from parsed JSON — re-serialising changes key order and spacing, and would invalidate every signature.
+         *
+         *     A 200 means "recorded, stop redelivering", replays included: a redelivered event is acknowledged with `duplicate: true` rather than applied twice. Any non-2xx asks the provider to try again, which is this module's entire retry mechanism — the 503 below is deliberate for exactly that reason.
+         */
+        post: operations["PaymentWebhookController_handleMercadoPago"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/webhook/stripe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a Stripe payment event
+         * @description Called by the payment provider, never by application code. **Do not generate a client for this route** — it exists to be configured as a webhook destination in the provider dashboard.
+         *
+         *     **There is no request schema, and none is invented here.** The body is the provider's own event envelope, read as raw bytes and never parsed by this API before its signature is checked. It is not part of this API's contract: the provider changes it when it likes, and the only part that matters here — the signature — travels in a header. The global validation pipe never sees this body either, because no DTO describes it.
+         *
+         *     Authentication is the gateway-specific signature header, an HMAC (or token comparison) over exactly the bytes that were sent. That signature is the only thing standing between this route and anyone on the internet declaring an order paid, which is why the raw bytes are preserved instead of re-serialised from parsed JSON — re-serialising changes key order and spacing, and would invalidate every signature.
+         *
+         *     A 200 means "recorded, stop redelivering", replays included: a redelivered event is acknowledged with `duplicate: true` rather than applied twice. Any non-2xx asks the provider to try again, which is this module's entire retry mechanism — the 503 below is deliberate for exactly that reason.
+         */
+        post: operations["PaymentWebhookController_handleStripe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shipping/cep/{postalCode}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lookup Brazilian address by postal code (CEP)
+         * @description Resolves street, neighborhood, city, and state from an 8-digit CEP via BrasilAPI/ViaCEP with local caching.
+         */
+        get: operations["ShippingQuoteController_lookupCep"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -802,6 +1106,108 @@ export interface paths {
          *     POST rather than GET despite being a read: a postal code is personal data, and query strings end up in access logs and browser history.
          */
         post: operations["ShippingQuoteController_quote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista os canais de integração e marketplaces configurados. */
+        get: operations["IntegrationsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/mercadolivre/auth-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gera URL de autorização OAuth 2.0 do Mercado Livre com state HMAC-SHA256. */
+        get: operations["IntegrationsController_getMeliAuthUrl"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/mercadolivre/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Troca código de autorização OAuth por tokens e ativa integração com Mercado Livre. */
+        post: operations["IntegrationsController_meliCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/mercadolivre/disconnect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Desconecta e revoga credenciais da integração com Mercado Livre. */
+        post: operations["IntegrationsController_disconnectMeli"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/mercadolivre/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dispara sincronização manual de catálogo e estoque para o Mercado Livre. */
+        post: operations["IntegrationsController_syncMeliCatalog"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/mercadolivre/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Receptor público de webhooks do Mercado Livre para tópicos orders e items. */
+        post: operations["IntegrationsController_meliWebhook"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1038,6 +1444,128 @@ export interface components {
              */
             refreshToken: string;
         };
+        CurrentUserResponse: {
+            /**
+             * Format: uuid
+             * @example 9b2f4a1e-0c33-4d7b-9f10-2a5c8e6d41bb
+             */
+            id: string;
+            /**
+             * Format: email
+             * @example ada@example.com
+             */
+            email: string;
+            /** @example Ada Lovelace */
+            name: string | null;
+            /** @example customer */
+            role: string;
+            /**
+             * @example [
+             *       "products.read"
+             *     ]
+             */
+            permissions: string[];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        StaffGrantResponse: {
+            /**
+             * @description The permission key, from the catalogue.
+             * @example products.create
+             */
+            permission: string;
+            /**
+             * Format: date-time
+             * @description When it was granted. Granting the same permission again is a no-op and leaves this at the first grant — the original act is the fact worth keeping.
+             */
+            grantedAt: string;
+            /**
+             * Format: uuid
+             * @description Who granted it. Null when that account no longer exists: the grant outlives the granter, because leaving does not take back the access you gave.
+             *
+             *     An id rather than an address — the granter is staff and therefore in this same listing, so a panel resolves the name without this route copying e-mail addresses inside other objects.
+             */
+            grantedById: string | null;
+        };
+        StaffAccountResponse: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * Format: email
+             * @example joana@example.com
+             */
+            email: string;
+            /**
+             * @description Null on an account created through Google that never set one.
+             * @example Joana
+             */
+            name: string | null;
+            /**
+             * @description Role name. Change it with `PATCH /staff/{userId}/role`.
+             * @example operator
+             */
+            role: string;
+            /**
+             * @description What the **role** grants. Not revocable here: these move when the role moves.
+             * @example [
+             *       "products.read",
+             *       "orders.read"
+             *     ]
+             */
+            rolePermissions: string[];
+            /** @description Grants made to this account on top of its role, oldest first. These are the ones `DELETE /staff/{userId}/permissions/{permission}` removes. */
+            directPermissions: components["schemas"]["StaffGrantResponse"][];
+            /**
+             * @description The union of the two above — **what the guard will actually see on the next request**, resolved by the same function the token strategy uses. A key that is no longer in the catalogue appears in `directPermissions` and not here, because it grants nothing.
+             * @example [
+             *       "products.create",
+             *       "products.read"
+             *     ]
+             */
+            effectivePermissions: string[];
+            /**
+             * Format: date-time
+             * @description Null on an account that has not proven its address yet. It does not affect authorization — verification gates password login, so an unverified account simply cannot sign in to use what it was granted.
+             */
+            emailVerifiedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        PaginatedStaffResponse: {
+            /** @description Ordered by e-mail, ascending. */
+            items: components["schemas"]["StaffAccountResponse"][];
+            /**
+             * @description Accounts matching the filter, not the page size.
+             * @example 3
+             */
+            total: number;
+            /** @example 1 */
+            page: number;
+            /**
+             * @description Clamped to 100.
+             * @example 20
+             */
+            perPage: number;
+        };
+        ChangeRoleDto: {
+            /**
+             * @description Name of the role this account moves to. The seeded roles are `customer` (no back-office access), `operator` (reads the catalogue, works the orders) and `admin` (everything, including `staff.manage`).
+             *
+             *     An unknown name is a **400** that lists the valid ones, rather than a 404: a role is a value from a small closed vocabulary here, not a resource whose existence could be worth hiding.
+             * @example operator
+             */
+            role: string;
+        };
+        GrantPermissionDto: {
+            /**
+             * @description The permission to grant. A key outside the catalogue is a 400.
+             *
+             *     Granting one the role already carries is allowed and is not pointless: a grant **survives a role change**, so the account keeps it after a demotion. Granting `staff.manage` hands over the ability to hand over everything — see the description of this route.
+             * @example products.create
+             * @enum {string}
+             */
+            permission: "products.read" | "products.create" | "products.update" | "products.delete" | "orders.read" | "orders.update_status" | "orders.cancel" | "orders.refund" | "customers.read" | "coupons.read" | "coupons.create" | "coupons.update" | "coupons.delete" | "reports.read" | "staff.manage" | "integrations.read" | "integrations.manage";
+        };
         ProductVariantResponse: {
             /** Format: uuid */
             id: string;
@@ -1056,6 +1584,26 @@ export interface components {
              * @example 4
              */
             stockQuantity: number;
+            /**
+             * @description Height in centimetres for cubic freight quoting.
+             * @example 10
+             */
+            heightCm: number | null;
+            /**
+             * @description Width in centimetres for cubic freight quoting.
+             * @example 15
+             */
+            widthCm: number | null;
+            /**
+             * @description Length in centimetres for cubic freight quoting.
+             * @example 20
+             */
+            lengthCm: number | null;
+            /**
+             * @description Whether this size has been archived and removed from the active storefront.
+             * @example false
+             */
+            isArchived: boolean;
         };
         ProductCategoryResponse: {
             /** Format: uuid */
@@ -1143,6 +1691,21 @@ export interface components {
              * @example 12
              */
             stockQuantity: number;
+            /**
+             * @description Height in centimetres for cubic freight quoting.
+             * @example 10
+             */
+            heightCm?: number;
+            /**
+             * @description Width in centimetres for cubic freight quoting.
+             * @example 15
+             */
+            widthCm?: number;
+            /**
+             * @description Length in centimetres for cubic freight quoting.
+             * @example 20
+             */
+            lengthCm?: number;
         };
         CreateProductDto: {
             /** @example Camiseta Azul */
@@ -1188,14 +1751,27 @@ export interface components {
              */
             variantIds: string[];
         };
-        RenameVariantDto: {
+        UpdateVariantDto: {
             /**
-             * @description The new label. Must be unique within the product — a label another size already holds is a 409. Renaming a size to what it already is does nothing and answers 200.
-             *
-             *     **Placed orders are unaffected**: `OrderItem.variantLabel` is a snapshot taken at purchase. Carts are the opposite and equally deliberate — they hold no snapshot, so a cart line starts showing the new label immediately.
+             * @description The new label. Must be unique within the product — a label another size already holds is a 409.
              * @example Médio
              */
-            label: string;
+            label?: string;
+            /**
+             * @description Height in centimetres for cubic freight quoting.
+             * @example 10
+             */
+            heightCm?: number | null;
+            /**
+             * @description Width in centimetres for cubic freight quoting.
+             * @example 15
+             */
+            widthCm?: number | null;
+            /**
+             * @description Length in centimetres for cubic freight quoting.
+             * @example 20
+             */
+            lengthCm?: number | null;
         };
         VariantInCartsResponse: {
             /**
@@ -1355,10 +1931,21 @@ export interface components {
             quantity: number;
         };
         ShippingAddressDto: {
-            /** @example Rua das Flores, 100 */
-            line1: string;
+            /**
+             * @description Full address line. Optional if street and number are provided.
+             * @example Rua das Flores, 100
+             */
+            line1?: string;
             /** @example Apto 42 */
             line2?: string;
+            /** @example Rua das Flores */
+            street?: string;
+            /** @example 100 */
+            number?: string;
+            /** @example Apto 42 */
+            complement?: string;
+            /** @example Centro */
+            neighborhood?: string;
             /** @example Curitiba */
             city: string;
             /** @example PR */
@@ -1377,6 +1964,12 @@ export interface components {
              * @enum {string}
              */
             paymentMode?: "hosted" | "embedded";
+            /**
+             * @description Which payment method the buyer selected. PIX routes to Asaas, CREDIT_CARD to Mercado Pago, STRIPE to Stripe/fallback.
+             * @example PIX
+             * @enum {string}
+             */
+            paymentMethod?: "PIX" | "CREDIT_CARD" | "STRIPE";
             /**
              * @description The `code` of an option returned by POST /shipping/quote.
              * @example padrao-sudeste
@@ -1431,6 +2024,17 @@ export interface components {
             /** @example 2 */
             quantity: number;
         };
+        PixSessionResponse: {
+            /**
+             * @description The EMV-standard Copia e Cola text string the buyer pastes into their bank app.
+             * @example 00020126360014BR.GOV.BCB.PIX...
+             */
+            payload: string;
+            /** @description Base64-encoded PNG of the dynamic QR Code, ready for <img src="...">. Null when the provider did not return one yet. */
+            encodedImage: string | null;
+            /** Format: date-time */
+            expirationDate: string;
+        };
         PaymentSessionResponse: {
             /**
              * @description `hosted` redirects the buyer to the provider; `embedded` renders checkout inside your own page.
@@ -1449,6 +2053,8 @@ export interface components {
             clientSecret: string | null;
             /** Format: date-time */
             expiresAt: string;
+            /** @description PIX credentials — only present when the payment method is PIX. Contains the QR Code image and the Copia e Cola EMV payload. */
+            pix?: components["schemas"]["PixSessionResponse"] | null;
         };
         OrderWithPaymentResponse: {
             /** Format: uuid */
@@ -1489,6 +2095,14 @@ export interface components {
             shippingLine1: string;
             /** @example Apto 42 */
             shippingLine2: string | null;
+            /** @example Rua das Flores */
+            shippingStreet: string | null;
+            /** @example 100 */
+            shippingNumber: string | null;
+            /** @example Apto 42 */
+            shippingComplement: string | null;
+            /** @example Centro */
+            shippingNeighborhood: string | null;
             /** @example Curitiba */
             shippingCity: string;
             /** @example PR */
@@ -1511,6 +2125,26 @@ export interface components {
             trackingCode: string | null;
             trackingUrl: string | null;
             /**
+             * @description Reference ID of the order in Bling ERP for NF-e emission.
+             * @example 12345678
+             */
+            blingOrderId?: string | null;
+            /**
+             * Format: date-time
+             * @description When the order was successfully exported to Bling ERP.
+             */
+            blingExportedAt?: string | null;
+            /**
+             * @description Temporary download URL for the carrier shipping label PDF.
+             * @example https://melhorenvio.com.br/labels/shipment-123.pdf
+             */
+            labelUrl?: string | null;
+            /**
+             * Format: date-time
+             * @description When the shipping label was purchased from the carrier.
+             */
+            labelPurchasedAt?: string | null;
+            /**
              * @description INTERNAL — the payment provider's checkout session id. No client should depend on it; see docs/known-issues.md.
              * @example cs_test_…
              */
@@ -1531,6 +2165,19 @@ export interface components {
             refundRef: string | null;
             /** Format: date-time */
             refundedAt: string | null;
+            /**
+             * @description Which gateway processed this order. PIX=Asaas, CREDIT_CARD=MercadoPago, STRIPE=Stripe. Null for legacy orders.
+             * @example PIX
+             * @enum {string|null}
+             */
+            paymentMethod?: "PIX" | "CREDIT_CARD" | "STRIPE" | null;
+            /**
+             * @description The EMV-standard Copia e Cola string for PIX payments. Present on PIX orders — the order page renders this so the buyer can copy-paste into their bank app.
+             * @example 00020126360014BR.GOV.BCB.PIX...
+             */
+            pixPayload?: string | null;
+            /** @description Base64-encoded PNG of the dynamic PIX QR Code. Present on PIX orders when the provider returned an image. Render with <img src="data:image/png;base64,..." />. */
+            pixQrCode?: string | null;
             /** Format: date-time */
             paidAt: string | null;
             /** Format: date-time */
@@ -1552,6 +2199,12 @@ export interface components {
              * @enum {string}
              */
             paymentMode?: "hosted" | "embedded";
+            /**
+             * @description Override the payment method for the new session. Omit to reuse the method chosen at checkout.
+             * @example PIX
+             * @enum {string}
+             */
+            paymentMethod?: "PIX" | "CREDIT_CARD" | "STRIPE";
         };
         OrderResponse: {
             /** Format: uuid */
@@ -1592,6 +2245,14 @@ export interface components {
             shippingLine1: string;
             /** @example Apto 42 */
             shippingLine2: string | null;
+            /** @example Rua das Flores */
+            shippingStreet: string | null;
+            /** @example 100 */
+            shippingNumber: string | null;
+            /** @example Apto 42 */
+            shippingComplement: string | null;
+            /** @example Centro */
+            shippingNeighborhood: string | null;
             /** @example Curitiba */
             shippingCity: string;
             /** @example PR */
@@ -1614,6 +2275,26 @@ export interface components {
             trackingCode: string | null;
             trackingUrl: string | null;
             /**
+             * @description Reference ID of the order in Bling ERP for NF-e emission.
+             * @example 12345678
+             */
+            blingOrderId?: string | null;
+            /**
+             * Format: date-time
+             * @description When the order was successfully exported to Bling ERP.
+             */
+            blingExportedAt?: string | null;
+            /**
+             * @description Temporary download URL for the carrier shipping label PDF.
+             * @example https://melhorenvio.com.br/labels/shipment-123.pdf
+             */
+            labelUrl?: string | null;
+            /**
+             * Format: date-time
+             * @description When the shipping label was purchased from the carrier.
+             */
+            labelPurchasedAt?: string | null;
+            /**
              * @description INTERNAL — the payment provider's checkout session id. No client should depend on it; see docs/known-issues.md.
              * @example cs_test_…
              */
@@ -1634,6 +2315,19 @@ export interface components {
             refundRef: string | null;
             /** Format: date-time */
             refundedAt: string | null;
+            /**
+             * @description Which gateway processed this order. PIX=Asaas, CREDIT_CARD=MercadoPago, STRIPE=Stripe. Null for legacy orders.
+             * @example PIX
+             * @enum {string|null}
+             */
+            paymentMethod?: "PIX" | "CREDIT_CARD" | "STRIPE" | null;
+            /**
+             * @description The EMV-standard Copia e Cola string for PIX payments. Present on PIX orders — the order page renders this so the buyer can copy-paste into their bank app.
+             * @example 00020126360014BR.GOV.BCB.PIX...
+             */
+            pixPayload?: string | null;
+            /** @description Base64-encoded PNG of the dynamic PIX QR Code. Present on PIX orders when the provider returned an image. Render with <img src="data:image/png;base64,..." />. */
+            pixQrCode?: string | null;
             /** Format: date-time */
             paidAt: string | null;
             /** Format: date-time */
@@ -1647,6 +2341,22 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        OrderStatusCountsResponse: {
+            /** @example 10 */
+            all: number;
+            /** @example 4 */
+            CREATED: number;
+            /** @example 3 */
+            PAID: number;
+            /** @example 2 */
+            SHIPPED: number;
+            /** @example 1 */
+            DELIVERED: number;
+            /** @example 0 */
+            CANCELLED: number;
+            /** @example 0 */
+            REFUNDED: number;
+        };
         PaginatedOrdersResponse: {
             items: components["schemas"]["OrderResponse"][];
             /** @example 12 */
@@ -1658,6 +2368,8 @@ export interface components {
              * @example 20
              */
             perPage: number;
+            /** @description Counts broken down by status for the current scope. */
+            statusCounts: components["schemas"]["OrderStatusCountsResponse"];
         };
         ShipOrderDto: {
             /**
@@ -1670,25 +2382,6 @@ export interface components {
              * @example https://rastreamento.correios.com.br/BR123456789BR
              */
             trackingUrl?: string;
-        };
-        WebhookAckResponse: {
-            /**
-             * @description Always true; a failure is a non-2xx.
-             * @example true
-             */
-            received: boolean;
-            /**
-             * @description True when this event id had already been processed. Redelivery is normal and is not an error — the event is simply not applied twice.
-             * @example false
-             */
-            duplicate: boolean;
-        };
-        ShippingQuoteDto: {
-            /**
-             * @description Destination CEP, 8 digits, hyphen optional. The only input a quote needs: in Brazil the postal code determines city and state, and it is what carriers price against.
-             * @example 80000-000
-             */
-            postalCode: string;
         };
         ShippingOptionResponse: {
             /**
@@ -1713,6 +2406,38 @@ export interface components {
              */
             orderTotalCents: number;
         };
+        PurchaseLabelDto: {
+            /**
+             * @description The carrier service code to purchase the label for. Formatted as "melhorenvio.{service_id}".
+             * @example melhorenvio.1
+             */
+            serviceCode: string;
+        };
+        WebhookAckResponse: {
+            /** @example true */
+            received: boolean;
+            /** @example order_imported_successfully */
+            action: string;
+        };
+        CepResponse: {
+            /** @example 01310-200 */
+            postalCode: string;
+            /** @example Avenida Paulista */
+            street: string;
+            /** @example Bela Vista */
+            neighborhood: string;
+            /** @example São Paulo */
+            city: string;
+            /** @example SP */
+            state: string;
+        };
+        ShippingQuoteDto: {
+            /**
+             * @description Destination CEP, 8 digits, hyphen optional. The only input a quote needs: in Brazil the postal code determines city and state, and it is what carriers price against.
+             * @example 80000-000
+             */
+            postalCode: string;
+        };
         ShippingQuoteResponse: {
             options: components["schemas"]["ShippingOptionResponse"][];
             /**
@@ -1720,6 +2445,84 @@ export interface components {
              * @example 49740
              */
             itemsSubtotalCents: number;
+        };
+        IntegrationItemResponse: {
+            /** @example MERCADO_LIVRE */
+            provider: string;
+            /** @example true */
+            connected: boolean;
+            /**
+             * @example ACTIVE
+             * @enum {string}
+             */
+            status: "ACTIVE" | "DISCONNECTED" | "ERROR";
+            /** @example 2026-10-06T18:00:00.000Z */
+            expiresAt: string | null;
+            /**
+             * @example {
+             *       "userId": 123456,
+             *       "nickname": "LOJA_OFICIAL_ML"
+             *     }
+             */
+            metadata: {
+                [key: string]: unknown;
+            } | null;
+        };
+        ListIntegrationsResponse: {
+            integrations: components["schemas"]["IntegrationItemResponse"][];
+        };
+        AuthUrlResponse: {
+            /** @example https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=123&redirect_uri=... */
+            url: string;
+        };
+        MercadoLivreCallbackDto: {
+            /**
+             * @description Código de autorização temporário emitido pelo Mercado Livre após consentimento.
+             * @example TG-65f1234567890abcdef
+             */
+            code: string;
+            /**
+             * @description Parâmetro state assinado com HMAC-SHA256 para prevenção de CSRF.
+             * @example eyJ0ZW5hbnRJZCI6ImRlZmF1bHQiLCJub25jZSI6ImFiY2RlZiIsInRpbWVzdGFtcCI6MTY5NjYwMDAwMDAwMCwic2lnIjoiMTIzNDU2In0
+             */
+            state: string;
+        };
+        DisconnectIntegrationResponse: {
+            /** @example true */
+            disconnected: boolean;
+        };
+        CatalogSyncResponse: {
+            /** @example 5 */
+            syncedProducts: number;
+            /** @example 12 */
+            totalVariants: number;
+        };
+        MercadoLivreWebhookDto: {
+            /**
+             * @description Tópico de notificação disparado pelo Mercado Livre (ex: orders_v2, orders, items).
+             * @example orders_v2
+             */
+            topic: string;
+            /**
+             * @description Recurso modificado no Mercado Livre (ex: /orders/2000001234567890).
+             * @example /orders/2000001234567890
+             */
+            resource: string;
+            /**
+             * @description Identificador numérico do vendedor (usuário) no Mercado Livre.
+             * @example 123456789
+             */
+            user_id: number;
+            /**
+             * @description Identificador do aplicativo no Mercado Livre.
+             * @example 987654321
+             */
+            application_id?: number;
+            /**
+             * @description Identificador único do evento no Mercado Livre.
+             * @example evt_1234567890
+             */
+            _id?: string;
         };
         ProductSalesRowResponse: {
             /** Format: uuid */
@@ -1797,6 +2600,28 @@ export interface components {
             /** @example 4 */
             orderCount: number;
         };
+        RevenueTotalsResponse: {
+            /**
+             * @description Total revenue in cents for the entire period.
+             * @example 59920
+             */
+            revenueCents: number;
+            /**
+             * @description Total goods subtotal in cents for the entire period.
+             * @example 55930
+             */
+            itemsSubtotalCents: number;
+            /**
+             * @description Total shipping in cents for the entire period.
+             * @example 3990
+             */
+            shippingCents: number;
+            /**
+             * @description Total paid orders in the entire period.
+             * @example 4
+             */
+            orderCount: number;
+        };
         RevenueReportResponse: {
             /**
              * Format: date-time
@@ -1820,6 +2645,8 @@ export interface components {
             timeZone: string;
             /** @description Ascending, and **continuous**: a week or month with no sales comes back as zeros rather than as a gap, so a bar chart does not silently skip the bad week. Not paginated — a chart needs the whole series, and the window already bounds it. */
             buckets: components["schemas"]["RevenueBucketResponse"][];
+            /** @description Aggregated totals across the entire period. */
+            totals: components["schemas"]["RevenueTotalsResponse"];
         };
         CartsReportResponse: {
             /**
@@ -2318,6 +3145,304 @@ export interface operations {
             };
         };
     };
+    AuthController_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentUserResponse"];
+                };
+            };
+            /**
+             * @description Token is missing, expired, or invalid.
+             *
+             *     No bearer token, or the token is expired or invalid.
+             */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    StaffController_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Find one account by its **exact** address, staff or not. This is how somebody who is not yet staff is found in order to be promoted — they are not in the listing by definition, and the alternative would be reading their id out of the database.
+                 *
+                 *     Matching is on equality, case-insensitively (the address is normalized the way registration normalizes it). There is no substring search, on purpose: that would turn this route into a way to enumerate the store’s customers.
+                 */
+                email?: string;
+                page?: number;
+                /** @description Values above 100 are clamped, not rejected. */
+                perPage?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedStaffResponse"];
+                };
+            };
+            /** @description `email` is not an address, or `page`/`perPage` is not an integer above zero. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `staff.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    StaffController_changeRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeRoleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffAccountResponse"];
+                };
+            };
+            /** @description No role by that name. The message lists the ones that exist. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `staff.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No account with that id. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The target is the caller, or the change would leave the store with nobody holding `staff.manage`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    StaffController_grant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GrantPermissionDto"];
+            };
+        };
+        responses: {
+            /** @description The account, with the grant in place. 200 on a repeat too. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffAccountResponse"];
+                };
+            };
+            /** @description `permission` is not a key in the catalogue. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `staff.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No account with that id. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The target is the caller. Nobody grants themselves anything. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    StaffController_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+                /** @description The granted permission to remove, e.g. `products.create`. */
+                permission: "products.read" | "products.create" | "products.update" | "products.delete" | "orders.read" | "orders.update_status" | "orders.cancel" | "orders.refund" | "customers.read" | "coupons.read" | "coupons.create" | "coupons.update" | "coupons.delete" | "reports.read" | "staff.manage" | "integrations.read" | "integrations.manage";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The account, without that grant. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffAccountResponse"];
+                };
+            };
+            /** @description `permission` is not a key in the catalogue. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `staff.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No account with that id, or that account has no such **granted** permission — one held through the role is removed by changing the role. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description It would remove the last account holding `staff.manage`, leaving nobody able to manage access. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     ProductsController_list: {
         parameters: {
             query?: {
@@ -2602,6 +3727,113 @@ export interface operations {
             };
         };
     };
+    ProductsController_archiveVariant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                variantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `products.delete` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such product, or that variant does not belong to it. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A product must keep at least one active variant. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ProductsController_unarchiveVariant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                variantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `products.update` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such product, or that variant does not belong to it. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     ProductsController_removeVariant: {
         parameters: {
             query?: {
@@ -2679,7 +3911,7 @@ export interface operations {
             };
         };
     };
-    ProductsController_renameVariant: {
+    ProductsController_updateVariant: {
         parameters: {
             query?: never;
             header?: never;
@@ -2691,7 +3923,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RenameVariantDto"];
+                "application/json": components["schemas"]["UpdateVariantDto"];
             };
         };
         responses: {
@@ -3362,6 +4594,8 @@ export interface operations {
                 status?: "CREATED" | "PAID" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED";
                 /** @description REQUIRES the `orders.read` permission — without it this is a 403. A customer listing is always implicitly their own, with or without this. */
                 userId?: string;
+                /** @description Search by order UUID prefix, customer name, or customer email. */
+                search?: string;
             };
             header?: never;
             path?: never;
@@ -3883,12 +5117,130 @@ export interface operations {
             };
         };
     };
+    OrdersController_quoteShipping: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShippingOptionResponse"][];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `orders.read` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such order. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    OrdersController_purchaseLabel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseLabelDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderResponse"];
+                };
+            };
+            /** @description Invalid service code. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `orders.update_status` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such order. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The order is not PAID. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     PaymentWebhookController_handle: {
         parameters: {
             query?: never;
-            header: {
-                /** @description HMAC over the raw request body. Verifying it is the authentication of this route. */
-                "stripe-signature": string;
+            header?: {
+                /** @description Present on Stripe events. The hybrid router dispatches by whichever signature header is present. */
+                "stripe-signature"?: string;
             };
             path?: never;
             cookie?: never;
@@ -3931,6 +5283,224 @@ export interface operations {
             /** @description Refused on purpose so the provider redelivers — a refund arriving before the payment that explains it, for instance. The event stays unprocessed rather than being marked done with the order left wrong. */
             503: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    PaymentWebhookController_handleAsaas: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The Asaas webhook token. Must equal ASAAS_WEBHOOK_SECRET for the event to be accepted. */
+                "asaas-access-token": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Asaas raw event payload. */
+        requestBody: {
+            content: {
+                "application/json": string;
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookAckResponse"];
+                };
+            };
+            /** @description Body missing or asaas-access-token is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded — this route allows 300 requests per minute. */
+            429: {
+                headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Refused so Asaas redelivers. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    PaymentWebhookController_handleMercadoPago: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Mercado Pago HMAC signature header (ts=<timestamp>,v1=<hmac>). */
+                "x-signature": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Mercado Pago raw event payload. */
+        requestBody: {
+            content: {
+                "application/json": string;
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookAckResponse"];
+                };
+            };
+            /** @description Body missing or x-signature is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded — this route allows 300 requests per minute. */
+            429: {
+                headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Refused so Mercado Pago redelivers. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    PaymentWebhookController_handleStripe: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stripe HMAC signature header. Verifying it is the authentication of this route. */
+                "stripe-signature": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Stripe raw event payload. */
+        requestBody: {
+            content: {
+                "application/json": string;
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookAckResponse"];
+                };
+            };
+            /** @description Body missing or stripe-signature is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded — this route allows 300 requests per minute. */
+            429: {
+                headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Refused so Stripe redelivers. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ShippingQuoteController_lookupCep: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postalCode: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CepResponse"];
+                };
+            };
+            /** @description The postal code is not a well-formed CEP (8 digits). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CEP not found or invalid. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded — this route allows 30 requests per minute. */
+            429: {
+                headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: number;
                     [name: string]: unknown;
                 };
                 content: {
@@ -4005,6 +5575,218 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListIntegrationsResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `integrations.read` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_getMeliAuthUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthUrlResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `integrations.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_meliCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MercadoLivreCallbackDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationItemResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `integrations.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_disconnectMeli: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisconnectIntegrationResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `integrations.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_syncMeliCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogSyncResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `integrations.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_meliWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MercadoLivreWebhookDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookAckResponse"];
                 };
             };
         };

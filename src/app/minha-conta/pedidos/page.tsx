@@ -23,18 +23,11 @@ type Page = components["schemas"]["PaginatedOrdersResponse"];
 const PER_PAGE = 20;
 
 /**
- * The destination of `Ver meus pedidos` on artboard 08.
+ * Página de histórico de pedidos do cliente ("Meus pedidos").
  *
- * There is no artboard for this one — the design has ten screens and this is
- * not among them — so it is built out of the vocabulary the other nine already
- * established: hairline-separated rows, meta labels, mono for the money and
- * the order number, and the same status colours the order page uses. Nothing
- * new is invented for it, which is the point.
- *
- * `GET /orders` is already scoped by who is asking: without the `orders.read`
- * permission the listing is silently limited to the caller's own orders and
- * there is no way to ask for anyone else's. So this route needs no filter and
- * carries no risk of showing one customer another's history.
+ * Exibe a listagem paginada de pedidos do usuário autenticado, com status,
+ * data, total e itens resumidos. O endpoint `GET /orders` já é restrito
+ * aos pedidos do próprio usuário pela sessão ativa.
  */
 export default async function MyOrdersPage(
   props: PageProps<"/minha-conta/pedidos">,
@@ -158,9 +151,7 @@ function NoOrders() {
 }
 
 /**
- * The same `Anterior · 1 · Próxima` as artboard 03, with the ends muted and
- * inert rather than hidden so the row keeps its shape on the first and last
- * page.
+ * Paginação com navegação entre páginas anterior, numeradas e próxima.
  */
 function Pagination({ page, lastPage }: { page: number; lastPage: number }) {
   const pages = Array.from({ length: lastPage }, (_, index) => index + 1);

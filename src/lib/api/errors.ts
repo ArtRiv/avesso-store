@@ -1,20 +1,17 @@
 import type { components } from "./schema";
 
 /**
- * The backend's error convention, in one place
- * (docs/backend-commerce-core.md, "Convenção de erros").
+ * Convenção de erros da API.
  *
- * Every failing route answers the same shape, so the storefront never has to
- * guess at a body. What it does have to do is treat several of these as screens
- * rather than as generic failure — 409 in particular is the last unit selling
- * between the sacola and the checkout, and it has an artboard of its own.
+ * Todas as rotas de erro respondem no mesmo formato (ErrorResponse),
+ * permitindo tratamento uniforme no storefront.
  */
 export type ErrorBody = components["schemas"]["ErrorResponse"];
 
 export class ApiError extends Error {
   readonly status: number;
   readonly body: ErrorBody | null;
-  /** Seconds the server asked us to wait. Only ever present on a 429. */
+  /** Segundos que o servidor solicitou de espera. Presente apenas em 429. */
   readonly retryAfterSeconds: number | null;
 
   constructor(
@@ -22,30 +19,30 @@ export class ApiError extends Error {
     body: ErrorBody | null,
     retryAfterSeconds: number | null,
   ) {
-    super(messageOf(body) ?? `A API respondeu ${String(status)}`);
+    super(
+      messageOf(body) ??
+        "Ocorreu um erro inesperado. Tente novamente em instantes.",
+    );
     this.name = "ApiError";
     this.status = status;
     this.body = body;
     this.retryAfterSeconds = retryAfterSeconds;
   }
 
-  /** No token, or one that expired. The BFF answers this with a refresh. */
+  /** Sem token ou token expirado. O BFF trata com refresh de sessão. */
   get isUnauthorized(): boolean {
     return this.status === 401;
   }
 
   /**
-   * Gone, or not yours. A customer asking for someone else's order gets this,
-   * not a 403 — so copy here must never say "acesso negado", which would tell
-   * the customer something the backend deliberately refuses to confirm.
+   * Recurso inexistente ou não pertencente ao usuário.
    */
   get isNotFound(): boolean {
     return this.status === 404;
   }
 
   /**
-   * A state conflict: stock ran out, the freight quote went stale, the order
-   * is already paid. Artboard 10 is what this looks like at checkout.
+   * Conflito de estado: estoque esgotado, cotação de frete expirada, pedido já pago.
    */
   get isConflict(): boolean {
     return this.status === 409;

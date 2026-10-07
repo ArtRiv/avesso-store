@@ -1,9 +1,12 @@
 import Link from "next/link";
 
+import { AccountMenu } from "@/components/account-menu";
 import { AccountIcon, BagIcon, SearchIcon } from "@/components/icons";
+import { MobileMenu } from "@/components/mobile-menu";
+import { StoreLogo } from "@/components/store-logo";
 import { textLinkClass } from "@/components/text-link";
 import { listCategories } from "@/lib/catalog";
-import { customerApi, hasSession } from "@/lib/auth/session";
+import { customerApi, hasSession, sessionProfile } from "@/lib/auth/session";
 import { unwrap } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 
@@ -18,49 +21,64 @@ import { cn } from "@/lib/utils";
  * appearing in the header of the store that owns it.
  */
 export async function SiteHeader() {
-  const [categories, signedIn, itemCount] = await Promise.all([
+  const [categories, signedIn, profile, itemCount] = await Promise.all([
     listCategories(),
     hasSession(),
+    sessionProfile(),
     countSacola(),
   ]);
 
   return (
-    <header className="flex h-20 flex-none items-center justify-between border-b border-hairline px-24">
-      <Link
-        href="/"
-        className={cn(textLinkClass, "text-[20px] font-semibold tracking-[0.22em]")}
-      >
-        AVESSO
-      </Link>
+    <header className="flex h-20 flex-none items-center justify-between border-b border-hairline px-6 md:px-12 lg:px-24">
+      <div className="flex items-center gap-12">
+        <Link
+          href="/"
+          className={cn(textLinkClass, "flex items-center")}
+        >
+          <StoreLogo />
+        </Link>
 
-      <nav className="flex gap-8">
-        {categories.map((category) => (
-          <Link
-            key={category.id}
-            href={`/catalogo?categoria=${category.slug}`}
-            className={cn(textLinkClass, "type-meta")}
-          >
-            {category.name}
-          </Link>
-        ))}
-      </nav>
+        <nav className="hidden gap-8 lg:flex">
+          {categories.map((category) => (
+            <Link
+              key={category.id}
+              href={`/catalogo?categoria=${category.slug}`}
+              className={cn(textLinkClass, "type-meta")}
+            >
+              {category.name}
+            </Link>
+          ))}
+        </nav>
+      </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4 md:gap-6">
         <Link
           href="/catalogo"
           className={cn(textLinkClass, "type-meta flex items-center gap-2")}
         >
           <SearchIcon />
-          Buscar
+          <span className="hidden md:inline">Buscar</span>
         </Link>
 
-        <Link
-          href={signedIn ? "/minha-conta/pedidos" : "/entrar"}
-          className={cn(textLinkClass, "type-meta flex items-center gap-2")}
-        >
-          <AccountIcon />
-          Conta
-        </Link>
+        {/* A menu with a session, a link without one. `hasSession()` rather
+            than the profile decides which: the profile cookie is only written
+            at sign-in, so someone signed in before it existed still has a live
+            session and must still get the menu — without the address line. */}
+        {signedIn ? (
+          <AccountMenu
+            name={profile?.name ?? null}
+            email={profile?.email ?? null}
+            backOffice={profile?.backOffice ?? false}
+          />
+        ) : (
+          <Link
+            href="/entrar"
+            className={cn(textLinkClass, "type-meta flex items-center gap-2")}
+          >
+            <AccountIcon />
+            <span className="hidden md:inline">Conta</span>
+          </Link>
+        )}
 
         {/* The count comes from the API, not from summing quantities here —
             that is what `itemCount` on GET /cart exists for. */}
@@ -69,8 +87,15 @@ export async function SiteHeader() {
           className={cn(textLinkClass, "type-meta flex items-center gap-2")}
         >
           <BagIcon />
-          {itemCount === null ? "Sacola" : `Sacola (${itemCount})`}
+          <span className="hidden md:inline">
+            {itemCount === null ? "Sacola" : `Sacola (${itemCount})`}
+          </span>
+          <span className="md:hidden">
+            {itemCount === null ? "" : `(${itemCount})`}
+          </span>
         </Link>
+
+        <MobileMenu categories={categories} />
       </div>
     </header>
   );

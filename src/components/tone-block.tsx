@@ -2,13 +2,8 @@ import { cn } from "@/lib/utils";
 import { toneClass, toneLabelClass, type Tone } from "@/lib/product-tone";
 
 /**
- * A placeholder image (docs/design-system.md §4): a solid block in one of the
- * five image tones, hairline border, and a label in mono at the bottom left.
- *
- * The canvas uses no photography at all — every image on every artboard is one
- * of these. So this is not a fallback that shows when something failed; it is
- * what the design specifies, and it holds the layout honestly until real
- * photography exists.
+ * Bloco tonal de placeholder para imagem de produto: preenchimento em tom neutro,
+ * borda de 1px hairline e rótulo descritivo em mono no canto inferior.
  */
 export function ToneBlock({
   tone,
@@ -17,11 +12,7 @@ export function ToneBlock({
   className,
 }: {
   tone: Tone;
-  /**
-   * Omitted at thumbnail size. The sacola's row image is 64px wide and the
-   * canvas draws it as bare colour (artboard 06) — an 11px name in that box
-   * would overflow it, and the row already carries the name in full.
-   */
+  /** Rótulo descritivo do produto (opcional em miniaturas pequenas). */
   label?: string;
   aspect?: string;
   className?: string;

@@ -1,16 +1,12 @@
 import Link from "next/link";
 
+import { StoreLogo } from "@/components/store-logo";
+
 /**
- * The frame for the pages a customer reaches from an e-mail.
+ * Estrutura de layout para páginas de fluxo de autenticação e e-mail
+ * (confirmação de e-mail, recuperação de senha, etc.).
  *
- * These are not in the design's ten artboards — they exist because the backend
- * sends links to them, and without them registration cannot finish. So they
- * borrow rather than invent: the page's warm ground, the wordmark from the
- * header (§2) as the way back into the store, and artboard 05's panel for the
- * content.
- *
- * Narrow and left-aligned. §7 rules out centred body text everywhere except
- * artboards 08 and 09, and these are neither.
+ * Utiliza cabeçalho simplificado com logo e área centralizada com largura máxima.
  */
 export function AuthPageShell({ children }: { children: React.ReactNode }) {
   return (
@@ -18,9 +14,9 @@ export function AuthPageShell({ children }: { children: React.ReactNode }) {
       <header className="flex h-20 items-center border-b border-hairline px-24">
         <Link
           href="/"
-          className="text-[20px] font-semibold tracking-[0.22em] outline-none hover:text-rust focus-visible:outline-1 focus-visible:outline-ink focus-visible:outline-offset-4"
+          className="flex items-center outline-none hover:text-rust focus-visible:outline-1 focus-visible:outline-ink focus-visible:outline-offset-4"
         >
-          AVESSO
+          <StoreLogo />
         </Link>
       </header>
 

@@ -8,17 +8,23 @@
  *
  *   pnpm api:types
  *
- * API_URL wins if set, so a developer running commerce-core on localhost:3000
- * generates against their own instance. Otherwise this targets the deployed
- * one — which hibernates on Render's free tier, so a cold first request takes
- * about a minute before anything is written.
+ * Checks for the local sibling `../commerce-core/openapi.json` first, then
+ * OPENAPI_SOURCE / API_URL, and finally falls back to the deployed Render URL.
  */
 
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 
-const API_URL = process.env.API_URL ?? 'https://commerce-core-kvlg.onrender.com';
+const LOCAL_OPENAPI = resolve(process.cwd(), '../commerce-core/openapi.json');
+const API_URL = process.env.API_URL;
 const OUT = 'src/lib/api/schema.d.ts';
-const source = `${API_URL.replace(/\/$/, '')}/docs-json`;
+
+const source =
+  process.env.OPENAPI_SOURCE ??
+  (existsSync(LOCAL_OPENAPI)
+    ? LOCAL_OPENAPI
+    : `${(API_URL ?? 'https://commerce-core-kvlg.onrender.com').replace(/\/$/, '')}/docs-json`);
 
 console.log(`Generating ${OUT} from ${source}`);
 

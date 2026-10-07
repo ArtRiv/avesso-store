@@ -65,11 +65,12 @@ export default async function ProductsPage({
   const search = typeof params.q === "string" ? params.q : "";
   const status = pick<StatusKey>(params.status, STATUSES, "all");
   const sort = pick<SortKey>(params.sort, SORTS, "newest");
+  const categoria = typeof params.categoria === "string" ? params.categoria : "all";
   const page = Math.max(1, Number(params.page) || 1);
 
   const api = await requireAdminApi();
-  const data = unwrap(
-    await api.GET("/products", {
+  const [dataResult, categoriesResult] = await Promise.all([
+    api.GET("/products", {
       params: {
         query: {
           status,
@@ -77,10 +78,19 @@ export default async function ProductsPage({
           page,
           perPage: PER_PAGE,
           ...(search ? { search } : {}),
+          ...(categoria !== "all" ? { category: categoria } : {}),
         },
       },
     }),
-  );
+    api.GET("/categories"),
+  ]);
+
+  const data = unwrap(dataResult);
+  const categoriesList = categoriesResult.data ?? [];
+  const categoryOptions: Record<string, string> = {
+    all: "Todas",
+    ...Object.fromEntries(categoriesList.map((c) => [c.slug, c.name])),
+  };
 
   const lastPage = Math.max(1, Math.ceil(data.total / data.perPage));
   const drafts = data.items.filter((p) => p.status === "DRAFT").length;
@@ -105,8 +115,10 @@ export default async function ProductsPage({
         search={search}
         status={status}
         sort={sort}
+        categoria={categoria}
         statuses={STATUSES}
         sorts={SORTS}
+        categories={categoryOptions}
       />
 
       <TableFrame>
@@ -205,7 +217,17 @@ export default async function ProductsPage({
         </tbody>
       </TableFrame>
 
-      <Pagination page={data.page} lastPage={lastPage} total={data.total} />
+      <Pagination
+        page={data.page}
+        lastPage={lastPage}
+        total={data.total}
+        query={{
+          ...(search ? { q: search } : {}),
+          ...(status !== "all" ? { status } : {}),
+          ...(sort !== "newest" ? { sort } : {}),
+          ...(categoria !== "all" ? { categoria } : {}),
+        }}
+      />
     </>
   );
 }
@@ -218,10 +240,12 @@ function Pagination({
   page,
   lastPage,
   total,
+  query,
 }: {
   page: number;
   lastPage: number;
   total: number;
+  query: Record<string, string>;
 }) {
   if (total === 0) {
     return null;
@@ -235,7 +259,7 @@ function Pagination({
       {lastPage > 1 ? (
         <div className="flex gap-2">
           {Array.from({ length: lastPage }, (_, index) => index + 1).map((n) => (
-            <PageLink key={n} n={n} current={n === page} />
+            <PageLink key={n} n={n} current={n === page} query={query} />
           ))}
         </div>
       ) : null}
@@ -243,7 +267,15 @@ function Pagination({
   );
 }
 
-function PageLink({ n, current }: { n: number; current: boolean }) {
+function PageLink({
+  n,
+  current,
+  query,
+}: {
+  n: number;
+  current: boolean;
+  query: Record<string, string>;
+}) {
   const className = `flex size-9 items-center justify-center border font-mono text-[14px] tabular-nums ${
     current
       ? "border-ink text-ink"
@@ -257,7 +289,7 @@ function PageLink({ n, current }: { n: number; current: boolean }) {
       {n}
     </span>
   ) : (
-    <Link href={{ query: { page: n } }} className={className}>
+    <Link href={{ query: { ...query, page: n } }} className={className}>
       {n}
     </Link>
   );

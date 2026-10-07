@@ -26,9 +26,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * Artboard 03. Every filter, the ordering and the pagination are applied by the
- * API — see src/lib/catalog-filters.ts for why that contradicts the design doc
- * and why the spec wins.
+ * Página do catálogo de produtos.
+ * Filtros, ordenação e paginação são aplicados via parâmetros de busca e repassados à API.
  */
 export default async function CatalogPage(props: PageProps<"/catalogo">) {
   const filters = parseFilters(await props.searchParams);
@@ -118,8 +117,7 @@ function EmptyResult({ filters }: { filters: CatalogFilters }) {
 }
 
 /**
- * `Anterior · 1 · Próxima` from artboard 03. The ends are muted and inert
- * rather than hidden, so the row keeps its shape on the first and last page.
+ * Paginação com navegação entre páginas anterior, numeradas e próxima.
  */
 function Pagination({
   filters,

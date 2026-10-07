@@ -9,14 +9,11 @@ import { Label } from "@/components/ui/label";
 import { TextButton } from "@/components/text-link";
 
 /**
- * The sign-in fields, exactly as artboard 05 lays them out: e-mail, password,
- * `Entrar` primary, `Criar conta` secondary, `Esqueci minha senha` as a link.
+ * Formulário de autenticação: e-mail, senha, ações de entrar, criar conta e
+ * recuperação de senha.
  *
- * Lives outside any one page because it has two homes — this is the panel the
- * PDP shows in place of its CTA when an anonymous visitor tries to add to the
- * sacola, where the whole point is that the page does not navigate. `onDone`
- * is what differs: the PDP finishes the interrupted add, the sign-in page
- * moves on.
+ * Reutilizado tanto na página de login quanto no painel inline acionado ao
+ * tentar adicionar um item à sacola sem sessão ativa.
  */
 export function SignInForm({
   onDone,

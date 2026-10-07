@@ -12,7 +12,12 @@ import { RemoveVariantDialog } from "@/components/admin/remove-variant-dialog";
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { apiFetch, problemMessage, SessionEndedError } from "@/lib/api/browser";
+import {
+  apiFetch,
+  GENERIC_FALLBACK,
+  problemMessage,
+  SessionEndedError,
+} from "@/lib/api/browser";
 import type { components } from "@/lib/api/schema";
 
 type Product = components["schemas"]["ProductResponse"];
@@ -86,7 +91,7 @@ export function VariantPanel({
       setError(
         caught instanceof SessionEndedError
           ? caught.message
-          : "Não foi possível concluir. Tente novamente em instantes.",
+          : GENERIC_FALLBACK,
       );
       return false;
     } finally {
@@ -197,8 +202,13 @@ export function VariantPanel({
               setRenameError(null);
               setRenaming(null);
             }}
-            onRename={async (label) => {
-              if (label === variant.label) {
+            onRename={async (data) => {
+              if (
+                data.label === variant.label &&
+                data.heightCm === (variant.heightCm ?? null) &&
+                data.widthCm === (variant.widthCm ?? null) &&
+                data.lengthCm === (variant.lengthCm ?? null)
+              ) {
                 setRenaming(null);
                 return;
               }
@@ -210,14 +220,11 @@ export function VariantPanel({
                 {
                   method: "PATCH",
                   headers: { "content-type": "application/json" },
-                  body: JSON.stringify({ label }),
+                  body: JSON.stringify(data),
                 },
               );
 
               if (!response.ok) {
-                // A duplicate label is a 409 and belongs on the field, beside
-                // the text that caused it — not in the panel's error line,
-                // where it would read as though the whole panel had failed.
                 setRenameError(await problemMessage(response));
                 return;
               }
@@ -238,6 +245,12 @@ export function VariantPanel({
             onRemove={() => {
               setRemoving(variant);
             }}
+            onUnarchive={async () => {
+              await send(
+                `/api/admin/products/${productId}/variants/${variant.id}/unarchive`,
+                { method: "PATCH" },
+              );
+            }}
           />
         ))}
       </div>
@@ -256,6 +269,15 @@ export function VariantPanel({
           onRename={() => {
             setRenameError(null);
             setRenaming(removing.id);
+          }}
+          onArchive={async () => {
+            const ok = await send(
+              `/api/admin/products/${productId}/variants/${removing.id}/archive`,
+              { method: "PATCH" },
+            );
+            if (ok) {
+              setRemoving(null);
+            }
           }}
           onRemove={async (expected) => {
             const query =
@@ -318,13 +340,13 @@ export function VariantPanel({
             onCancel={() => {
               setAdding(false);
             }}
-            onAdd={async (label) => {
+            onAdd={async (newVariant) => {
               const ok = await send(
                 `/api/admin/products/${productId}/variants`,
                 {
                   method: "POST",
                   headers: { "content-type": "application/json" },
-                  body: JSON.stringify({ label }),
+                  body: JSON.stringify(newVariant),
                 },
               );
 
@@ -368,6 +390,7 @@ function VariantRow({
   onRename,
   onStock,
   onRemove,
+  onUnarchive,
 }: {
   variant: Variant;
   index: number;
@@ -380,9 +403,15 @@ function VariantRow({
   onMove: (direction: 1 | -1) => void;
   onStartRename: () => void;
   onCancelRename: () => void;
-  onRename: (label: string) => Promise<void>;
+  onRename: (data: {
+    label: string;
+    heightCm?: number | null;
+    widthCm?: number | null;
+    lengthCm?: number | null;
+  }) => Promise<void>;
   onStock: (quantity: number) => Promise<boolean>;
   onRemove: () => void;
+  onUnarchive: () => Promise<void>;
 }) {
   const soldOut = variant.stockQuantity === 0;
 
@@ -431,19 +460,31 @@ function VariantRow({
       {renaming ? (
         <RenameField
           label={variant.label}
+          heightCm={variant.heightCm}
+          widthCm={variant.widthCm}
+          lengthCm={variant.lengthCm}
           error={renameError}
           onCancel={onCancelRename}
           onSubmit={onRename}
         />
       ) : (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <span className="font-mono text-[15px] font-medium">
             {variant.label}
           </span>
-          {soldOut ? (
+          {variant.isArchived ? (
+            <Badge tone="dim" className="px-1.5 py-0.5 text-[11px]">
+              Arquivado
+            </Badge>
+          ) : soldOut ? (
             <Badge tone="clay" className="px-1.5 py-0.5 text-[11px]">
               Esgotado
             </Badge>
+          ) : null}
+          {variant.heightCm && variant.widthCm && variant.lengthCm ? (
+            <span className="font-mono text-[11px] text-admin-dim">
+              {variant.heightCm}×{variant.widthCm}×{variant.lengthCm} cm
+            </span>
           ) : null}
         </div>
       )}
@@ -451,12 +492,22 @@ function VariantRow({
       <StockField
         key={variant.stockQuantity}
         value={variant.stockQuantity}
-        disabled={busy || renaming}
+        disabled={busy || renaming || variant.isArchived}
         onCommit={onStock}
       />
 
       <div className="flex justify-end gap-3">
-        {renaming ? null : (
+        {renaming ? null : variant.isArchived ? (
+          <button
+            type="button"
+            aria-label={`Desarquivar ${variant.label}`}
+            disabled={busy}
+            onClick={onUnarchive}
+            className="type-meta text-[11px] text-muted outline-none hover:text-ink focus-visible:outline-1 focus-visible:outline-ink disabled:text-admin-hairline cursor-pointer"
+          >
+            Desarquivar
+          </button>
+        ) : (
           <>
             <button
               type="button"
@@ -486,16 +537,30 @@ function VariantRow({
 /** The inline rename, where a duplicate label lands as a field error. */
 function RenameField({
   label,
+  heightCm: initialHeight,
+  widthCm: initialWidth,
+  lengthCm: initialLength,
   error,
   onCancel,
   onSubmit,
 }: {
   label: string;
+  heightCm?: number | null;
+  widthCm?: number | null;
+  lengthCm?: number | null;
   error: string | null;
   onCancel: () => void;
-  onSubmit: (label: string) => Promise<void>;
+  onSubmit: (data: {
+    label: string;
+    heightCm?: number | null;
+    widthCm?: number | null;
+    lengthCm?: number | null;
+  }) => Promise<void>;
 }) {
   const [value, setValue] = useState(label);
+  const [height, setHeight] = useState(initialHeight ? String(initialHeight) : "");
+  const [width, setWidth] = useState(initialWidth ? String(initialWidth) : "");
+  const [length, setLength] = useState(initialLength ? String(initialLength) : "");
 
   return (
     <form
@@ -505,27 +570,61 @@ function RenameField({
         const trimmed = value.trim();
 
         if (trimmed.length > 0) {
-          void onSubmit(trimmed);
+          void onSubmit({
+            label: trimmed,
+            heightCm: height ? Number(height) : null,
+            widthCm: width ? Number(width) : null,
+            lengthCm: length ? Number(length) : null,
+          });
         }
       }}
     >
-      <Input
-        autoFocus
-        inputSize="admin-sm"
-        maxLength={20}
-        value={value}
-        aria-invalid={error !== null}
-        aria-label="Novo rótulo"
-        className="font-mono"
-        onChange={(event) => {
-          setValue(event.target.value);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            onCancel();
-          }
-        }}
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          autoFocus
+          inputSize="admin-sm"
+          maxLength={20}
+          value={value}
+          aria-invalid={error !== null}
+          aria-label="Novo rótulo"
+          className="w-24 font-mono"
+          onChange={(event) => {
+            setValue(event.target.value);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              onCancel();
+            }
+          }}
+        />
+        <Input
+          inputSize="admin-sm"
+          type="number"
+          min={1}
+          placeholder="Alt (cm)"
+          value={height}
+          className="w-16 font-mono text-[12px]"
+          onChange={(e) => setHeight(e.target.value)}
+        />
+        <Input
+          inputSize="admin-sm"
+          type="number"
+          min={1}
+          placeholder="Larg (cm)"
+          value={width}
+          className="w-16 font-mono text-[12px]"
+          onChange={(e) => setWidth(e.target.value)}
+        />
+        <Input
+          inputSize="admin-sm"
+          type="number"
+          min={1}
+          placeholder="Comp (cm)"
+          value={length}
+          className="w-16 font-mono text-[12px]"
+          onChange={(e) => setLength(e.target.value)}
+        />
+      </div>
       {error ? <p className="text-[13px] text-clay">{error}</p> : null}
       <div className="flex gap-3">
         <button type="submit" className="type-meta text-[11px] hover:text-rust">
@@ -605,20 +704,33 @@ function AddVariant({
   onCancel,
 }: {
   busy: boolean;
-  onAdd: (label: string) => Promise<void>;
+  onAdd: (data: {
+    label: string;
+    heightCm?: number;
+    widthCm?: number;
+    lengthCm?: number;
+  }) => Promise<void>;
   onCancel: () => void;
 }) {
   const [label, setLabel] = useState("");
+  const [height, setHeight] = useState("");
+  const [width, setWidth] = useState("");
+  const [length, setLength] = useState("");
 
   return (
     <form
-      className="flex items-center gap-2.5"
+      className="flex flex-wrap items-center gap-2.5"
       onSubmit={(event) => {
         event.preventDefault();
         const trimmed = label.trim();
 
         if (trimmed.length > 0) {
-          void onAdd(trimmed);
+          void onAdd({
+            label: trimmed,
+            heightCm: height ? Number(height) : undefined,
+            widthCm: width ? Number(width) : undefined,
+            lengthCm: length ? Number(length) : undefined,
+          });
         }
       }}
     >
@@ -629,7 +741,7 @@ function AddVariant({
         value={label}
         placeholder="P, M, G…"
         aria-label="Rótulo do novo tamanho"
-        className="w-40 font-mono"
+        className="w-28 font-mono"
         onChange={(event) => {
           setLabel(event.target.value);
         }}
@@ -638,6 +750,33 @@ function AddVariant({
             onCancel();
           }
         }}
+      />
+      <Input
+        inputSize="admin"
+        type="number"
+        min={1}
+        placeholder="Alt (cm)"
+        value={height}
+        className="w-24 font-mono text-[12px]"
+        onChange={(e) => setHeight(e.target.value)}
+      />
+      <Input
+        inputSize="admin"
+        type="number"
+        min={1}
+        placeholder="Larg (cm)"
+        value={width}
+        className="w-24 font-mono text-[12px]"
+        onChange={(e) => setWidth(e.target.value)}
+      />
+      <Input
+        inputSize="admin"
+        type="number"
+        min={1}
+        placeholder="Comp (cm)"
+        value={length}
+        className="w-24 font-mono text-[12px]"
+        onChange={(e) => setLength(e.target.value)}
       />
       <Button type="submit" size="admin" disabled={busy || label.trim() === ""}>
         Adicionar

@@ -210,12 +210,16 @@ Este documento centraliza o diagnóstico de arquitetura, qualidade de código, e
 - [x] OpenAPI & BFF: 65 endpoints OpenAPI documentados no `commerce-core`, tipos sincronizados no `avesso-store` (`schema.d.ts`), e rotas BFF em `/api/admin/integrations/` repassando tokens de sessão.
 - [x] Garantia de Qualidade: 727 testes Jest no backend (50 suítes, 100% aprovados), 61 testes Vitest no frontend (11 suítes, 100% aprovados), 7/7 testes E2E Playwright reais (100% aprovados) e builds de produção `pnpm build` bem-sucedidos em ambos os repositórios.
 
-### Sessão 11 — Integração Shopee (Marketplace)
+### Sessão 11 — Integração Shopee (Marketplace) (Concluída)
 *(Referência arquitetural: [`docs/architecture/marketplaces_multi_tenant_roadmap.md`](file:///c:/Users/Arthu/Desktop/code/commerce-core/docs/architecture/marketplaces_multi_tenant_roadmap.md))*
-- [ ] Autenticação Shopee Open Platform com assinaturas HMAC-SHA256 (`/api/v2/shop/auth_partner`).
-- [ ] Mapeamento dinâmico de categorias e atributos obrigatórios da Shopee para variantes locais.
-- [ ] Sincronização bidirecional de saldo de estoque em tempo real.
-- [ ] Push Mechanism para captura imediata de novos pedidos da Shopee.
+- [x] Autenticação Shopee Open Platform com assinaturas HMAC-SHA256 (`/api/v2/shop/auth_partner`) e persistência criptografada (AES-256-GCM) em `tenant_integrations`.
+- [x] Conector Shopee com rotação automática de tokens (access_token de 4h, refresh_token de 30 dias) sob row lock atômico em PostgreSQL (`SELECT ... FOR UPDATE`), prevenindo concorrência sem dependência de Redis externo.
+- [x] Mapeamento dinâmico de categorias e atributos obrigatórios da Shopee (`ShopeeCategoryMappingService`) para variantes locais de produtos, assegurando conformidade com a taxonomia mandatória.
+- [x] Sincronização bidirecional de saldo de estoque em tempo real (`ShopeeSyncService`) com prevenção rigorosa de overselling integrada ao `OrdersService.checkout`.
+- [x] Push Mechanism / receptor de webhooks da Shopee (`ShopeeWebhookService`) com validação de assinatura HMAC-SHA256, deduplicação idempotente, decremento atômico de estoque, propagação para outros marketplaces e exportação contábil para o Bling ERP.
+- [x] Painel Administrativo (`/admin/integracoes`): Conexão em 1-clique com a Shopee, status visual com Badges nativas, sincronização manual de catálogo e desconexão assistida.
+- [x] Sincronização OpenAPI & BFF: 70 operações OpenAPI registradas no `commerce-core`, tipos sincronizados no `avesso-store` (`schema.d.ts`), e rotas BFF em `/api/admin/integrations/shopee/`.
+- [x] Garantia de Qualidade: 756 testes Jest no backend (55 suítes, 100% aprovados), 63 testes Vitest no frontend (11 suítes, 100% aprovados), 7/7 testes E2E Playwright reais (100% aprovados), zero erros de lint e builds de produção `pnpm build` bem-sucedidos em ambos os repositórios.
 
 ### Sessão 12 — Integração Amazon Selling Partner API (SP-API)
 *(Referência arquitetural: [`docs/architecture/marketplaces_multi_tenant_roadmap.md`](file:///c:/Users/Arthu/Desktop/code/commerce-core/docs/architecture/marketplaces_multi_tenant_roadmap.md))*

@@ -1299,6 +1299,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/integrations/amazon/auth-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gera URL de autorização Login with Amazon (LWA) para a Selling Partner API com state HMAC-SHA256. */
+        get: operations["IntegrationsController_getAmazonAuthUrl"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/amazon/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Troca spapi_oauth_code por tokens LWA e ativa integração em tenant_integrations com criptografia AES-256-GCM. */
+        post: operations["IntegrationsController_amazonCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/amazon/disconnect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Desconecta e revoga credenciais da integração com a Amazon SP-API. */
+        post: operations["IntegrationsController_disconnectAmazon"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/amazon/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dispara sincronização manual de catálogo e estoque para a Amazon SP-API via Listings Items API. */
+        post: operations["IntegrationsController_syncAmazonCatalog"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/amazon/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Receptor público de notificações assíncronas de pedidos da Amazon (EventBridge / SQS / Notifications API). */
+        post: operations["IntegrationsController_amazonNotifications"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reports/product-sales": {
         parameters: {
             query?: never;
@@ -2651,6 +2736,56 @@ export interface components {
              *     }
              */
             data: Record<string, never>;
+        };
+        AmazonCallbackDto: {
+            /**
+             * @description Código de autorização OAuth 2.0 retornado pela Amazon (spapi_oauth_code).
+             * @example ANzUvgZcKjV...
+             */
+            spapi_oauth_code?: string;
+            /**
+             * @description Código de autorização (alias convencional code).
+             * @example ANzUvgZcKjV...
+             */
+            code?: string;
+            /**
+             * @description Identificador do vendedor na Amazon (Selling Partner ID / Merchant ID).
+             * @example A21TJRUUN4KGV
+             */
+            selling_partner_id: string;
+            /**
+             * @description Parâmetro state assinado com HMAC-SHA256 para prevenção de CSRF.
+             * @example eyJ0ZW5hbnRJZCI6ImRlZmF1bHQiLCJub25jZSI6Ii...}
+             */
+            state: string;
+        };
+        AmazonNotificationDto: {
+            /**
+             * @description Tipo da notificação SP-API (ex: ORDER_CHANGE, MFN_ORDER_STATUS_CHANGE).
+             * @example ORDER_CHANGE
+             */
+            NotificationType?: string;
+            /**
+             * @description Tipo da notificação em camelCase / EventBridge detail-type.
+             * @example ORDER_CHANGE
+             */
+            notificationType?: string;
+            /**
+             * @description Tipo de detalhe em eventos disparados via Amazon EventBridge.
+             * @example Amazon Selling Partner Notification
+             */
+            "detail-type"?: string;
+            /**
+             * @description ID da conta ou seller de origem.
+             * @example A21TJRUUN4KGV
+             */
+            SellerId?: string;
+            /** @description Dados ou payload do evento da notificação (contém AmazonOrderId, status, etc.). */
+            Payload: Record<string, never>;
+            /** @description Payload em minúsculo / formato EventBridge detail. */
+            payload?: Record<string, never>;
+            /** @description Detail em eventos nativos do Amazon EventBridge. */
+            detail?: Record<string, never>;
         };
         ProductSalesRowResponse: {
             /** Format: uuid */
@@ -6083,6 +6218,181 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ShopeeWebhookDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookAckResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_getAmazonAuthUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthUrlResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `integrations.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_amazonCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AmazonCallbackDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationItemResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `integrations.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_disconnectAmazon: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisconnectIntegrationResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `integrations.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_syncAmazonCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogSyncResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `integrations.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_amazonNotifications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AmazonNotificationDto"];
             };
         };
         responses: {

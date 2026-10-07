@@ -221,10 +221,16 @@ Este documento centraliza o diagnóstico de arquitetura, qualidade de código, e
 - [x] Sincronização OpenAPI & BFF: 70 operações OpenAPI registradas no `commerce-core`, tipos sincronizados no `avesso-store` (`schema.d.ts`), e rotas BFF em `/api/admin/integrations/shopee/`.
 - [x] Garantia de Qualidade: 756 testes Jest no backend (55 suítes, 100% aprovados), 63 testes Vitest no frontend (11 suítes, 100% aprovados), 7/7 testes E2E Playwright reais (100% aprovados), zero erros de lint e builds de produção `pnpm build` bem-sucedidos em ambos os repositórios.
 
-### Sessão 12 — Integração Amazon Selling Partner API (SP-API)
+### Sessão 12 — Integração Amazon Selling Partner API (SP-API) (Concluída)
 *(Referência arquitetural: [`docs/architecture/marketplaces_multi_tenant_roadmap.md`](file:///c:/Users/Arthu/Desktop/code/commerce-core/docs/architecture/marketplaces_multi_tenant_roadmap.md))*
-- [ ] Infraestrutura de autenticação Login with Amazon (LWA) combinada com credenciais AWS IAM / STS assume-role.
-- [ ] Conformidade estrita com Data Protection Policy (DPP) e criptografia de ponta a ponta de dados PII.
-- [ ] Mensageria assíncrona orientada a eventos via AWS SQS / Amazon EventBridge.
-- [ ] Sincronização em massa de produtos e preços via Feeds API v2021-06-30.
+- [x] Autenticação Login with Amazon (LWA) OAuth 2.0 com `state` assinado via HMAC-SHA256, combinado com perfis AWS IAM e assinatura AWS SigV4 para endpoints REST (`execute-api`).
+- [x] Conformidade estrita com a Data Protection Policy (DPP) da Amazon: criptografia em repouso de dados de identificação pessoal (PII) do comprador (AES-256-GCM) em `encryptedBuyerPii` do modelo `Order`, rotina de higienização de pedidos após 30 dias (`anonymizeOrderPii`) e governança de rotação de credenciais a cada 180 dias.
+- [x] Conector Amazon SP-API com rotação automática de tokens (LWA access token de 1h) sob row lock exclusivo no PostgreSQL via `SELECT ... FOR UPDATE` em transação Prisma, prevenindo concorrência sem dependência de Redis externo.
+- [x] Mapeamento dinâmico de catálogo de moda/vestuário para a Product Type Definitions API / Listings Items API v2021-08-01 da Amazon (`AmazonCatalogMappingService`), gerando JSON Patches para atributos estruturados.
+- [x] Sincronização atômica de inventário e preços via Listings Items API / Feeds API v2021-06-30 para prevenção rigorosa de overselling integrada ao checkout (`OrdersService.checkout`) e sincronização em lote.
+- [x] Receptor assíncrono de notificações de pedidos (Amazon EventBridge / SQS / Webhook Notifications API) com integração na tabela central `orders` (`originChannel: "AMAZON"`), baixa imediata de estoque, propagação multicanal para Mercado Livre e Shopee e exportação contábil para o Bling ERP.
+- [x] Painel Administrativo (`/admin/integracoes`): Card interativo da Amazon SP-API com conexão em 1-clique via LWA, badges dinâmicos de status, exibição de Selling Partner ID, Marketplace Brasil (`A2Q3Y263D00KWC`), status de conformidade DPP, sincronização manual de catálogo e desconexão assistida.
+- [x] Sincronização OpenAPI & BFF: 75 operações OpenAPI documentadas no `commerce-core`, tipos sincronizados no `avesso-store` (`schema.d.ts`), e rotas BFF em `/api/admin/integrations/amazon/`.
+- [x] Garantia de Qualidade: 795 testes unitários Jest no backend (62 suítes, 100% aprovados), 65 testes Vitest no frontend (11 suítes, 100% aprovados), 7/7 testes E2E Playwright reais (100% aprovados) e builds de produção `pnpm build` bem-sucedidos em ambos os repositórios.
+
 

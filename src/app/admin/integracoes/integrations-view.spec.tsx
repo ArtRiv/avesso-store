@@ -21,15 +21,18 @@ describe("IntegrationsView", () => {
     expect(screen.getByText("Amazon SP-API")).toBeInTheDocument();
   });
 
-  it("exibe estado desconectado e botão de conexão em 1-clique para Mercado Livre e Shopee", () => {
+  it("exibe estado desconectado e botões de conexão em 1-clique para todos os canais", () => {
     render(<IntegrationsView integrations={[]} />);
 
-    expect(screen.getAllByText("Desconectado")).toHaveLength(2);
+    expect(screen.getAllByText("Desconectado")).toHaveLength(3);
     expect(
       screen.getByRole("button", { name: "Conectar com Mercado Livre" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Conectar com Shopee" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Conectar com Amazon SP-API" }),
     ).toBeInTheDocument();
   });
 
@@ -84,6 +87,36 @@ describe("IntegrationsView", () => {
     ).toBeInTheDocument();
   });
 
+  it("exibe estado conectado da Amazon SP-API com Seller ID, marketplace Brasil e botões de ação", () => {
+    render(
+      <IntegrationsView
+        integrations={[
+          {
+            provider: "AMAZON",
+            connected: true,
+            status: "ACTIVE",
+            expiresAt: "2026-10-07T21:00:00.000Z",
+            metadata: {
+              sellingPartnerId: "A21TJRUUN4KGV",
+              marketplaceId: "A2Q3Y263D00KWC",
+              dppCompliant: true,
+            },
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("Conectado")).toBeInTheDocument();
+    expect(screen.getByText("A21TJRUUN4KGV")).toBeInTheDocument();
+    expect(screen.getByText(/Brasil \(A2Q3Y263D00KWC\)/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Sincronizar Catálogo" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Desconectar" }),
+    ).toBeInTheDocument();
+  });
+
   it("renderiza banner de sucesso quando initialConnected é verdadeiro para Mercado Livre", () => {
     render(
       <IntegrationsView
@@ -107,6 +140,19 @@ describe("IntegrationsView", () => {
 
     expect(
       screen.getByText(/Shopee conectada com sucesso!/),
+    ).toBeInTheDocument();
+  });
+
+  it("renderiza banner de sucesso quando initialConnected é 'amazon'", () => {
+    render(
+      <IntegrationsView
+        integrations={[]}
+        initialConnected="amazon"
+      />,
+    );
+
+    expect(
+      screen.getByText(/Amazon SP-API conectada com sucesso!/),
     ).toBeInTheDocument();
   });
 });

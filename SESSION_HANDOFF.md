@@ -63,6 +63,16 @@
         - **Painel Administrativo (`/admin/integracoes`)**: Ativação da conexão Shopee em 1-clique via Open Platform, exibição de loja conectada, shop ID, expiração de token com segurança AES-256-GCM, sincronização manual e desconexão assistida.
         - **Sincronização OpenAPI & BFF**: 70 operações registradas no OpenAPI do `commerce-core`, tipos sincronizados no `avesso-store` (`schema.d.ts`), e rotas BFF em `/api/admin/integrations/shopee/`.
         - **Garantia de Qualidade**: 756 testes Jest no backend (55 suítes, 100% aprovados), 63 testes Vitest no frontend (11 suítes, 100% aprovados), 7/7 testes E2E Playwright reais (100% aprovados), zero warnings no ESLint e builds de produção `pnpm build` bem-sucedidos em ambos os repositórios.
+      - **Sessão 12 (Integração Amazon Selling Partner API — SP-API)**:
+        - **Autenticação LWA & Assinatura AWS SigV4**: Integração completa com Login with Amazon (LWA) OAuth 2.0 com `state` assinado com HMAC-SHA256, credenciais AWS IAM e gerador de assinaturas AWS Signature Version 4 (SigV4) para endpoints REST da SP-API (`execute-api`). Persistência segura em `tenant_integrations` com criptografia simétrica AES-256-GCM em repouso (`AmazonAuthService`, `AmazonSigV4`).
+        - **Conformidade Estrita com a Data Protection Policy (DPP)**: Criptografia em repouso de dados de identificação pessoal (PII) do comprador (AES-256-GCM) no campo `encryptedBuyerPii` do modelo `Order` (migração Prisma `20261007000000_add_amazon_dpp_pii_field`), rotina de higienização de pedidos após 30 dias de conclusão (`AmazonDppService.anonymizeOrderPii`) e monitoramento/relatório de rotação de credenciais a cada 180 dias.
+        - **Conector SP-API com Rotação Atômica de Tokens**: Renovação sob lock exclusivo em nível de linha no PostgreSQL via `SELECT ... FOR UPDATE` (`AmazonConnector`), garantindo renovação atômica do token LWA de 1h sem dependência de Redis externo.
+        - **Mapeamento de Catálogo de Moda/Vestuário**: Serviço de mapeamento `AmazonCatalogMappingService` traduzindo categorias e atributos locais para Product Types da Amazon (`SHIRT`, `SWEATSHIRT`, `PANTS`, `HAT`, `CLOTHING`) com patches JSON compatíveis com a Listings Items API v2021-08-01.
+        - **Sincronização de Inventário & Prevenção de Overselling**: Atualização de saldo em tempo real acoplada ao checkout (`OrdersService.checkout`) e sincronização em lote de catálogo (`AmazonSyncService`).
+        - **Receptor Assíncrono de Notificações de Pedidos**: Processamento de eventos de pedidos via Amazon EventBridge / SQS / Webhook Notifications API (`AmazonWebhookService`), deduplicação idempotente, baixa imediata de estoque em PostgreSQL, propagação para Mercado Livre e Shopee e exportação contábil para o Bling ERP.
+        - **Painel Administrativo (`/admin/integracoes`)**: Card interativo da Amazon SP-API com conexão em 1-clique via LWA, badges nativos de status, exibição de Selling Partner ID, Marketplace Brasil (`A2Q3Y263D00KWC`), status de conformidade DPP, sincronização manual e desconexão assistida.
+        - **Sincronização OpenAPI & BFF**: 75 operações OpenAPI documentadas no `commerce-core`, tipos sincronizados no `avesso-store` (`schema.d.ts`), e rotas BFF em `/api/admin/integrations/amazon/`.
+        - **Garantia de Qualidade**: 795 testes unitários Jest no backend (62 suítes, 100% aprovados), 65 testes Vitest no frontend (11 suítes, 100% aprovados), 7/7 testes E2E Playwright reais (100% aprovados), zero warnings no ESLint e builds de produção `pnpm build` bem-sucedidos em ambos os repositórios.
 - **Documento Mestre de Acompanhamento:** [ROADMAP.md](file:///c:/Users/Arthu/Desktop/code/avesso-store/ROADMAP.md)
 - **Playbook de Onboarding do Cliente:** [CLIENT_ONBOARDING_PLAYBOOK.md](file:///c:/Users/Arthu/Desktop/code/avesso-store/docs/CLIENT_ONBOARDING_PLAYBOOK.md)
 - **Decisão Arquitetural de Pagamentos (ADR 001):** [registro_de_decis_o_arquitetural.md](file:///c:/Users/Arthu/Desktop/code/commerce-core/docs/architecture/registro_de_decis_o_arquitetural.md) e [documento_de_benchmarking.md](file:///c:/Users/Arthu/Desktop/code/commerce-core/docs/architecture/documento_de_benchmarking.md)
@@ -71,32 +81,10 @@
 
 ---
 
-## Próxima Sessão: Sessão 12 — Integração Amazon Selling Partner API (SP-API)
+## Status da Sessão 12 e Próximos Passos
 
-As Sessões 1 a 11 foram 100% concluídas com sucesso. Para manter o foco e evitar degradação de contexto, **recomendo abrir uma nova conversa para iniciar a Sessão 12**.
+As Sessões 1 a 12 foram 100% concluídas com sucesso. O ecossistema de e-commerce e marketplaces (Mercado Livre, Shopee e Amazon SP-API), checkout híbrido (PIX e Cartão), logística dinâmica (Melhor Envio) e ERP contábil (Bling v3) encontram-se totalmente operacionais, testados e integrados com alta fidelidade arquitetural.
 
----
-
-## Prompt de Inicialização para a Próxima Conversa
-
-Ao abrir a nova conversa, basta colar o seguinte prompt:
-
-```markdown
-Olá! Estamos dando continuidade ao projeto de e-commerce (avesso-store e commerce-core).
-As Sessões 1 a 11 já foram concluídas com sucesso.
-Consulte os arquivos `avesso-store/ROADMAP.md`, `avesso-store/SESSION_HANDOFF.md` e `commerce-core/docs/architecture/marketplaces_multi_tenant_roadmap.md`.
-
-Nosso foco para esta conversa é a **Sessão 12 — Integração Amazon Selling Partner API (SP-API)**:
-1. Autenticação LWA (Login with Amazon) combinada com perfis IAM (STS assume-role e assinatura AWS SigV4) e persistência segura em `tenant_integrations`.
-2. Conformidade com Data Protection Policy (DPP) e criptografia em repouso de dados de identificação pessoal (PII) do comprador.
-3. Conector Amazon SP-API com rotação automática de tokens (LWA access token de 1h) e controle de concorrência.
-4. Mapeamento de catálogo de vestuário e produtos para a Product Type Definitions API / Listings Items API v2021-08-01 da Amazon.
-5. Sincronização atômica de inventário e preços via Listings Items API / Feeds API v2021-06-30 para prevenção de overselling.
-6. Receptor assíncrono de notificações de pedidos (Amazon EventBridge / SQS / Webhook Notifications API) com integração na tabela central de pedidos (`originChannel: "AMAZON"`).
-7. Painel Admin: Habilitação da conexão Amazon SP-API em 1-clique em `/admin/integracoes`.
-8. Manter 100% de sucesso em testes unitários (`pnpm test`), testes E2E (`pnpm test:e2e`) e builds de produção (`pnpm build`) em ambos os repositórios.
-9. Git & Pull Request: Iniciar a sessão criando/alternando para a branch `feat/session-12-amazon-spapi` em ambos os repositórios, manter commits atômicos com Conventional Commits e finalizar com todas as alterações devidamente commitadas na branch da sessão, deixando o Pull Request preparado para revisão e aprovação pelo usuário.
-```
 
 ---
 

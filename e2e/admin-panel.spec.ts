@@ -160,7 +160,14 @@ test.describe("Painel Administrativo (Back Office)", () => {
       await expect(page.getByText(/Shopee conectada com sucesso!/i).first()).toBeVisible({ timeout: 10_000 });
     }
 
-    // 6. Valida ações disponíveis quando conectado
+    // 6. Conexão em 1-clique com Amazon SP-API
+    const connectAmazonBtn = page.getByRole("button", { name: "Conectar com Amazon SP-API" });
+    if (await connectAmazonBtn.isVisible()) {
+      await connectAmazonBtn.click();
+      await expect(page.getByText(/Amazon SP-API conectada com sucesso!/i).first()).toBeVisible({ timeout: 10_000 });
+    }
+
+    // 7. Valida ações disponíveis quando conectado
     await expect(page.getByRole("button", { name: "Sincronizar Catálogo" }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Desconectar" }).first()).toBeVisible();
   });

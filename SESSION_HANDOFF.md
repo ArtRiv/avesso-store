@@ -54,7 +54,15 @@
       - **Webhook Receiver de Alta Performance**: Endpoint `/integrations/mercadolivre/webhook` para tópicos `orders_v2`, `orders` e `items`, deduplicação idempotente, persistência imediata na tabela central `orders` (`originChannel: "MERCADO_LIVRE"`, `externalOrderId`), baixa imediata de estoque via `StockService.decrement` e exportação automática para o Bling ERP.
       - **Painel Administrativo (`/admin/integracoes`)**: Interface minimalista com visual refinado da AVESSO contendo cards para Mercado Livre, Shopee e Amazon SP-API, status de conexão com Badges nativas, fluxo de autorização em 1-clique via OAuth, sincronização manual de catálogo e desconexão assistida.
       - **Sincronização OpenAPI & BFF**: 65 operações OpenAPI registradas no `commerce-core`, tipos sincronizados no `avesso-store` (`schema.d.ts`), e rotas BFF em `/api/admin/integrations/` repassando credenciais e cookies de sessão administrativa.
-      - **Garantia de Qualidade**: 727 testes Jest no backend (50 suítes, 100% aprovados), 61 testes Vitest no frontend (11 suítes, 100% aprovados), 7/7 testes E2E Playwright reais (100% aprovados) e builds de produção `pnpm build` bem-sucedidos em ambos os repositórios.
+      - **Sessão 11 (Integração Shopee Marketplace)**:
+        - **Autenticação Shopee Open Platform**: Assinaturas HMAC-SHA256 para rotas públicas e autenticadas (`/api/v2/shop/auth_partner`), state assinado contra CSRF (10m TTL) e persistência segura em `tenant_integrations` com criptografia simétrica AES-256-GCM em repouso (`ShopeeAuthService`).
+        - **Conector Shopee com Rotação Atômica de Tokens**: Renovação sob lock exclusivo no PostgreSQL via `SELECT ... FOR UPDATE` (`ShopeeConnector`), prevenindo invalidação concorrente do token de 4h e refresh de 30 dias sem custo com Redis adicional.
+        - **Mapeamento de Atributos Mandatários e Taxonomia**: Mapeamento dinâmico de categorias de moda e atributos obrigatórios (Marca, Material, País de Origem, Garantia) para aprovação instantânea de anúncios na Shopee Brasil (`ShopeeCategoryMappingService`).
+        - **Sincronização Bidirecional & Prevenção de Overselling**: Sincronização atômica de saldo de estoque em tempo real (`ShopeeSyncService`) acoplada ao `OrdersService.checkout` e propagação para o Mercado Livre.
+        - **Push Mechanism & Webhook Receiver**: Receptor seguro de notificações da Shopee (`ShopeeWebhookService`) com verificação criptográfica, deduplicação idempotente, baixa imediata de estoque em transação PostgreSQL, canal `originChannel: "SHOPEE"` e exportação automática para o Bling ERP.
+        - **Painel Administrativo (`/admin/integracoes`)**: Ativação da conexão Shopee em 1-clique via Open Platform, exibição de loja conectada, shop ID, expiração de token com segurança AES-256-GCM, sincronização manual e desconexão assistida.
+        - **Sincronização OpenAPI & BFF**: 70 operações registradas no OpenAPI do `commerce-core`, tipos sincronizados no `avesso-store` (`schema.d.ts`), e rotas BFF em `/api/admin/integrations/shopee/`.
+        - **Garantia de Qualidade**: 756 testes Jest no backend (55 suítes, 100% aprovados), 63 testes Vitest no frontend (11 suítes, 100% aprovados), 7/7 testes E2E Playwright reais (100% aprovados), zero warnings no ESLint e builds de produção `pnpm build` bem-sucedidos em ambos os repositórios.
 - **Documento Mestre de Acompanhamento:** [ROADMAP.md](file:///c:/Users/Arthu/Desktop/code/avesso-store/ROADMAP.md)
 - **Playbook de Onboarding do Cliente:** [CLIENT_ONBOARDING_PLAYBOOK.md](file:///c:/Users/Arthu/Desktop/code/avesso-store/docs/CLIENT_ONBOARDING_PLAYBOOK.md)
 - **Decisão Arquitetural de Pagamentos (ADR 001):** [registro_de_decis_o_arquitetural.md](file:///c:/Users/Arthu/Desktop/code/commerce-core/docs/architecture/registro_de_decis_o_arquitetural.md) e [documento_de_benchmarking.md](file:///c:/Users/Arthu/Desktop/code/commerce-core/docs/architecture/documento_de_benchmarking.md)
@@ -63,9 +71,9 @@
 
 ---
 
-## Próxima Sessão: Sessão 11 — Integração Shopee (Marketplace)
+## Próxima Sessão: Sessão 12 — Integração Amazon Selling Partner API (SP-API)
 
-As Sessões 1 a 10 foram 100% concluídas com sucesso. Para manter o foco e evitar degradação de contexto, **recomendo abrir uma nova conversa para iniciar a Sessão 11**.
+As Sessões 1 a 11 foram 100% concluídas com sucesso. Para manter o foco e evitar degradação de contexto, **recomendo abrir uma nova conversa para iniciar a Sessão 12**.
 
 ---
 
@@ -75,18 +83,19 @@ Ao abrir a nova conversa, basta colar o seguinte prompt:
 
 ```markdown
 Olá! Estamos dando continuidade ao projeto de e-commerce (avesso-store e commerce-core).
-As Sessões 1 a 10 já foram concluídas com sucesso.
+As Sessões 1 a 11 já foram concluídas com sucesso.
 Consulte os arquivos `avesso-store/ROADMAP.md`, `avesso-store/SESSION_HANDOFF.md` e `commerce-core/docs/architecture/marketplaces_multi_tenant_roadmap.md`.
 
-Nosso foco para esta conversa é a **Sessão 11 — Integração Shopee (Marketplace)**:
-1. Autenticação Shopee Open Platform via assinatura de requisições HMAC-SHA256 (`/api/v2/shop/auth_partner`) e persistência segura em `tenant_integrations`.
-2. Conector Shopee com rotação automática de tokens (access_token de 4h, refresh_token de 30 dias com row lock atômico em PostgreSQL).
-3. Mapeamento de atributos mandatários e categorias da Shopee para variantes locais de produtos.
-4. Sincronização bidirecional de saldo de estoque em tempo real para prevenção de overselling.
-5. Push mechanism / webhook receiver da Shopee para captura imediata de novos pedidos e integração na tabela central de pedidos (`originChannel: "SHOPEE"`).
-6. Painel Admin: Habilitação da conexão Shopee em 1-clique em `/admin/integracoes`.
-7. Manter 100% de sucesso em testes unitários (`pnpm test`), testes E2E (`pnpm test:e2e`) e builds de produção (`pnpm build`) em ambos os repositórios.
-8. Git & Pull Request: Iniciar a sessão criando/alternando para a branch `feat/session-11-shopee` em ambos os repositórios, manter commits atômicos com Conventional Commits e finalizar com todas as alterações devidamente commitadas na branch da sessão, deixando o Pull Request preparado para revisão e aprovação pelo usuário.
+Nosso foco para esta conversa é a **Sessão 12 — Integração Amazon Selling Partner API (SP-API)**:
+1. Autenticação LWA (Login with Amazon) combinada com perfis IAM (STS assume-role e assinatura AWS SigV4) e persistência segura em `tenant_integrations`.
+2. Conformidade com Data Protection Policy (DPP) e criptografia em repouso de dados de identificação pessoal (PII) do comprador.
+3. Conector Amazon SP-API com rotação automática de tokens (LWA access token de 1h) e controle de concorrência.
+4. Mapeamento de catálogo de vestuário e produtos para a Product Type Definitions API / Listings Items API v2021-08-01 da Amazon.
+5. Sincronização atômica de inventário e preços via Listings Items API / Feeds API v2021-06-30 para prevenção de overselling.
+6. Receptor assíncrono de notificações de pedidos (Amazon EventBridge / SQS / Webhook Notifications API) com integração na tabela central de pedidos (`originChannel: "AMAZON"`).
+7. Painel Admin: Habilitação da conexão Amazon SP-API em 1-clique em `/admin/integracoes`.
+8. Manter 100% de sucesso em testes unitários (`pnpm test`), testes E2E (`pnpm test:e2e`) e builds de produção (`pnpm build`) em ambos os repositórios.
+9. Git & Pull Request: Iniciar a sessão criando/alternando para a branch `feat/session-12-amazon-spapi` em ambos os repositórios, manter commits atômicos com Conventional Commits e finalizar com todas as alterações devidamente commitadas na branch da sessão, deixando o Pull Request preparado para revisão e aprovação pelo usuário.
 ```
 
 ---

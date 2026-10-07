@@ -1214,6 +1214,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/integrations/shopee/auth-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gera URL de autorização Shopee Open Platform (/api/v2/shop/auth_partner) com assinatura HMAC-SHA256. */
+        get: operations["IntegrationsController_getShopeeAuthUrl"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/shopee/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Troca código de autorização por tokens da Shopee e ativa integração em tenant_integrations. */
+        post: operations["IntegrationsController_shopeeCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/shopee/disconnect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Desconecta e revoga credenciais da integração com a Shopee. */
+        post: operations["IntegrationsController_disconnectShopee"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/shopee/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dispara sincronização manual de catálogo e estoque para a Shopee. */
+        post: operations["IntegrationsController_syncShopeeCatalog"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/shopee/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Receptor público de push mechanism/webhooks da Shopee para criação/atualização de pedidos. */
+        post: operations["IntegrationsController_shopeeWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reports/product-sales": {
         parameters: {
             query?: never;
@@ -2523,6 +2608,49 @@ export interface components {
              * @example evt_1234567890
              */
             _id?: string;
+        };
+        ShopeeCallbackDto: {
+            /**
+             * @description Código de autorização temporário emitido pela Shopee Open Platform após consentimento.
+             * @example sp_auth_code_987654321
+             */
+            code: string;
+            /**
+             * @description Identificador numérico da loja (shop_id) na Shopee.
+             * @example 654321
+             */
+            shop_id: number;
+            /**
+             * @description Parâmetro state assinado com HMAC-SHA256 para prevenção de CSRF.
+             * @example eyJ0ZW5hbnRJZCI6ImRlZmF1bHQiLCJub25jZSI6ImFiY2RlZiIsInRpbWVzdGFtcCI6MTY5NjYwMDAwMDAwMCwic2lnIjoiMTIzNDU2In0
+             */
+            state?: string;
+        };
+        ShopeeWebhookDto: {
+            /**
+             * @description Identificador numérico da loja (shop_id) na Shopee.
+             * @example 654321
+             */
+            shop_id: number;
+            /**
+             * @description Código numérico do evento disparado pela Shopee (3 = Order Update, 2 = Item Update, 4 = Tracking Update).
+             * @example 3
+             */
+            code: number;
+            /**
+             * @description Timestamp Unix (em segundos) do envio da notificação push.
+             * @example 1696600000
+             */
+            timestamp: number;
+            /**
+             * @description Carga útil específica do evento (ex: ordersn, status, etc.).
+             * @example {
+             *       "ordersn": "230928ABCDEF1234",
+             *       "status": "READY_TO_SHIP",
+             *       "update_time": 1696600000
+             *     }
+             */
+            data: Record<string, never>;
         };
         ProductSalesRowResponse: {
             /** Format: uuid */
@@ -5778,6 +5906,183 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["MercadoLivreWebhookDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookAckResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_getShopeeAuthUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthUrlResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `integrations.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_shopeeCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShopeeCallbackDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationItemResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `integrations.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_disconnectShopee: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisconnectIntegrationResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `integrations.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_syncShopeeCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogSyncResponse"];
+                };
+            };
+            /** @description No bearer token, or the token is expired or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Authenticated, but the account lacks the `integrations.manage` permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    IntegrationsController_shopeeWebhook: {
+        parameters: {
+            query?: never;
+            header: {
+                authorization: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShopeeWebhookDto"];
             };
         };
         responses: {

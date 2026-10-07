@@ -153,8 +153,15 @@ test.describe("Painel Administrativo (Back Office)", () => {
       await expect(page.getByText(/Mercado Livre conectado com sucesso!/i).first()).toBeVisible({ timeout: 10_000 });
     }
 
-    // 5. Valida ações disponíveis quando conectado
-    await expect(page.getByRole("button", { name: "Sincronizar Catálogo" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Desconectar" })).toBeVisible();
+    // 5. Conexão em 1-clique com Shopee
+    const connectShopeeBtn = page.getByRole("button", { name: "Conectar com Shopee" });
+    if (await connectShopeeBtn.isVisible()) {
+      await connectShopeeBtn.click();
+      await expect(page.getByText(/Shopee conectada com sucesso!/i).first()).toBeVisible({ timeout: 10_000 });
+    }
+
+    // 6. Valida ações disponíveis quando conectado
+    await expect(page.getByRole("button", { name: "Sincronizar Catálogo" }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Desconectar" }).first()).toBeVisible();
   });
 });

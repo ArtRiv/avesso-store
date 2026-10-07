@@ -33,7 +33,7 @@ export default async function IntegrationsPage({
   return (
     <IntegrationsView
       integrations={integrations}
-      initialConnected={connected === "true"}
+      initialConnected={connected ?? false}
       initialError={error ?? null}
     />
   );

@@ -521,7 +521,7 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 200, ord);
   }
 
-  // --- Integrações Multi-Tenant & Marketplaces (Sessão 10) ---
+  // --- Integrações Multi-Tenant & Marketplaces (Sessão 10 & 11) ---
   if (path === '/integrations' && method === 'GET') {
     return sendJson(res, 200, {
       integrations: [
@@ -531,6 +531,13 @@ const server = http.createServer(async (req, res) => {
           status: globalThis.__meliConnected ? 'ACTIVE' : 'DISCONNECTED',
           expiresAt: '2026-10-06T20:00:00.000Z',
           metadata: { nickname: 'LOJA_OFICIAL_ML', userId: 123456 },
+        },
+        {
+          provider: 'SHOPEE',
+          connected: globalThis.__shopeeConnected ?? false,
+          status: globalThis.__shopeeConnected ? 'ACTIVE' : 'DISCONNECTED',
+          expiresAt: '2026-10-06T22:00:00.000Z',
+          metadata: { shopName: 'Loja Oficial Shopee', shopId: 654321 },
         },
       ],
     });
@@ -564,6 +571,37 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (path === '/integrations/mercadolivre/webhook' && method === 'POST') {
+    return sendJson(res, 200, { received: true, action: 'order_imported_successfully' });
+  }
+
+  if (path === '/integrations/shopee/auth-url' && method === 'GET') {
+    globalThis.__shopeeConnected = true;
+    return sendJson(res, 200, {
+      url: 'http://localhost:5173/admin/integracoes?connected=shopee',
+    });
+  }
+
+  if (path === '/integrations/shopee/callback' && method === 'POST') {
+    globalThis.__shopeeConnected = true;
+    return sendJson(res, 200, {
+      provider: 'SHOPEE',
+      connected: true,
+      status: 'ACTIVE',
+      expiresAt: '2026-10-06T22:00:00.000Z',
+      metadata: { shopName: 'Loja Oficial Shopee', shopId: 654321 },
+    });
+  }
+
+  if (path === '/integrations/shopee/disconnect' && method === 'POST') {
+    globalThis.__shopeeConnected = false;
+    return sendJson(res, 200, { disconnected: true });
+  }
+
+  if (path === '/integrations/shopee/sync' && method === 'POST') {
+    return sendJson(res, 200, { syncedProducts: 1, totalVariants: 4 });
+  }
+
+  if (path === '/integrations/shopee/webhook' && method === 'POST') {
     return sendJson(res, 200, { received: true, action: 'order_imported_successfully' });
   }
 

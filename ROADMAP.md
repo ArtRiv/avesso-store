@@ -233,4 +233,15 @@ Este documento centraliza o diagnóstico de arquitetura, qualidade de código, e
 - [x] Sincronização OpenAPI & BFF: 75 operações OpenAPI documentadas no `commerce-core`, tipos sincronizados no `avesso-store` (`schema.d.ts`), e rotas BFF em `/api/admin/integrations/amazon/`.
 - [x] Garantia de Qualidade: 795 testes unitários Jest no backend (62 suítes, 100% aprovados), 65 testes Vitest no frontend (11 suítes, 100% aprovados), 7/7 testes E2E Playwright reais (100% aprovados) e builds de produção `pnpm build` bem-sucedidos em ambos os repositórios.
 
+### Sessão 13 — Observabilidade Estruturada com Pino & AsyncLocalStorage (Concluída)
+*(Referência arquitetural: [`docs/architecture/marketplaces_multi_tenant_roadmap.md`](file:///c:/Users/Arthu/Desktop/code/commerce-core/docs/architecture/marketplaces_multi_tenant_roadmap.md))*
+- [x] Propagação de Contexto com `AsyncLocalStorage`: Implementação de `RequestContextService` utilizando `node:async_hooks` nativo do Node.js, com rastreamento thread-safe de `tenant_id`, `order_id`, `correlation_id` e `user_id` através de pilhas de execução assíncronas no `commerce-core`.
+- [x] Middleware HTTP de Contexto: `RequestContextMiddleware` interceptando requisições, gerando `correlation_id` único (UUIDv4) ou propagando `x-correlation-id` / `x-request-id`, extraindo `tenant_id` e `order_id` (com fallback por path regex `/orders/:uuid`) e adicionando headers de resposta `X-Correlation-Id` e `X-Tenant-Id`.
+- [x] Logger Estruturado com Pino (`PinoLoggerService`): Logger de alta performance implementando NestJS `LoggerService`, com redação automática de dados sensíveis (OWASP, LGPD e PCI-DSS: tokens, segredos, senhas, CPF, CVV, PII de comprador), formatação síncrona `pino-pretty` em desenvolvimento e stdout JSON estruturado em produção com timestamps ISO 8601.
+- [x] Interceptor Global de Métricas HTTP (`HttpLoggingInterceptor`): Medição de latência com precisão de milissegundos (`duration_ms`), classificação semântica de níveis de log (5xx ERROR, 4xx WARN, 2xx/3xx INFO, `/health` DEBUG) e captura de erros de requisição.
+- [x] Injeção Dinâmica no Domínio: Enriquecimento de contexto com `order_id` e `tenant_id` em operações atômicas de checkout (`OrdersService.checkout`, transições de status), webhooks de pagamentos (`PaymentEventsService`) e webhooks de marketplaces (`MercadoLivre`, `Shopee`, `Amazon`).
+- [x] Tratamento Estruturado de Exceções (`AllExceptionsFilter`): Enriquecimento de logs de exceção com payload HTTP, correlation ID, URL, método e stack trace seguro.
+- [x] Garantia de Qualidade: 818 testes unitários Jest no backend (68 suítes, 100% aprovados), 65 testes Vitest no frontend (11 suítes, 100% aprovados), zero erros de lint ou typecheck e builds de produção `pnpm build` bem-sucedidos em ambos os repositórios.
+
+
 

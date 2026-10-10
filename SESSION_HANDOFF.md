@@ -73,6 +73,14 @@
         - **Painel Administrativo (`/admin/integracoes`)**: Card interativo da Amazon SP-API com conexão em 1-clique via LWA, badges nativos de status, exibição de Selling Partner ID, Marketplace Brasil (`A2Q3Y263D00KWC`), status de conformidade DPP, sincronização manual e desconexão assistida.
         - **Sincronização OpenAPI & BFF**: 75 operações OpenAPI documentadas no `commerce-core`, tipos sincronizados no `avesso-store` (`schema.d.ts`), e rotas BFF em `/api/admin/integrations/amazon/`.
         - **Garantia de Qualidade**: 795 testes unitários Jest no backend (62 suítes, 100% aprovados), 65 testes Vitest no frontend (11 suítes, 100% aprovados), 7/7 testes E2E Playwright reais (100% aprovados), zero warnings no ESLint e builds de produção `pnpm build` bem-sucedidos em ambos os repositórios.
+      - **Sessão 13 (Observabilidade Estruturada com Pino & AsyncLocalStorage)**:
+        - **Propagação de Contexto com `AsyncLocalStorage`**: Módulo `RequestContextService` utilizando `node:async_hooks` nativo do Node.js, com rastreamento isolado e thread-safe de `tenant_id`, `order_id`, `correlation_id` e `user_id` através de fluxos assíncronos e callbacks no `commerce-core`.
+        - **Middleware HTTP de Contexto**: `RequestContextMiddleware` interceptando requisições, gerando `correlation_id` único (UUIDv4) ou propagando `x-correlation-id` / `x-request-id`, extraindo `tenant_id` e `order_id` (com suporte a rotas `/orders/:uuid`) e adicionando headers de resposta `X-Correlation-Id` e `X-Tenant-Id`.
+        - **Logger Estruturado com Pino (`PinoLoggerService`)**: Logger de alta performance implementando NestJS `LoggerService`, com redação automática de dados sensíveis (LGPD / OWASP / PCI-DSS: tokens, senhas, chaves de API, secrets de webhooks, CPF, CVV e PII de compradores), formatação síncrona amigável (`pino-pretty`) em desenvolvimento e JSON estruturado com timestamps ISO 8601 em produção.
+        - **Interceptor Global de Métricas HTTP (`HttpLoggingInterceptor`)**: Medição precisa de latência por requisição (`duration_ms`), status HTTP e rotas, com níveis dinâmicos (5xx ERROR, 4xx WARN, 2xx/3xx INFO, `/health` DEBUG).
+        - **Injeção de Contexto no Domínio**: Enriquecimento automático de contexto com `order_id` e `tenant_id` em operações de checkout (`OrdersService.checkout`, cancelamento, reembolso, transições), webhooks de pagamentos (`PaymentEventsService`) e webhooks de marketplaces (`MercadoLivre`, `Shopee`, `Amazon`).
+        - **Tratamento Estruturado de Exceções (`AllExceptionsFilter`)**: Enriquecimento de logs de exceções globais com payload HTTP, correlation ID, URL, método e stack trace sem vazar dados confidenciais.
+        - **Garantia de Qualidade**: 818 testes unitários Jest no backend (68 suítes, 100% aprovados), 65 testes Vitest no frontend (11 suítes, 100% aprovados), zero erros de lint ou typecheck e builds de produção `pnpm build` bem-sucedidos em ambos os repositórios.
 - **Documento Mestre de Acompanhamento:** [ROADMAP.md](file:///c:/Users/Arthu/Desktop/code/avesso-store/ROADMAP.md)
 - **Playbook de Onboarding do Cliente:** [CLIENT_ONBOARDING_PLAYBOOK.md](file:///c:/Users/Arthu/Desktop/code/avesso-store/docs/CLIENT_ONBOARDING_PLAYBOOK.md)
 - **Decisão Arquitetural de Pagamentos (ADR 001):** [registro_de_decis_o_arquitetural.md](file:///c:/Users/Arthu/Desktop/code/commerce-core/docs/architecture/registro_de_decis_o_arquitetural.md) e [documento_de_benchmarking.md](file:///c:/Users/Arthu/Desktop/code/commerce-core/docs/architecture/documento_de_benchmarking.md)
@@ -81,9 +89,10 @@
 
 ---
 
-## Status da Sessão 12 e Próximos Passos
+## Status da Sessão 13 e Próximos Passos
 
-As Sessões 1 a 12 foram 100% concluídas com sucesso. O ecossistema de e-commerce e marketplaces (Mercado Livre, Shopee e Amazon SP-API), checkout híbrido (PIX e Cartão), logística dinâmica (Melhor Envio) e ERP contábil (Bling v3) encontram-se totalmente operacionais, testados e integrados com alta fidelidade arquitetural.
+As Sessões 1 a 13 foram 100% concluídas com sucesso. O ecossistema de e-commerce e marketplaces (Mercado Livre, Shopee e Amazon SP-API), checkout híbrido (PIX e Cartão), logística dinâmica (Melhor Envio), ERP contábil (Bling v3) e a infraestrutura de observabilidade estruturada com Pino e AsyncLocalStorage encontram-se totalmente operacionais, testados e integrados com alta fidelidade arquitetural.
+
 
 
 ---
